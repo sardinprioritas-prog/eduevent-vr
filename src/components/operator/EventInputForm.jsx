@@ -3,7 +3,7 @@ import { useAuth } from '../../context/useAuth';
 import { PlusCircle, Save, X, Calendar, MapPin, School, Clock, Users, CheckCircle, AlertTriangle } from 'lucide-react';
 
 export const EventInputForm = ({ editingEvent, onCancelEdit }) => {
-  const { cities, schools, currentUser, handleSaveEvent } = useAuth();
+  const { cities, schools, events, currentUser, handleSaveEvent } = useAuth();
 
   const activeCities = cities.filter((c) => {
     if (c.active === false) return false;
@@ -12,6 +12,39 @@ export const EventInputForm = ({ editingEvent, onCancelEdit }) => {
     }
     return true;
   });
+
+  // Hitung sekolah yang sudah terlaksana event di kota currentUser
+  // Logika: sekolah dikecualikan dari dropdown jika:
+  //   - Ada event dengan schoolName tersebut di kota yang sama
+  //   - KECUALI: sekolah yang sedang diedit (boleh tetap tampil)
+  //   - KECUALI: sekolah dengan durasi "2 Hari" tapi baru ada Hari-1 (masih perlu Hari-2)
+  const usedSchoolNames = (() => {
+    const userCity = currentUser?.city;
+    const cityEvents = events.filter(e => e.cityName === userCity);
+
+    // Grup event per nama sekolah
+    const schoolEventMap = {};
+    cityEvents.forEach(evt => {
+      if (!schoolEventMap[evt.schoolName]) schoolEventMap[evt.schoolName] = [];
+      schoolEventMap[evt.schoolName].push(evt);
+    });
+
+    const excluded = new Set();
+    Object.entries(schoolEventMap).forEach(([schoolName, evts]) => {
+      // Jika sedang mengedit event dari sekolah ini, jangan dikecualikan
+      if (editingEvent && editingEvent.schoolName === schoolName) return;
+
+      const hasFullday    = evts.some(e => e.session === 'Fullday');
+      const hasHari1      = evts.some(e => e.session === 'Hari-1');
+      const hasHari2      = evts.some(e => e.session === 'Hari-2');
+
+      // Sekolah selesai jika: sudah Fullday, atau sudah ada Hari-1 DAN Hari-2
+      const isCompleted   = hasFullday || (hasHari1 && hasHari2);
+
+      if (isCompleted) excluded.add(schoolName);
+    });
+    return excluded;
+  })();
 
   const [formData, setFormData] = useState({
     schoolName: '',
@@ -189,9 +222,24 @@ export const EventInputForm = ({ editingEvent, onCancelEdit }) => {
 
           {/* Nama Sekolah */}
           <div className="space-y-2">
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 flex items-center">
-              <School className="w-3.5 h-3.5 mr-1.5 text-emerald-400" />
-              Nama Sekolah <span className="text-rose-400 ml-1">*</span>
+            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 flex items-center justify-between">
+              <span className="flex items-center">
+                <School className="w-3.5 h-3.5 mr-1.5 text-emerald-400" />
+                Nama Sekolah <span className="text-rose-400 ml-1">*</span>
+              </span>
+              {(() => {
+                const totalCity = schools.filter(s => s.cityId === formData.cityId && s.active !== false).length;
+                const remaining = totalCity - usedSchoolNames.size;
+                return totalCity > 0 ? (
+                  <span className={`text-[10px] px-2 py-0.5 rounded border font-semibold ${
+                    remaining > 0
+                      ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                      : 'bg-amber-500/10 text-amber-400 border-amber-500/30'
+                  }`}>
+                    {remaining > 0 ? `${remaining} sekolah tersisa` : 'Semua sekolah terlaksana'}
+                  </span>
+                ) : null;
+              })()}
             </label>
             <select
               required
@@ -207,9 +255,12 @@ export const EventInputForm = ({ editingEvent, onCancelEdit }) => {
               className="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl px-4 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all appearance-none cursor-pointer"
             >
               <option value="" disabled>-- Pilih Target Sekolah --</option>
-              {schools.filter(s => s.cityId === formData.cityId && s.active !== false).map(school => (
-                <option key={school.id} value={school.name}>{school.name}</option>
-              ))}
+              {schools
+                .filter(s => s.cityId === formData.cityId && s.active !== false && !usedSchoolNames.has(s.name))
+                .map(school => (
+                  <option key={school.id} value={school.name}>{school.name}</option>
+                ))
+              }
             </select>
           </div>
 
