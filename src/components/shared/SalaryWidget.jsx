@@ -18,18 +18,26 @@ export const SalaryWidget = ({ role = 'operator' }) => {
       }
     }
 
-    // 2. Kumpulkan ID event yang sudah dicairkan untuk currentUser ini
+    // 2. Kumpulkan ID event yang sudah dicairkan untuk currentUser ini (format baru)
     const paidEventIds = new Set(
       payouts
         .filter(p => p.userId === currentUser?.id)
         .flatMap(p => p.details?.eventIds || [])
     );
 
+    // Backward compatibility: payout lama tidak menyimpan eventIds
+    const userHasOldFormatPayout = payouts
+      .filter(p => p.userId === currentUser?.id)
+      .some(p => !p.details?.eventIds);
+
     // 3. Hitung hanya event di kota yang sama yang BELUM dicairkan untuk user ini
     const userCity = currentUser?.city;
     
     const cityEventsUnpaid = events.filter((evt) => {
-      return evt.cityName === userCity && !paidEventIds.has(evt.id);
+      if (evt.cityName !== userCity) return false;
+      if (paidEventIds.has(evt.id)) return false;
+      if (userHasOldFormatPayout && evt.payoutId) return false;
+      return true;
     });
 
     const totalStudents = cityEventsUnpaid.reduce((sum, evt) => {

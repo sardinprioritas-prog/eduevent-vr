@@ -20,18 +20,30 @@ export const AdminSalaryDisbursement = () => {
       }
     }
 
-    // Kumpulkan ID event yang sudah dicairkan KHUSUS untuk user ini
-    // (setiap payout menyimpan details.eventIds agar tidak bentrok antar user satu kota)
+    // Kumpulkan ID event yang sudah dicairkan KHUSUS untuk user ini (format baru)
     const paidEventIds = new Set(
       payouts
         .filter(p => p.userId === user.id)
         .flatMap(p => p.details?.eventIds || [])
     );
 
-    // Event belum dibayar = event di kota user yang belum masuk payout user ini
-    const unpaidEvents = events.filter(
-      (evt) => evt.cityName === user.city && !paidEventIds.has(evt.id)
-    );
+    // Backward compatibility: payout lama (sebelum fix) tidak menyimpan eventIds.
+    // Jika user punya payout lama, gunakan evt.payoutId sebagai penanda tambahan
+    // agar event yang sudah dibayar tidak dihitung ulang.
+    const userHasOldFormatPayout = payouts
+      .filter(p => p.userId === user.id)
+      .some(p => !p.details?.eventIds);
+
+    // Event belum dibayar:
+    //   - Harus di kota yang sama
+    //   - Belum ada di payout baru user ini (format baru)
+    //   - Jika user punya payout lama: event juga tidak boleh sudah bertanda payout_id
+    const unpaidEvents = events.filter((evt) => {
+      if (evt.cityName !== user.city) return false;
+      if (paidEventIds.has(evt.id)) return false;
+      if (userHasOldFormatPayout && evt.payoutId) return false;
+      return true;
+    });
 
     const totalStudents = unpaidEvents.reduce((sum, evt) => sum + (parseInt(evt.participatingStudents, 10) || 0), 0);
     const uniqueDates = new Set(unpaidEvents.map(evt => evt.date));
