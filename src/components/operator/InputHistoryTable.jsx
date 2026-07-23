@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/useAuth';
-import { History, Search, Edit3, Trash2, Calendar, MapPin, Users, Award } from 'lucide-react';
+import { History, Search, Edit3, Trash2, Calendar, MapPin, Users, Award, CheckCircle } from 'lucide-react';
 
 export const InputHistoryTable = ({ onEditEvent }) => {
   const { events, handleDeleteEvent } = useAuth();
@@ -57,6 +57,7 @@ export const InputHistoryTable = ({ onEditEvent }) => {
                 <th className="py-3 px-4">Durasi & Sesi</th>
                 <th className="py-3 px-4 text-center">Partisipan / Dapodik</th>
                 <th className="py-3 px-4 text-center">Konversi %</th>
+                <th className="py-3 px-4 text-center">Status Fee</th>
                 <th className="py-3 px-4 text-right">Aksi</th>
               </tr>
             </thead>
@@ -117,6 +118,19 @@ export const InputHistoryTable = ({ onEditEvent }) => {
                       >
                         {rate}%
                       </span>
+                    </td>
+
+                    <td className="py-4 px-4 text-center">
+                      {item.payoutId ? (
+                        <span className="inline-flex items-center px-2 py-1 rounded-md text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                          <CheckCircle className="w-3 h-3 mr-1" />
+                          Sudah Cair
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center px-2 py-1 rounded-md text-[10px] font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                          Belum Cair
+                        </span>
+                      )}
                     </td>
 
                     <td className="py-3 px-4 text-right">

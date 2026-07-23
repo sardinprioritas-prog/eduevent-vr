@@ -67,6 +67,7 @@ const toAppEvent = (row) => ({
   dapodikStudents: row.dapodik_students,
   participatingStudents: row.participating_students,
   operatorName: row.operator_name,
+  payoutId: row.payout_id,
   createdAt: row.created_at,
 });
 
@@ -101,6 +102,7 @@ const toDbEvent = (evt) => ({
   dapodik_students: evt.dapodikStudents,
   participating_students: evt.participatingStudents,
   operator_name: evt.operatorName,
+  payout_id: evt.payoutId || null,
 });
 
 const toDbUser = (u) => ({
@@ -232,6 +234,53 @@ export const sbDeleteEvent = async (id) => {
   const { error } = await supabase.from('events').delete().eq('id', id);
   if (error) throw error;
   return sbGetEvents();
+};
+
+// ============================================================
+// PAYOUTS API
+// ============================================================
+export const sbGetPayouts = async () => {
+  const { data, error } = await supabase
+    .from('payouts')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return data.map(row => ({
+    id: row.id,
+    userId: row.user_id,
+    amount: row.amount,
+    details: row.details,
+    createdAt: row.created_at
+  }));
+};
+
+export const sbSavePayout = async (payout, eventIdsToUpdate) => {
+  const dbData = {
+    id: payout.id || `pyt-${Date.now()}`,
+    user_id: payout.userId,
+    amount: payout.amount,
+    details: payout.details
+  };
+
+  // 1. Simpan payout
+  const { error: payoutError } = await supabase
+    .from('payouts')
+    .upsert(dbData, { onConflict: 'id' });
+    
+  if (payoutError) throw payoutError;
+
+  // 2. Update events dengan payout_id tersebut
+  if (eventIdsToUpdate && eventIdsToUpdate.length > 0) {
+    const { error: updateError } = await supabase
+      .from('events')
+      .update({ payout_id: dbData.id })
+      .in('id', eventIdsToUpdate);
+      
+    if (updateError) throw updateError;
+  }
+
+  return { payouts: await sbGetPayouts(), events: await sbGetEvents() };
 };
 
 // ============================================================

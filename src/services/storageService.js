@@ -6,6 +6,7 @@ const KEYS = {
   EVENTS: 'eduevent_events',
   SCHOOLS: 'eduevent_schools',
   SALARY_SETTINGS: 'eduevent_salary_settings',
+  PAYOUTS: 'eduevent_payouts',
   ACTIVE_USER: 'eduevent_active_user',
 };
 
@@ -32,6 +33,9 @@ export const initStorage = () => {
   }
   if (!localStorage.getItem(KEYS.SALARY_SETTINGS)) {
     localStorage.setItem(KEYS.SALARY_SETTINGS, JSON.stringify(INITIAL_USER_SALARY_SETTINGS));
+  }
+  if (!localStorage.getItem(KEYS.PAYOUTS)) {
+    localStorage.setItem(KEYS.PAYOUTS, JSON.stringify([]));
   }
 };
 
@@ -184,4 +188,10 @@ export const saveSalarySettings = (setting) => {
   }
   localStorage.setItem(KEYS.SALARY_SETTINGS, JSON.stringify(settings));
   return settings;
+};
+
+// Payouts API (Local Storage Fallback)
+export const getPayouts = () => {
+  initStorage();
+  return JSON.parse(localStorage.getItem(KEYS.PAYOUTS) || '[]');
 };

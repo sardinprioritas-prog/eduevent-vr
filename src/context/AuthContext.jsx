@@ -17,6 +17,7 @@ import {
   deleteSchool as removeSchool,
   getSalarySettings,
   saveSalarySettings as storeSalarySettings,
+  getPayouts,
 } from '../services/storageService';
 
 import {
@@ -34,6 +35,8 @@ import {
   sbDeleteSchool,
   sbGetSalarySettings,
   sbSaveSalarySettings,
+  sbGetPayouts,
+  sbSavePayout,
   subscribeToEvents,
 } from '../services/supabaseService';
 
@@ -48,6 +51,7 @@ export const AuthProvider = ({ children }) => {
   const [events, setEvents]             = useState([]);
   const [schools, setSchools]           = useState([]);
   const [salarySettings, setSalarySettings] = useState(null);
+  const [payouts, setPayouts]           = useState([]);
   const [toast, setToast]               = useState(null);
   const [kadinCity, setKadinCity]       = useState('Bone');
 
@@ -98,12 +102,13 @@ export const AuthProvider = ({ children }) => {
 
     if (isSupabaseConfigured) {
       try {
-        const [loadedCities, loadedUsers, loadedEvents, loadedSchools, loadedSalarySettings] = await Promise.all([
+        const [loadedCities, loadedUsers, loadedEvents, loadedSchools, loadedSalarySettings, loadedPayouts] = await Promise.all([
           sbGetCities(),
           sbGetUsers(),
           sbGetEvents(),
           sbGetSchools(),
           sbGetSalarySettings(),
+          sbGetPayouts(),
         ]);
 
         setCities(loadedCities);
@@ -111,6 +116,7 @@ export const AuthProvider = ({ children }) => {
         setEvents(loadedEvents);
         setSchools(loadedSchools);
         setSalarySettings(loadedSalarySettings || getSalarySettings()); // fallback to local if null
+        setPayouts(loadedPayouts);
         setIsOnline(true);
         setDbMode('supabase');
 
@@ -119,6 +125,7 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem('eduevent_users', JSON.stringify(loadedUsers));
         localStorage.setItem('eduevent_events', JSON.stringify(loadedEvents));
         localStorage.setItem('eduevent_schools', JSON.stringify(loadedSchools));
+        localStorage.setItem('eduevent_payouts', JSON.stringify(loadedPayouts));
         if (loadedSalarySettings) {
           localStorage.setItem('eduevent_salary_settings', JSON.stringify(loadedSalarySettings));
         }
@@ -147,6 +154,7 @@ export const AuthProvider = ({ children }) => {
     const loadedEvents     = getEvents();
     const loadedSchools    = getSchools();
     const loadedSalary     = getSalarySettings();
+    const loadedPayouts    = getPayouts();
     const loadedActiveUser = getActiveUser();
 
     setUsers(loadedUsers);
@@ -154,6 +162,7 @@ export const AuthProvider = ({ children }) => {
     setEvents(loadedEvents);
     setSchools(loadedSchools);
     setSalarySettings(loadedSalary);
+    setPayouts(loadedPayouts);
     if (loadedActiveUser) {
       setCurrentUser(loadedActiveUser);
       if (loadedActiveUser.city) {
@@ -370,6 +379,32 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // ============================================================
+  // PAYOUT HANDLERS
+  // ============================================================
+  const handleDisburseFee = async (userId, amount, details, eventIdsToUpdate) => {
+    try {
+      if (dbMode === 'supabase') {
+        const { payouts: updatedPayouts, events: updatedEvents } = await sbSavePayout({
+          userId,
+          amount,
+          details
+        }, eventIdsToUpdate);
+        
+        setPayouts(updatedPayouts);
+        setEvents(updatedEvents);
+        localStorage.setItem('eduevent_payouts', JSON.stringify(updatedPayouts));
+        localStorage.setItem('eduevent_events', JSON.stringify(updatedEvents));
+      } else {
+        showToast('Fitur pencairan hanya tersedia dalam mode Supabase', 'warning');
+      }
+    } catch (err) {
+      console.error(err);
+      showToast('Gagal memproses pencairan: ' + err.message, 'error');
+      throw err;
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -379,6 +414,7 @@ export const AuthProvider = ({ children }) => {
         events,
         schools,
         salarySettings,
+        payouts,
         toast,
         showToast,
         switchRole,
@@ -401,6 +437,7 @@ export const AuthProvider = ({ children }) => {
         handleSaveSchool,
         handleDeleteSchool,
         handleSaveSalarySettings,
+        handleDisburseFee,
       }}
     >
       {children}

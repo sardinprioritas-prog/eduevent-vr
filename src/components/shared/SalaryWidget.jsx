@@ -21,20 +21,8 @@ export const SalaryWidget = ({ role = 'operator' }) => {
     // 2. Hitung jumlah partisipan & hari event di kota yang sama pada minggu ini
     const userCity = currentUser?.city;
     
-    // Tentukan hari Senin s/d Minggu untuk minggu ini
-    const now = new Date();
-    const dayOfWeek = now.getDay() === 0 ? 7 : now.getDay(); // 1 = Senin, 7 = Minggu
-    const startOfWeek = new Date(now);
-    startOfWeek.setDate(now.getDate() - dayOfWeek + 1);
-    startOfWeek.setHours(0, 0, 0, 0);
-
-    const endOfWeek = new Date(startOfWeek);
-    endOfWeek.setDate(startOfWeek.getDate() + 6);
-    endOfWeek.setHours(23, 59, 59, 999);
-
     const cityEventsThisWeek = events.filter((evt) => {
-      const evtDate = new Date(evt.date);
-      return evt.cityName === userCity && evtDate >= startOfWeek && evtDate <= endOfWeek;
+      return evt.cityName === userCity && !evt.payoutId;
     });
 
     const totalStudents = cityEventsThisWeek.reduce((sum, evt) => {
@@ -80,13 +68,13 @@ export const SalaryWidget = ({ role = 'operator' }) => {
           </div>
           <div>
             <h2 className="text-lg font-bold text-slate-100">Estimasi Fee Mingguan</h2>
-            <p className="text-xs text-slate-400">Total partisipan di wilayah {currentUser?.city || 'Anda'} minggu ini</p>
+            <p className="text-xs text-slate-400">Total akumulasi fee belum cair di wilayah {currentUser?.city || 'Anda'}</p>
           </div>
         </div>
         {role === 'pioneer' && (
           <div className="text-right">
             <div className="text-sm font-bold text-indigo-400">{uniqueEventDays} Hari Aktif</div>
-            <div className="text-xs text-slate-400">Minggu Ini</div>
+            <div className="text-xs text-slate-400">Belum Dicairkan</div>
           </div>
         )}
       </div>

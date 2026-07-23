@@ -53,10 +53,21 @@ CREATE TABLE IF NOT EXISTS events (
   dapodik_students      INTEGER NOT NULL DEFAULT 0 CHECK (dapodik_students >= 0),
   participating_students INTEGER NOT NULL DEFAULT 0 CHECK (participating_students >= 0),
   operator_name         TEXT,
+  payout_id             TEXT,
   created_at            TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- 5. TABLE: user_salary_settings (Pengaturan Gaji & Fee Personal)
+-- 5. TABLE: payouts (Riwayat Pencairan Gaji/Fee)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS payouts (
+  id             TEXT PRIMARY KEY DEFAULT ('pyt-' || floor(extract(epoch from now()) * 1000)::text),
+  user_id        TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  amount         INTEGER NOT NULL DEFAULT 0,
+  details        JSONB,
+  created_at     TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- 6. TABLE: user_salary_settings (Pengaturan Gaji & Fee Personal)
 -- ============================================================
 CREATE TABLE IF NOT EXISTS user_salary_settings (
   user_id          TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
@@ -122,6 +133,13 @@ ON CONFLICT (id) DO NOTHING;
 INSERT INTO user_salary_settings (user_id, fee, bonus) VALUES
   ('usr-1', 1000, 500)
 ON CONFLICT (user_id) DO NOTHING;
+
+-- Menambahkan Foreign Key untuk payout_id pada events
+ALTER TABLE events
+  ADD CONSTRAINT fk_events_payout_id
+  FOREIGN KEY (payout_id)
+  REFERENCES payouts(id)
+  ON DELETE SET NULL;
 
 -- ============================================================
 -- INDEXES untuk performa query
