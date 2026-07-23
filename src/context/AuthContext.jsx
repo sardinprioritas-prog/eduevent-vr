@@ -15,6 +15,8 @@ import {
   getSchools,
   saveSchool,
   deleteSchool as removeSchool,
+  getSalarySettings,
+  saveSalarySettings as storeSalarySettings,
 } from '../services/storageService';
 
 import {
@@ -30,6 +32,8 @@ import {
   sbGetSchools,
   sbSaveSchool,
   sbDeleteSchool,
+  sbGetSalarySettings,
+  sbSaveSalarySettings,
   subscribeToEvents,
 } from '../services/supabaseService';
 
@@ -43,6 +47,7 @@ export const AuthProvider = ({ children }) => {
   const [cities, setCities]             = useState([]);
   const [events, setEvents]             = useState([]);
   const [schools, setSchools]           = useState([]);
+  const [salarySettings, setSalarySettings] = useState(null);
   const [toast, setToast]               = useState(null);
   const [kadinCity, setKadinCity]       = useState('Bone');
 
@@ -93,17 +98,19 @@ export const AuthProvider = ({ children }) => {
 
     if (isSupabaseConfigured) {
       try {
-        const [loadedCities, loadedUsers, loadedEvents, loadedSchools] = await Promise.all([
+        const [loadedCities, loadedUsers, loadedEvents, loadedSchools, loadedSalarySettings] = await Promise.all([
           sbGetCities(),
           sbGetUsers(),
           sbGetEvents(),
           sbGetSchools(),
+          sbGetSalarySettings(),
         ]);
 
         setCities(loadedCities);
         setUsers(loadedUsers);
         setEvents(loadedEvents);
         setSchools(loadedSchools);
+        setSalarySettings(loadedSalarySettings || getSalarySettings()); // fallback to local if null
         setIsOnline(true);
         setDbMode('supabase');
 
@@ -112,6 +119,9 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem('eduevent_users', JSON.stringify(loadedUsers));
         localStorage.setItem('eduevent_events', JSON.stringify(loadedEvents));
         localStorage.setItem('eduevent_schools', JSON.stringify(loadedSchools));
+        if (loadedSalarySettings) {
+          localStorage.setItem('eduevent_salary_settings', JSON.stringify(loadedSalarySettings));
+        }
 
         // Set active user if there is a session
         const loadedActiveUser = getActiveUser();
@@ -136,12 +146,14 @@ export const AuthProvider = ({ children }) => {
     const loadedCities     = getCities();
     const loadedEvents     = getEvents();
     const loadedSchools    = getSchools();
+    const loadedSalary     = getSalarySettings();
     const loadedActiveUser = getActiveUser();
 
     setUsers(loadedUsers);
     setCities(loadedCities);
     setEvents(loadedEvents);
     setSchools(loadedSchools);
+    setSalarySettings(loadedSalary);
     if (loadedActiveUser) {
       setCurrentUser(loadedActiveUser);
       if (loadedActiveUser.city) {
@@ -300,6 +312,24 @@ export const AuthProvider = ({ children }) => {
   };
 
   // ============================================================
+  // MANAJEMEN PENGATURAN GAJI & FEE
+  // ============================================================
+  const handleSaveSalarySettings = async (settingsData) => {
+    try {
+      if (isOnline) {
+        const saved = await sbSaveSalarySettings(settingsData);
+        setSalarySettings(storeSalarySettings(saved));
+      } else {
+        setSalarySettings(storeSalarySettings(settingsData));
+      }
+      showToast('Pengaturan gaji dan bonus berhasil disimpan', 'success');
+    } catch (err) {
+      console.error(err);
+      showToast('Gagal menyimpan pengaturan: ' + err.message, 'error');
+    }
+  };
+
+  // ============================================================
   // EVENT HANDLERS (Hybrid CRUD)
   // ============================================================
   const handleSaveEvent = async (eventData) => {
@@ -344,6 +374,7 @@ export const AuthProvider = ({ children }) => {
         cities,
         events,
         schools,
+        salarySettings,
         toast,
         showToast,
         switchRole,
@@ -365,6 +396,7 @@ export const AuthProvider = ({ children }) => {
         handleDeleteUser,
         handleSaveSchool,
         handleDeleteSchool,
+        handleSaveSalarySettings,
       }}
     >
       {children}

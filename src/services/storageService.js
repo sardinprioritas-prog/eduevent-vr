@@ -1,10 +1,11 @@
-import { INITIAL_CITIES, INITIAL_USERS, INITIAL_EVENTS, INITIAL_SCHOOLS } from '../data/mockData';
+import { INITIAL_CITIES, INITIAL_USERS, INITIAL_EVENTS, INITIAL_SCHOOLS, INITIAL_SALARY_SETTINGS } from '../data/mockData';
 
 const KEYS = {
   CITIES: 'eduevent_cities',
   USERS: 'eduevent_users',
   EVENTS: 'eduevent_events',
   SCHOOLS: 'eduevent_schools',
+  SALARY_SETTINGS: 'eduevent_salary_settings',
   ACTIVE_USER: 'eduevent_active_user',
 };
 
@@ -28,6 +29,9 @@ export const initStorage = () => {
   }
   if (!localStorage.getItem(KEYS.SCHOOLS)) {
     localStorage.setItem(KEYS.SCHOOLS, JSON.stringify(INITIAL_SCHOOLS));
+  }
+  if (!localStorage.getItem(KEYS.SALARY_SETTINGS)) {
+    localStorage.setItem(KEYS.SALARY_SETTINGS, JSON.stringify(INITIAL_SALARY_SETTINGS));
   }
 };
 
@@ -151,10 +155,26 @@ export const deleteSchool = (id) => {
 // Active User Session API
 export const getActiveUser = () => {
   initStorage();
-  return JSON.parse(localStorage.getItem(KEYS.ACTIVE_USER) || 'null');
+  const data = localStorage.getItem(KEYS.ACTIVE_USER);
+  return data ? JSON.parse(data) : null;
 };
 
 export const setActiveUserSession = (user) => {
-  localStorage.setItem(KEYS.ACTIVE_USER, JSON.stringify(user));
-  return user;
+  if (user) {
+    localStorage.setItem(KEYS.ACTIVE_USER, JSON.stringify(user));
+  } else {
+    localStorage.removeItem(KEYS.ACTIVE_USER);
+  }
+};
+
+// Salary Settings API
+export const getSalarySettings = () => {
+  initStorage();
+  const data = localStorage.getItem(KEYS.SALARY_SETTINGS);
+  return data ? JSON.parse(data) : INITIAL_SALARY_SETTINGS;
+};
+
+export const saveSalarySettings = (settings) => {
+  localStorage.setItem(KEYS.SALARY_SETTINGS, JSON.stringify(settings));
+  return settings;
 };

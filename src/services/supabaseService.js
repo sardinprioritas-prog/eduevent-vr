@@ -49,6 +49,16 @@ const toAppSchool = (row) => ({
   createdAt: row.created_at,
 });
 
+const toAppSalarySettings = (row) => ({
+  id: row.id,
+  operatorFee: row.operator_fee,
+  operatorBonus: row.operator_bonus,
+  pioneerFee: row.pioneer_fee,
+  pioneerBonus: row.pioneer_bonus,
+  bonusThreshold: row.bonus_threshold,
+  updatedAt: row.updated_at,
+});
+
 const toAppEvent = (row) => ({
   id: row.id,
   schoolName: row.school_name,
@@ -74,6 +84,16 @@ const toDbSchool = (sch) => ({
   demo_date: sch.demoDate,
   event_date: sch.eventDate,
   active: sch.active,
+});
+
+const toDbSalarySettings = (settings) => ({
+  id: settings.id || 'default',
+  operator_fee: settings.operatorFee,
+  operator_bonus: settings.operatorBonus,
+  pioneer_fee: settings.pioneerFee,
+  pioneer_bonus: settings.pioneerBonus,
+  bonus_threshold: settings.bonusThreshold,
+  updated_at: new Date().toISOString(),
 });
 
 const toDbEvent = (evt) => ({
@@ -251,6 +271,36 @@ export const sbDeleteSchool = async (id) => {
   const { error } = await supabase.from('schools').delete().eq('id', id);
   if (error) throw error;
   return id;
+};
+
+// ============================================================
+// SALARY SETTINGS API
+// ============================================================
+export const sbGetSalarySettings = async () => {
+  const { data, error } = await supabase
+    .from('salary_settings')
+    .select('*')
+    .eq('id', 'default')
+    .single();
+  
+  if (error && error.code !== 'PGRST116') {
+    // Ignore not found error (PGRST116) and return default object if missing
+    throw error;
+  }
+  
+  return data ? toAppSalarySettings(data) : null;
+};
+
+export const sbSaveSalarySettings = async (settings) => {
+  const dbData = toDbSalarySettings(settings);
+  const { data, error } = await supabase
+    .from('salary_settings')
+    .upsert(dbData, { onConflict: 'id' })
+    .select()
+    .single();
+
+  if (error) throw error;
+  return toAppSalarySettings(data);
 };
 
 // ============================================================

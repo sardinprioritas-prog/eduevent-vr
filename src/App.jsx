@@ -10,6 +10,8 @@ import { InputHistoryTable } from './components/operator/InputHistoryTable';
 import { CityManagement } from './components/admin/CityManagement';
 import { UserManagement } from './components/admin/UserManagement';
 import { SchoolManagement } from './components/admin/SchoolManagement';
+import { SalarySettings } from './components/admin/SalarySettings';
+import { SalaryWidget } from './components/shared/SalaryWidget';
 import { ExecutiveDashboard } from './components/executive/ExecutiveDashboard';
 import { LandingPage } from './components/LandingPage';
 import { Login } from './components/auth/Login';
@@ -44,6 +46,12 @@ const DashboardLayout = ({ role, children }) => {
       dot: 'bg-amber-500',
       ping: 'bg-amber-500',
     },
+    pioneer: {
+      label: 'PIONEER',
+      desc: 'Pantau pencapaian target dan estimasi komisi mingguan.',
+      dot: 'bg-indigo-500',
+      ping: 'bg-indigo-500',
+    }
   };
 
   const rc = roleConfig[role] || roleConfig.operator;
@@ -120,6 +128,7 @@ const OperatorView = () => {
   const [editingEvent, setEditingEvent] = useState(null);
   return (
     <div className="space-y-8">
+      <SalaryWidget role="operator" />
       <EventInputForm
         editingEvent={editingEvent}
         onCancelEdit={() => setEditingEvent(null)}
@@ -134,8 +143,17 @@ const OperatorView = () => {
   );
 };
 
+const PioneerView = () => {
+  return (
+    <div className="space-y-8">
+      <SalaryWidget role="pioneer" />
+    </div>
+  );
+};
+
 const AdminView = () => (
   <div className="space-y-8">
+    <SalarySettings />
     <CityManagement />
     <UserManagement />
     <SchoolManagement />
@@ -154,6 +172,7 @@ const AppRoutes = () => {
       <Route path="/login/admin" element={currentUser ? <Navigate to="/admin" /> : <Login role="admin" />} />
       <Route path="/login/pimpinan" element={currentUser ? <Navigate to="/pimpinan" /> : <Login role="pimpinan" />} />
       <Route path="/login/kadin" element={currentUser ? <Navigate to="/kadin" /> : <Login role="kadin" />} />
+      <Route path="/login/pioneer" element={currentUser ? <Navigate to="/pioneer" /> : <Login role="pioneer" />} />
 
       {/* Protected Dashboards */}
       <Route path="/operator" element={
@@ -177,6 +196,12 @@ const AppRoutes = () => {
       <Route path="/kadin" element={
         <ProtectedRoute role="kadin">
           <DashboardLayout role="kadin"><ExecutiveDashboard /></DashboardLayout>
+        </ProtectedRoute>
+      } />
+
+      <Route path="/pioneer" element={
+        <ProtectedRoute role="pioneer">
+          <DashboardLayout role="pioneer"><PioneerView /></DashboardLayout>
         </ProtectedRoute>
       } />
 
