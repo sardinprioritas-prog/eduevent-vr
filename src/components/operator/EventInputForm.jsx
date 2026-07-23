@@ -5,12 +5,18 @@ import { PlusCircle, Save, X, Calendar, MapPin, School, Clock, Users, CheckCircl
 export const EventInputForm = ({ editingEvent, onCancelEdit }) => {
   const { cities, schools, currentUser, handleSaveEvent } = useAuth();
 
-  const activeCities = cities.filter((c) => c.active !== false);
+  const activeCities = cities.filter((c) => {
+    if (c.active === false) return false;
+    if (currentUser?.role === 'operator' || currentUser?.role === 'pioneer') {
+      return c.name === currentUser?.city;
+    }
+    return true;
+  });
 
   const [formData, setFormData] = useState({
     schoolName: '',
     date: new Date().toISOString().split('T')[0],
-    cityId: activeCities[0]?.id || '',
+    cityId: activeCities.length > 0 ? activeCities[0].id : '',
     duration: '1 Hari',
     session: 'Fullday',
     dapodikStudents: '',
@@ -170,7 +176,8 @@ export const EventInputForm = ({ editingEvent, onCancelEdit }) => {
               onChange={(e) => {
                 setFormData({ ...formData, cityId: e.target.value, schoolName: '' });
               }}
-              className="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl px-4 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all appearance-none cursor-pointer"
+              disabled={currentUser?.role === 'operator' || currentUser?.role === 'pioneer'}
+              className="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl px-4 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all appearance-none cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {activeCities.map((city) => (
                 <option key={city.id} value={city.id}>
