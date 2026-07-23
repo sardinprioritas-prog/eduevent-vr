@@ -1,9 +1,11 @@
 import React, { useState, useMemo } from 'react';
 import { useAuth } from '../../context/useAuth';
-import { Wallet, Target, Award, CheckCircle } from 'lucide-react';
+import { Wallet, Target, Award, CheckCircle, FileText } from 'lucide-react';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 
 export const AdminSalaryDisbursement = () => {
-  const { users, events, salarySettings, payouts, handleDisburseFee } = useAuth();
+  const { users, events, salarySettings, payouts, handleDisburseFee, showToast } = useAuth();
   const [processingId, setProcessingId] = useState(null);
 
   // Helper to calculate unpaid fee for a specific user
@@ -126,16 +128,68 @@ export const AdminSalaryDisbursement = () => {
     }
   };
 
+  const exportToPDF = () => {
+    if (usersWithUnpaidFees.length === 0) {
+      showToast('Tidak ada data untuk diekspor', 'warning');
+      return;
+    }
+
+    const doc = new jsPDF('landscape');
+
+    doc.setFontSize(15);
+    doc.setTextColor(30, 41, 59);
+    doc.text('LAPORAN PENCAIRAN FEE — OPERATOR & PIONEER', 14, 15);
+
+    doc.setFontSize(9);
+    doc.setTextColor(100, 116, 139);
+    doc.text(`Tanggal Cetak: ${new Date().toLocaleDateString('id-ID')}  |  Total Anggota: ${usersWithUnpaidFees.length}`, 14, 22);
+
+    const columns = ['No', 'Nama', 'Peran', 'Wilayah', 'Partisipan', 'Fee Dasar', 'Bonus', 'Total Fee', 'Status'];
+    const rows = usersWithUnpaidFees.map((u, i) => [
+      i + 1,
+      u.name,
+      u.role.toUpperCase(),
+      u.city,
+      `${u.feeData.totalStudents} siswa`,
+      `Rp ${u.feeData.baseSalary.toLocaleString('id-ID')}`,
+      `Rp ${u.feeData.bonusSalary.toLocaleString('id-ID')}`,
+      `Rp ${u.feeData.totalSalary.toLocaleString('id-ID')}`,
+      u.feeData.totalSalary > 0 ? 'Belum Cair' : 'Lunas',
+    ]);
+
+    doc.autoTable({
+      head: [columns],
+      body: rows,
+      startY: 28,
+      theme: 'grid',
+      headStyles: { fillColor: [16, 185, 129], textColor: [255, 255, 255], fontStyle: 'bold' },
+      styles: { fontSize: 9 },
+      columnStyles: { 0: { halign: 'center', cellWidth: 10 } },
+    });
+
+    doc.save(`Laporan_Pencairan_Fee_${new Date().toISOString().split('T')[0]}.pdf`);
+    showToast('Berhasil mengekspor Laporan Pencairan PDF', 'success');
+  };
+
   return (
     <div className="glass-card p-6 rounded-2xl border border-slate-800">
-      <div className="flex items-center mb-6">
-        <div className="p-2.5 bg-emerald-500/10 text-emerald-400 rounded-xl border border-emerald-500/20 mr-3">
-          <Wallet className="w-5 h-5" />
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center">
+          <div className="p-2.5 bg-emerald-500/10 text-emerald-400 rounded-xl border border-emerald-500/20 mr-3">
+            <Wallet className="w-5 h-5" />
+          </div>
+          <div>
+            <h2 className="text-xl font-bold text-slate-100">Pencairan Fee</h2>
+            <p className="text-sm text-slate-400">Daftar Operator dan Pioneer beserta akumulasi fee yang belum dicairkan.</p>
+          </div>
         </div>
-        <div>
-          <h2 className="text-xl font-bold text-slate-100">Pencairan Fee</h2>
-          <p className="text-sm text-slate-400">Daftar Operator dan Pioneer beserta akumulasi fee yang belum dicairkan.</p>
-        </div>
+        <button
+          onClick={exportToPDF}
+          className="flex items-center px-3.5 py-2 rounded-xl text-xs font-bold bg-rose-600 hover:bg-rose-500 text-white shadow-lg shadow-rose-600/20 transition-all"
+        >
+          <FileText className="w-3.5 h-3.5 mr-1.5" />
+          Ekspor PDF
+        </button>
       </div>
 
       <div className="overflow-x-auto">

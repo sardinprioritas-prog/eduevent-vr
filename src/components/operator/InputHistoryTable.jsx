@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/useAuth';
-import { History, Search, Edit3, Trash2, Calendar, MapPin, Users, Award, CheckCircle } from 'lucide-react';
+import { History, Search, Edit3, Trash2, Calendar, MapPin, Users, Award, CheckCircle, FileText } from 'lucide-react';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 
 export const InputHistoryTable = ({ onEditEvent, readOnly = false }) => {
-  const { events, handleDeleteEvent, currentUser } = useAuth();
+  const { events, handleDeleteEvent, currentUser, showToast } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
 
   // Tampilkan hanya event dari kota currentUser (operator/pioneer)
@@ -12,6 +14,59 @@ export const InputHistoryTable = ({ onEditEvent, readOnly = false }) => {
                           e.cityName.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesSearch && e.cityName === currentUser?.city;
   });
+
+  // Export to PDF
+  const exportToPDF = () => {
+    if (filteredEvents.length === 0) {
+      showToast('Tidak ada data untuk diekspor', 'warning');
+      return;
+    }
+
+    const doc = new jsPDF('landscape');
+
+    doc.setFontSize(15);
+    doc.setTextColor(30, 41, 59);
+    doc.text(`RIWAYAT INPUT KEGIATAN VR — WILAYAH ${(currentUser?.city || '').toUpperCase()}`, 14, 15);
+
+    doc.setFontSize(9);
+    doc.setTextColor(100, 116, 139);
+    doc.text(
+      `Operator: ${currentUser?.name || '-'}  |  Tanggal Cetak: ${new Date().toLocaleDateString('id-ID')}  |  Total: ${filteredEvents.length} kegiatan`,
+      14, 22
+    );
+
+    const columns = ['No', 'Sekolah', 'Kota', 'Tanggal', 'Durasi/Sesi', 'Dapodik', 'Partisipan', 'Konversi', 'Status Fee'];
+    const rows = filteredEvents.map((e, i) => {
+      const rate = e.dapodikStudents > 0
+        ? ((e.participatingStudents / e.dapodikStudents) * 100).toFixed(1)
+        : '0';
+      return [
+        i + 1,
+        e.schoolName,
+        e.cityName,
+        e.date,
+        `${e.duration} (${e.session})`,
+        e.dapodikStudents,
+        e.participatingStudents,
+        `${rate}%`,
+        e.payoutId ? 'Sudah Cair' : 'Belum Cair',
+      ];
+    });
+
+    doc.autoTable({
+      head: [columns],
+      body: rows,
+      startY: 28,
+      theme: 'grid',
+      headStyles: { fillColor: [79, 70, 229], textColor: [255, 255, 255], fontStyle: 'bold' },
+      styles: { fontSize: 8.5 },
+      columnStyles: { 0: { halign: 'center', cellWidth: 10 } },
+    });
+
+    const city = (currentUser?.city || 'Semua').replace(/\s+/g, '_');
+    doc.save(`Riwayat_Kegiatan_VR_${city}_${new Date().toISOString().split('T')[0]}.pdf`);
+    showToast('Berhasil mengekspor Riwayat PDF', 'success');
+  };
 
   return (
     <div className="glass-card rounded-2xl p-6 border border-slate-800 shadow-2xl">
@@ -28,16 +83,27 @@ export const InputHistoryTable = ({ onEditEvent, readOnly = false }) => {
           </div>
         </div>
 
-        {/* Search Bar */}
-        <div className="relative w-full sm:w-64">
-          <Search className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
-          <input
-            type="text"
-            placeholder="Cari sekolah atau kota..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-slate-900 border border-slate-700/80 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-100 focus:outline-none focus:border-indigo-500 transition-all placeholder:text-slate-500"
-          />
+        <div className="flex items-center gap-2">
+          {/* PDF Export */}
+          <button
+            onClick={exportToPDF}
+            className="flex items-center px-3 py-2 rounded-xl text-xs font-bold bg-rose-600 hover:bg-rose-500 text-white shadow-lg shadow-rose-600/20 transition-all"
+          >
+            <FileText className="w-3.5 h-3.5 mr-1.5" />
+            Ekspor PDF
+          </button>
+
+          {/* Search Bar */}
+          <div className="relative w-full sm:w-64">
+            <Search className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Cari sekolah atau kota..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-slate-900 border border-slate-700/80 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-100 focus:outline-none focus:border-indigo-500 transition-all placeholder:text-slate-500"
+            />
+          </div>
         </div>
       </div>
 
