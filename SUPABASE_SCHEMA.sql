@@ -27,7 +27,20 @@ CREATE TABLE IF NOT EXISTS users (
   created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- 3. TABLE: events (Data Kegiatan VR)
+-- 3. TABLE: schools (Target Sekolah)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS schools (
+  id             TEXT PRIMARY KEY DEFAULT ('sch-' || floor(extract(epoch from now()) * 1000)::text),
+  city_id        TEXT NOT NULL REFERENCES cities(id) ON DELETE CASCADE,
+  name           TEXT NOT NULL,
+  student_count  INTEGER NOT NULL DEFAULT 0 CHECK (student_count >= 0),
+  demo_date      DATE,
+  event_date     DATE,
+  active         BOOLEAN NOT NULL DEFAULT true,
+  created_at     TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- 4. TABLE: events (Data Kegiatan VR)
 -- ============================================================
 CREATE TABLE IF NOT EXISTS events (
   id                    TEXT PRIMARY KEY DEFAULT ('evt-' || floor(extract(epoch from now()) * 1000)::text),
@@ -50,17 +63,20 @@ CREATE TABLE IF NOT EXISTS events (
 -- ============================================================
 ALTER TABLE cities ENABLE ROW LEVEL SECURITY;
 ALTER TABLE users  ENABLE ROW LEVEL SECURITY;
+ALTER TABLE schools ENABLE ROW LEVEL SECURITY;
 ALTER TABLE events ENABLE ROW LEVEL SECURITY;
 
 -- Drop existing policies jika re-run
 DROP POLICY IF EXISTS "Allow all cities"  ON cities;
 DROP POLICY IF EXISTS "Allow all users"   ON users;
+DROP POLICY IF EXISTS "Allow all schools" ON schools;
 DROP POLICY IF EXISTS "Allow all events"  ON events;
 
 -- Buka akses penuh via anon key (gunakan untuk MVP/demo)
-CREATE POLICY "Allow all cities"  ON cities  FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Allow all users"   ON users   FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Allow all events"  ON events  FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all cities"  ON cities  FOR ALL USING (true);
+CREATE POLICY "Allow all users"   ON users   FOR ALL USING (true);
+CREATE POLICY "Allow all schools" ON schools FOR ALL USING (true);
+CREATE POLICY "Allow all events"  ON events  FOR ALL USING (true);
 
 -- ============================================================
 -- SEED DATA AWAL (Data Contoh Sulawesi Selatan)

@@ -38,6 +38,17 @@ const toAppUser = (row) => ({
   createdAt: row.created_at,
 });
 
+const toAppSchool = (row) => ({
+  id: row.id,
+  cityId: row.city_id,
+  name: row.name,
+  studentCount: row.student_count,
+  demoDate: row.demo_date,
+  eventDate: row.event_date,
+  active: row.active,
+  createdAt: row.created_at,
+});
+
 const toAppEvent = (row) => ({
   id: row.id,
   schoolName: row.school_name,
@@ -55,6 +66,16 @@ const toAppEvent = (row) => ({
 /**
  * Ubah format app (camelCase) → Supabase row (snake_case)
  */
+const toDbSchool = (sch) => ({
+  id: sch.id,
+  city_id: sch.cityId,
+  name: sch.name,
+  student_count: sch.studentCount,
+  demo_date: sch.demoDate,
+  event_date: sch.eventDate,
+  active: sch.active,
+});
+
 const toDbEvent = (evt) => ({
   id: evt.id,
   school_name: evt.schoolName,
@@ -197,6 +218,39 @@ export const sbDeleteEvent = async (id) => {
   const { error } = await supabase.from('events').delete().eq('id', id);
   if (error) throw error;
   return sbGetEvents();
+};
+
+// ============================================================
+// SCHOOLS API
+// ============================================================
+export const sbGetSchools = async () => {
+  const { data, error } = await supabase
+    .from('schools')
+    .select('*')
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return data.map(toAppSchool);
+};
+
+export const sbSaveSchool = async (school) => {
+  const dbData = toDbSchool(school);
+  if (!school.id) {
+    dbData.id = `sch-${Date.now()}`;
+  }
+  const { data, error } = await supabase
+    .from('schools')
+    .upsert(dbData, { onConflict: 'id' })
+    .select()
+    .single();
+
+  if (error) throw error;
+  return toAppSchool(data);
+};
+
+export const sbDeleteSchool = async (id) => {
+  const { error } = await supabase.from('schools').delete().eq('id', id);
+  if (error) throw error;
+  return id;
 };
 
 // ============================================================

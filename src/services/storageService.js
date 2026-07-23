@@ -1,9 +1,10 @@
-import { INITIAL_CITIES, INITIAL_USERS, INITIAL_EVENTS } from '../data/mockData';
+import { INITIAL_CITIES, INITIAL_USERS, INITIAL_EVENTS, INITIAL_SCHOOLS } from '../data/mockData';
 
 const KEYS = {
   CITIES: 'eduevent_cities',
   USERS: 'eduevent_users',
   EVENTS: 'eduevent_events',
+  SCHOOLS: 'eduevent_schools',
   ACTIVE_USER: 'eduevent_active_user',
 };
 
@@ -24,6 +25,9 @@ export const initStorage = () => {
   }
   if (!localStorage.getItem(KEYS.EVENTS)) {
     localStorage.setItem(KEYS.EVENTS, JSON.stringify(INITIAL_EVENTS));
+  }
+  if (!localStorage.getItem(KEYS.SCHOOLS)) {
+    localStorage.setItem(KEYS.SCHOOLS, JSON.stringify(INITIAL_SCHOOLS));
   }
 };
 
@@ -93,18 +97,15 @@ export const getEvents = () => {
   return JSON.parse(localStorage.getItem(KEYS.EVENTS) || '[]');
 };
 
-export const saveEvent = (event) => {
+export const saveEvent = (eventData) => {
   const events = getEvents();
+  const existingIndex = events.findIndex((e) => e.id === eventData.id);
+
   let updated;
-  if (event.id) {
-    updated = events.map((e) => (e.id === event.id ? { ...e, ...event } : e));
+  if (existingIndex >= 0) {
+    updated = events.map((e, idx) => (idx === existingIndex ? { ...e, ...eventData } : e));
   } else {
-    const newEvent = {
-      ...event,
-      id: `evt-${Date.now()}`,
-      createdAt: new Date().toISOString(),
-    };
-    updated = [newEvent, ...events];
+    updated = [{ ...eventData, id: `evt-${Date.now()}`, createdAt: new Date().toISOString() }, ...events];
   }
   localStorage.setItem(KEYS.EVENTS, JSON.stringify(updated));
   return updated;
@@ -114,6 +115,36 @@ export const deleteEvent = (id) => {
   const events = getEvents();
   const updated = events.filter((e) => e.id !== id);
   localStorage.setItem(KEYS.EVENTS, JSON.stringify(updated));
+  return updated;
+};
+
+// Schools API
+export const getSchools = () => {
+  initStorage();
+  return JSON.parse(localStorage.getItem(KEYS.SCHOOLS) || '[]');
+};
+
+export const saveSchool = (school) => {
+  const schools = getSchools();
+  let updated;
+  if (school.id) {
+    updated = schools.map((s) => (s.id === school.id ? { ...s, ...school } : s));
+  } else {
+    const newSchool = {
+      ...school,
+      id: `sch-${Date.now()}`,
+      active: true,
+    };
+    updated = [newSchool, ...schools];
+  }
+  localStorage.setItem(KEYS.SCHOOLS, JSON.stringify(updated));
+  return updated;
+};
+
+export const deleteSchool = (id) => {
+  const schools = getSchools();
+  const updated = schools.filter((s) => s.id !== id);
+  localStorage.setItem(KEYS.SCHOOLS, JSON.stringify(updated));
   return updated;
 };
 

@@ -7,6 +7,12 @@ export const INITIAL_CITIES = [
   { id: 'city-6', name: 'Maros', province: 'Sulawesi Selatan', active: true },
 ];
 
+export const INITIAL_SCHOOLS = [
+  { id: 'sch-1', cityId: 'city-1', name: 'SMA Negeri 1 Bone', studentCount: 450, demoDate: '2026-07-10', eventDate: '2026-07-15', active: true },
+  { id: 'sch-2', cityId: 'city-2', name: 'SMK Negeri 2 Parepare', studentCount: 300, demoDate: '2026-07-12', eventDate: '2026-07-18', active: true },
+  { id: 'sch-3', cityId: 'city-3', name: 'SMA Negeri 5 Makassar', studentCount: 800, demoDate: '2026-07-20', eventDate: '2026-07-25', active: true },
+];
+
 export const INITIAL_USERS = [
   {
     id: 'usr-1',

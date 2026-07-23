@@ -12,6 +12,9 @@ import {
   deleteUser as removeUser,
   saveEvent,
   deleteEvent as removeEvent,
+  getSchools,
+  saveSchool,
+  deleteSchool as removeSchool,
 } from '../services/storageService';
 
 import {
@@ -24,6 +27,9 @@ import {
   sbGetEvents,
   sbSaveEvent,
   sbDeleteEvent,
+  sbGetSchools,
+  sbSaveSchool,
+  sbDeleteSchool,
   subscribeToEvents,
 } from '../services/supabaseService';
 
@@ -36,6 +42,7 @@ export const AuthProvider = ({ children }) => {
   const [users, setUsers]               = useState([]);
   const [cities, setCities]             = useState([]);
   const [events, setEvents]             = useState([]);
+  const [schools, setSchools]           = useState([]);
   const [toast, setToast]               = useState(null);
   const [kadinCity, setKadinCity]       = useState('Bone');
 
@@ -86,15 +93,17 @@ export const AuthProvider = ({ children }) => {
 
     if (isSupabaseConfigured) {
       try {
-        const [loadedCities, loadedUsers, loadedEvents] = await Promise.all([
+        const [loadedCities, loadedUsers, loadedEvents, loadedSchools] = await Promise.all([
           sbGetCities(),
           sbGetUsers(),
           sbGetEvents(),
+          sbGetSchools(),
         ]);
 
         setCities(loadedCities);
         setUsers(loadedUsers);
         setEvents(loadedEvents);
+        setSchools(loadedSchools);
         setIsOnline(true);
         setDbMode('supabase');
 
@@ -102,6 +111,7 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem('eduevent_cities', JSON.stringify(loadedCities));
         localStorage.setItem('eduevent_users', JSON.stringify(loadedUsers));
         localStorage.setItem('eduevent_events', JSON.stringify(loadedEvents));
+        localStorage.setItem('eduevent_schools', JSON.stringify(loadedSchools));
 
         // Set active user if there is a session
         const loadedActiveUser = getActiveUser();
@@ -125,11 +135,13 @@ export const AuthProvider = ({ children }) => {
     const loadedUsers      = getUsers();
     const loadedCities     = getCities();
     const loadedEvents     = getEvents();
+    const loadedSchools    = getSchools();
     const loadedActiveUser = getActiveUser();
 
     setUsers(loadedUsers);
     setCities(loadedCities);
     setEvents(loadedEvents);
+    setSchools(loadedSchools);
     if (loadedActiveUser) {
       setCurrentUser(loadedActiveUser);
       if (loadedActiveUser.city) {
@@ -245,18 +257,45 @@ export const AuthProvider = ({ children }) => {
 
   const handleDeleteUser = async (id) => {
     try {
-      if (dbMode === 'supabase') {
-        const updated = await sbDeleteUser(id);
-        setUsers(updated);
-        localStorage.setItem('eduevent_users', JSON.stringify(updated));
-      } else {
-        const updated = removeUser(id);
-        setUsers(updated);
+      if (isOnline) {
+        await sbDeleteUser(id);
       }
-      showToast('Akun telah dihapus', 'warning');
+      setUsers(removeUser(id));
+      showToast('Pengguna berhasil dihapus', 'success');
     } catch (err) {
-      console.error('[handleDeleteUser]', err);
-      showToast('Gagal menghapus akun: ' + err.message, 'error');
+      console.error(err);
+      showToast('Gagal menghapus pengguna: ' + err.message, 'error');
+    }
+  };
+
+  // ============================================================
+  // MANAJEMEN TARGET SEKOLAH
+  // ============================================================
+  const handleSaveSchool = async (schoolData) => {
+    try {
+      if (isOnline) {
+        const saved = await sbSaveSchool(schoolData);
+        setSchools(saveSchool(saved)); // Sync local
+      } else {
+        setSchools(saveSchool(schoolData));
+      }
+      showToast('Data sekolah berhasil disimpan', 'success');
+    } catch (err) {
+      console.error(err);
+      showToast('Gagal menyimpan data sekolah: ' + err.message, 'error');
+    }
+  };
+
+  const handleDeleteSchool = async (id) => {
+    try {
+      if (isOnline) {
+        await sbDeleteSchool(id);
+      }
+      setSchools(removeSchool(id));
+      showToast('Sekolah berhasil dihapus', 'success');
+    } catch (err) {
+      console.error(err);
+      showToast('Gagal menghapus sekolah: ' + err.message, 'error');
     }
   };
 
@@ -304,26 +343,28 @@ export const AuthProvider = ({ children }) => {
         users,
         cities,
         events,
+        schools,
         toast,
         showToast,
         switchRole,
         switchUser,
-        kadinCity,
-        setKadinCity,
-        handleSaveCity,
-        handleDeleteCity,
-        handleSaveUser,
-        handleDeleteUser,
-        handleSaveEvent,
-        handleDeleteEvent,
-        refreshData,
-        // Sync / DB status
         isOnline,
         isSyncing,
         dbMode,
         isSupabaseConfigured,
+        kadinCity,
         login,
         logout,
+        refreshData,
+        setKadinCity,
+        handleSaveEvent,
+        handleDeleteEvent,
+        handleSaveCity,
+        handleDeleteCity,
+        handleSaveUser,
+        handleDeleteUser,
+        handleSaveSchool,
+        handleDeleteSchool,
       }}
     >
       {children}

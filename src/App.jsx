@@ -9,6 +9,7 @@ import { EventInputForm } from './components/operator/EventInputForm';
 import { InputHistoryTable } from './components/operator/InputHistoryTable';
 import { CityManagement } from './components/admin/CityManagement';
 import { UserManagement } from './components/admin/UserManagement';
+import { SchoolManagement } from './components/admin/SchoolManagement';
 import { ExecutiveDashboard } from './components/executive/ExecutiveDashboard';
 import { LandingPage } from './components/LandingPage';
 import { Login } from './components/auth/Login';
@@ -137,6 +138,7 @@ const AdminView = () => (
   <div className="space-y-8">
     <CityManagement />
     <UserManagement />
+    <SchoolManagement />
   </div>
 );
 

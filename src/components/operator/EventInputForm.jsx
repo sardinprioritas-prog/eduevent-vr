@@ -3,7 +3,7 @@ import { useAuth } from '../../context/useAuth';
 import { PlusCircle, Save, X, Calendar, MapPin, School, Clock, Users, CheckCircle, AlertTriangle } from 'lucide-react';
 
 export const EventInputForm = ({ editingEvent, onCancelEdit }) => {
-  const { cities, currentUser, handleSaveEvent } = useAuth();
+  const { cities, schools, currentUser, handleSaveEvent } = useAuth();
 
   const activeCities = cities.filter((c) => c.active !== false);
 
@@ -159,20 +159,51 @@ export const EventInputForm = ({ editingEvent, onCancelEdit }) => {
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Kota Dropdown */}
+          <div className="space-y-2">
+            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 flex items-center">
+              <MapPin className="w-3.5 h-3.5 mr-1.5 text-emerald-400" />
+              Kota / Wilayah <span className="text-rose-400 ml-1">*</span>
+            </label>
+            <select
+              value={formData.cityId}
+              onChange={(e) => {
+                setFormData({ ...formData, cityId: e.target.value, schoolName: '' });
+              }}
+              className="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl px-4 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all appearance-none cursor-pointer"
+            >
+              {activeCities.map((city) => (
+                <option key={city.id} value={city.id}>
+                  {city.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
           {/* Nama Sekolah */}
           <div className="space-y-2">
             <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 flex items-center">
               <School className="w-3.5 h-3.5 mr-1.5 text-emerald-400" />
               Nama Sekolah <span className="text-rose-400 ml-1">*</span>
             </label>
-            <input
-              type="text"
+            <select
               required
-              placeholder="Contoh: SMA Negeri 1 Bone"
               value={formData.schoolName}
-              onChange={(e) => setFormData({ ...formData, schoolName: e.target.value })}
-              className="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl px-4 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all placeholder:text-slate-500"
-            />
+              onChange={(e) => {
+                const selectedSchool = schools.find(s => s.name === e.target.value);
+                setFormData({ 
+                  ...formData, 
+                  schoolName: e.target.value,
+                  dapodikStudents: selectedSchool ? selectedSchool.studentCount : formData.dapodikStudents
+                });
+              }}
+              className="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl px-4 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all appearance-none cursor-pointer"
+            >
+              <option value="" disabled>-- Pilih Target Sekolah --</option>
+              {schools.filter(s => s.cityId === formData.cityId && s.active !== false).map(school => (
+                <option key={school.id} value={school.name}>{school.name}</option>
+              ))}
+            </select>
           </div>
 
           {/* Tanggal Kegiatan */}
@@ -190,24 +221,7 @@ export const EventInputForm = ({ editingEvent, onCancelEdit }) => {
             />
           </div>
 
-          {/* Kota Dropdown */}
-          <div className="space-y-2">
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 flex items-center">
-              <MapPin className="w-3.5 h-3.5 mr-1.5 text-emerald-400" />
-              Kota / Wilayah <span className="text-rose-400 ml-1">*</span>
-            </label>
-            <select
-              value={formData.cityId}
-              onChange={(e) => setFormData({ ...formData, cityId: e.target.value })}
-              className="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl px-4 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all"
-            >
-              {activeCities.map((city) => (
-                <option key={city.id} value={city.id}>
-                  {city.name} ({city.province})
-                </option>
-              ))}
-            </select>
-          </div>
+
         </div>
 
         {/* Section Durasi & Sesi (Otomasisasi Logika) */}
