@@ -18,7 +18,7 @@ export const SalarySettings = () => {
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
-    if (selectedUserId && salarySettings) {
+    if (selectedUserId && Array.isArray(salarySettings)) {
       const userSettings = salarySettings.find(s => s.userId === selectedUserId) || {
         userId: selectedUserId,
         fee: 0,
@@ -26,7 +26,7 @@ export const SalarySettings = () => {
       };
       setFormData(userSettings);
     } else {
-      setFormData({ userId: '', fee: 0, bonus: 0 });
+      setFormData({ userId: selectedUserId || '', fee: 0, bonus: 0 });
     }
   }, [selectedUserId, salarySettings]);
 

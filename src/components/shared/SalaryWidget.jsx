@@ -10,7 +10,7 @@ export const SalaryWidget = ({ role = 'operator' }) => {
     let baseFee = 0;
     let bonusFee = 0;
 
-    if (salarySettings && currentUser) {
+    if (Array.isArray(salarySettings) && currentUser) {
       const userSettings = salarySettings.find(s => s.userId === currentUser.id);
       if (userSettings) {
         baseFee = userSettings.fee;
