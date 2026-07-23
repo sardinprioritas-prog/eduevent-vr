@@ -53,6 +53,12 @@ export const RecapTable = ({ selectedCity }) => {
     setSearchQuery('');
   };
 
+  // Kalkulasi Summary
+  const totalSchools = new Set(filteredEvents.map(e => e.schoolName)).size;
+  const totalDapodik = filteredEvents.reduce((sum, e) => sum + (Number(e.dapodikStudents) || 0), 0);
+  const totalParticipating = filteredEvents.reduce((sum, e) => sum + (Number(e.participatingStudents) || 0), 0);
+  const totalConversionRate = totalDapodik > 0 ? ((totalParticipating / totalDapodik) * 100).toFixed(1) : 0;
+
   // Export to Excel
   const exportToExcel = () => {
     if (filteredEvents.length === 0) {
@@ -78,6 +84,21 @@ export const RecapTable = ({ selectedCity }) => {
         'Tingkat Konversi (%)': `${rate}%`,
         'Operator Field': e.operatorName || '-',
       };
+    });
+
+    // Menambahkan baris kosong lalu baris summary
+    excelData.push({});
+    excelData.push({
+      'No': 'SUMMARY',
+      'Nama Sekolah': `Total Sekolah: ${totalSchools}`,
+      'Kota': '',
+      'Tanggal Kegiatan': '',
+      'Durasi': '',
+      'Sesi': '',
+      'Total Siswa (Dapodik)': totalDapodik,
+      'Siswa Berpartisipasi': totalParticipating,
+      'Tingkat Konversi (%)': `${totalConversionRate}%`,
+      'Operator Field': '',
     });
 
     const worksheet = XLSX.utils.json_to_sheet(excelData);
@@ -141,9 +162,20 @@ export const RecapTable = ({ selectedCity }) => {
     autoTable(doc, {
       head: [tableColumn],
       body: tableRows,
+      foot: [[
+        '', 
+        `TOTAL SEKOLAH: ${totalSchools}`, 
+        '', 
+        '', 
+        'TOTAL:', 
+        totalDapodik.toString(), 
+        totalParticipating.toString(), 
+        `${totalConversionRate}%`
+      ]],
       startY: 28,
       theme: 'grid',
       headStyles: { fillColor: [79, 70, 229], textColor: [255, 255, 255], fontStyle: 'bold' },
+      footStyles: { fillColor: [15, 23, 42], textColor: [255, 255, 255], fontStyle: 'bold' },
       styles: { fontSize: 9 },
     });
 
@@ -354,6 +386,37 @@ export const RecapTable = ({ selectedCity }) => {
               })
             )}
           </tbody>
+          {filteredEvents.length > 0 && (
+            <tfoot className="bg-slate-900/95 border-t-2 border-slate-700 text-slate-200">
+              <tr>
+                <td colSpan="4" className="py-4 px-4 text-right font-bold">
+                  <span className="mr-6 inline-flex items-center text-slate-400">
+                    Total Sekolah Berpartisipasi: 
+                    <span className="ml-2 text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded border border-indigo-500/20">{totalSchools}</span>
+                  </span>
+                  TOTAL KESELURUHAN:
+                </td>
+                <td className="py-4 px-4 text-center font-mono font-bold">
+                  <span className="text-emerald-400 text-sm">{totalParticipating}</span>
+                  <span className="text-slate-500 mx-1">/</span>
+                  <span className="text-slate-400 text-sm">{totalDapodik}</span>
+                </td>
+                <td className="py-4 px-4 text-center">
+                  <span
+                    className={`inline-block px-3 py-1 rounded-full font-bold text-xs ${
+                      totalConversionRate >= 80
+                        ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shadow-[0_0_10px_rgba(16,185,129,0.2)]'
+                        : totalConversionRate >= 50
+                        ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                        : 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
+                    }`}
+                  >
+                    {totalConversionRate}%
+                  </span>
+                </td>
+              </tr>
+            </tfoot>
+          )}
         </table>
       </div>
     </div>
