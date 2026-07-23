@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Building2, Shield, UserCheck, BarChart3, ArrowRight } from 'lucide-react';
+import { Building2, Shield, UserCheck, BarChart3, ArrowRight, Target } from 'lucide-react';
 
 export const LandingPage = () => {
   const navigate = useNavigate();
@@ -37,6 +37,14 @@ export const LandingPage = () => {
       icon: <UserCheck className="w-8 h-8 text-amber-400" />,
       color: 'bg-amber-500/10 border-amber-500/30 hover:bg-amber-500/20',
       path: '/kadin',
+    },
+    {
+      id: 'pioneer',
+      title: 'Portal Pioneer',
+      desc: 'Manajemen target sekolah & progres',
+      icon: <Target className="w-8 h-8 text-rose-400" />,
+      color: 'bg-rose-500/10 border-rose-500/30 hover:bg-rose-500/20',
+      path: '/pioneer',
     },
   ];
 
