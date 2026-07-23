@@ -18,9 +18,6 @@ export const initStorage = () => {
   if (!localStorage.getItem(KEYS.EVENTS)) {
     localStorage.setItem(KEYS.EVENTS, JSON.stringify(INITIAL_EVENTS));
   }
-  if (!localStorage.getItem(KEYS.ACTIVE_USER)) {
-    localStorage.setItem(KEYS.ACTIVE_USER, JSON.stringify(INITIAL_USERS[0])); // Default Operator
-  }
 };
 
 // Cities API
