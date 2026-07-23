@@ -5,24 +5,20 @@ import { Wallet, TrendingUp, Target, Award } from 'lucide-react';
 export const SalaryWidget = ({ role = 'operator' }) => {
   const { events, currentUser, salarySettings } = useAuth();
 
-  const { fee, bonus, threshold, totalParticipating } = useMemo(() => {
-    // 1. Dapatkan setting fee
-    let baseFee = 1000;
-    let bonusFee = 500;
-    let targetThreshold = 1000;
+  const { fee, bonus, totalParticipating, uniqueEventDays } = useMemo(() => {
+    // 1. Dapatkan setting fee personal untuk currentUser
+    let baseFee = 0;
+    let bonusFee = 0;
 
-    if (salarySettings) {
-      if (role === 'pioneer') {
-        baseFee = salarySettings.pioneerFee;
-        bonusFee = salarySettings.pioneerBonus;
-      } else {
-        baseFee = salarySettings.operatorFee;
-        bonusFee = salarySettings.operatorBonus;
+    if (salarySettings && currentUser) {
+      const userSettings = salarySettings.find(s => s.userId === currentUser.id);
+      if (userSettings) {
+        baseFee = userSettings.fee;
+        bonusFee = userSettings.bonus;
       }
-      targetThreshold = salarySettings.bonusThreshold;
     }
 
-    // 2. Hitung jumlah partisipan di kota yang sama pada minggu ini
+    // 2. Hitung jumlah partisipan & hari event di kota yang sama pada minggu ini
     const userCity = currentUser?.city;
     
     // Tentukan hari Senin s/d Minggu untuk minggu ini
@@ -42,35 +38,57 @@ export const SalaryWidget = ({ role = 'operator' }) => {
     });
 
     const totalStudents = cityEventsThisWeek.reduce((sum, evt) => {
-      return sum + (parseInt(evt.participatingStudents, 10) || 0);
+      return sum + (parseInt(evt.dapodikStudents, 10) ? parseInt(evt.participatingStudents, 10) : 0);
     }, 0);
 
+    const uniqueDates = new Set(cityEventsThisWeek.map(evt => evt.date));
+    
     return {
       fee: baseFee,
       bonus: bonusFee,
-      threshold: targetThreshold,
-      totalParticipating: totalStudents
+      totalParticipating: totalStudents,
+      uniqueEventDays: uniqueDates.size
     };
-  }, [events, currentUser, salarySettings, role]);
+  }, [events, currentUser, salarySettings]);
 
   // Perhitungan final
   const baseSalary = totalParticipating * fee;
-  const isBonusAchieved = totalParticipating >= threshold;
-  const bonusSalary = isBonusAchieved ? (totalParticipating * bonus) : 0;
+  let bonusSalary = 0;
+  let isBonusAchieved = false;
+  let bonusStatusText = "";
+
+  if (role === 'operator') {
+    isBonusAchieved = totalParticipating >= 1000;
+    bonusSalary = isBonusAchieved ? bonus : 0;
+    bonusStatusText = isBonusAchieved ? `Tercapai (>= 1000)` : `Belum (Target: 1000)`;
+  } else if (role === 'pioneer') {
+    isBonusAchieved = uniqueEventDays >= 4 && totalParticipating >= 250;
+    bonusSalary = isBonusAchieved ? bonus * uniqueEventDays : 0;
+    bonusStatusText = isBonusAchieved ? `Tercapai (${uniqueEventDays} hari, >= 250 siswa)` : `Belum (Syarat: >=4 hari & >=250 siswa)`;
+  }
+
   const totalSalary = baseSalary + bonusSalary;
 
   return (
     <div className="glass-card rounded-2xl p-6 mb-8 border border-slate-800 relative overflow-hidden">
       <div className="absolute top-0 right-0 -mt-8 -mr-8 w-48 h-48 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
       
-      <div className="flex items-center space-x-3 mb-6 relative z-10 border-b border-slate-800 pb-4">
-        <div className="p-2.5 bg-emerald-500/10 text-emerald-400 rounded-xl border border-emerald-500/20">
-          <Wallet className="w-5 h-5" />
+      <div className="flex items-center justify-between mb-6 relative z-10 border-b border-slate-800 pb-4">
+        <div className="flex items-center space-x-3">
+          <div className="p-2.5 bg-emerald-500/10 text-emerald-400 rounded-xl border border-emerald-500/20">
+            <Wallet className="w-5 h-5" />
+          </div>
+          <div>
+            <h2 className="text-lg font-bold text-slate-100">Estimasi Fee Mingguan</h2>
+            <p className="text-xs text-slate-400">Total partisipan di wilayah {currentUser?.city || 'Anda'} minggu ini</p>
+          </div>
         </div>
-        <div>
-          <h2 className="text-lg font-bold text-slate-100">Estimasi Fee Mingguan</h2>
-          <p className="text-xs text-slate-400">Total partisipan di wilayah {currentUser?.city || 'Anda'} minggu ini</p>
-        </div>
+        {role === 'pioneer' && (
+          <div className="text-right">
+            <div className="text-sm font-bold text-indigo-400">{uniqueEventDays} Hari Aktif</div>
+            <div className="text-xs text-slate-400">Minggu Ini</div>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 relative z-10">
@@ -82,13 +100,7 @@ export const SalaryWidget = ({ role = 'operator' }) => {
             Total Siswa
           </div>
           <div className="text-2xl font-bold text-slate-100">
-            {totalParticipating.toLocaleString('id-ID')} <span className="text-sm font-normal text-slate-400">/ {threshold}</span>
-          </div>
-          <div className="mt-2 h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
-            <div 
-              className={`h-full rounded-full transition-all duration-500 ${isBonusAchieved ? 'bg-emerald-500' : 'bg-blue-500'}`} 
-              style={{ width: `${Math.min((totalParticipating / threshold) * 100, 100)}%` }} 
-            />
+            {totalParticipating.toLocaleString('id-ID')}
           </div>
         </div>
 
@@ -105,11 +117,16 @@ export const SalaryWidget = ({ role = 'operator' }) => {
 
         {/* Card: Bonus Fee */}
         <div className={`bg-slate-900/60 p-4 rounded-xl border ${isBonusAchieved ? 'border-emerald-500/30' : 'border-slate-800'}`}>
-          <div className="flex items-center text-slate-400 text-xs font-semibold mb-2 uppercase tracking-wider">
-            <Award className={`w-3.5 h-3.5 mr-1.5 ${isBonusAchieved ? 'text-emerald-400' : 'text-slate-500'}`} />
-            Bonus (Rp {bonus})
+          <div className="flex flex-col mb-1">
+            <div className="flex items-center text-slate-400 text-xs font-semibold uppercase tracking-wider">
+              <Award className={`w-3.5 h-3.5 mr-1.5 ${isBonusAchieved ? 'text-emerald-400' : 'text-slate-500'}`} />
+              Bonus {role === 'operator' ? '(Flat)' : '(Pengali)'}
+            </div>
+            <span className={`text-[10px] mt-1 ${isBonusAchieved ? 'text-emerald-500' : 'text-rose-500/70'}`}>
+              {bonusStatusText}
+            </span>
           </div>
-          <div className={`text-xl font-bold ${isBonusAchieved ? 'text-emerald-400' : 'text-slate-500'}`}>
+          <div className={`text-xl font-bold mt-2 ${isBonusAchieved ? 'text-emerald-400' : 'text-slate-500'}`}>
             + Rp {bonusSalary.toLocaleString('id-ID')}
           </div>
         </div>

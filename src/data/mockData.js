@@ -13,14 +13,13 @@ export const INITIAL_SCHOOLS = [
   { id: 'sch-3', cityId: 'city-3', name: 'SMA Negeri 5 Makassar', studentCount: 800, demoDate: '2026-07-20', eventDate: '2026-07-25', active: true },
 ];
 
-export const INITIAL_SALARY_SETTINGS = {
-  id: 'default',
-  operatorFee: 1000,
-  operatorBonus: 500,
-  pioneerFee: 1500,
-  pioneerBonus: 750,
-  bonusThreshold: 1000,
-};
+export const INITIAL_USER_SALARY_SETTINGS = [
+  {
+    userId: 'usr-1', // Budi Santoso (Operator)
+    fee: 1000,
+    bonus: 500,
+  }
+];
 
 export const INITIAL_USERS = [
   {

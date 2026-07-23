@@ -56,15 +56,12 @@ CREATE TABLE IF NOT EXISTS events (
   created_at            TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- 5. TABLE: salary_settings (Pengaturan Gaji & Fee)
+-- 5. TABLE: user_salary_settings (Pengaturan Gaji & Fee Personal)
 -- ============================================================
-CREATE TABLE IF NOT EXISTS salary_settings (
-  id               TEXT PRIMARY KEY DEFAULT 'default',
-  operator_fee     INTEGER NOT NULL DEFAULT 1000,
-  operator_bonus   INTEGER NOT NULL DEFAULT 500,
-  pioneer_fee      INTEGER NOT NULL DEFAULT 1500,
-  pioneer_bonus    INTEGER NOT NULL DEFAULT 750,
-  bonus_threshold  INTEGER NOT NULL DEFAULT 1000,
+CREATE TABLE IF NOT EXISTS user_salary_settings (
+  user_id          TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  fee              INTEGER NOT NULL DEFAULT 1000,
+  bonus            INTEGER NOT NULL DEFAULT 500,
   updated_at       TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
@@ -77,21 +74,22 @@ ALTER TABLE cities ENABLE ROW LEVEL SECURITY;
 ALTER TABLE users  ENABLE ROW LEVEL SECURITY;
 ALTER TABLE schools ENABLE ROW LEVEL SECURITY;
 ALTER TABLE events ENABLE ROW LEVEL SECURITY;
-ALTER TABLE salary_settings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_salary_settings ENABLE ROW LEVEL SECURITY;
 
 -- Drop existing policies jika re-run
 DROP POLICY IF EXISTS "Allow all cities"  ON cities;
 DROP POLICY IF EXISTS "Allow all users"   ON users;
 DROP POLICY IF EXISTS "Allow all schools" ON schools;
 DROP POLICY IF EXISTS "Allow all events"  ON events;
-DROP POLICY IF EXISTS "Allow all salary"  ON salary_settings;
+DROP POLICY IF EXISTS "Allow all salary"  ON user_salary_settings;
+DROP POLICY IF EXISTS "Allow all salary"  ON salary_settings; -- In case of old table
 
 -- Buka akses penuh via anon key (gunakan untuk MVP/demo)
 CREATE POLICY "Allow all cities"  ON cities  FOR ALL USING (true);
 CREATE POLICY "Allow all users"   ON users   FOR ALL USING (true);
 CREATE POLICY "Allow all schools" ON schools FOR ALL USING (true);
 CREATE POLICY "Allow all events"  ON events  FOR ALL USING (true);
-CREATE POLICY "Allow all salary"  ON salary_settings FOR ALL USING (true);
+CREATE POLICY "Allow all salary"  ON user_salary_settings FOR ALL USING (true);
 
 -- ============================================================
 -- SEED DATA AWAL (Data Contoh Sulawesi Selatan)
@@ -121,9 +119,9 @@ INSERT INTO events (id, school_name, date, city_id, city_name, duration, session
   ('evt-106', 'SMA Negeri 1 Gowa',        '2026-07-22', 'city-5', 'Gowa',     '1 Hari', 'Fullday', 500, 465, 'Budi Santoso')
 ON CONFLICT (id) DO NOTHING;
 
-INSERT INTO salary_settings (id, operator_fee, operator_bonus, pioneer_fee, pioneer_bonus, bonus_threshold) VALUES
-  ('default', 1000, 500, 1500, 750, 1000)
-ON CONFLICT (id) DO NOTHING;
+INSERT INTO user_salary_settings (user_id, fee, bonus) VALUES
+  ('usr-1', 1000, 500)
+ON CONFLICT (user_id) DO NOTHING;
 
 -- ============================================================
 -- INDEXES untuk performa query

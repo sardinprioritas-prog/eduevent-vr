@@ -50,12 +50,9 @@ const toAppSchool = (row) => ({
 });
 
 const toAppSalarySettings = (row) => ({
-  id: row.id,
-  operatorFee: row.operator_fee,
-  operatorBonus: row.operator_bonus,
-  pioneerFee: row.pioneer_fee,
-  pioneerBonus: row.pioneer_bonus,
-  bonusThreshold: row.bonus_threshold,
+  userId: row.user_id,
+  fee: row.fee,
+  bonus: row.bonus,
   updatedAt: row.updated_at,
 });
 
@@ -87,12 +84,9 @@ const toDbSchool = (sch) => ({
 });
 
 const toDbSalarySettings = (settings) => ({
-  id: settings.id || 'default',
-  operator_fee: settings.operatorFee,
-  operator_bonus: settings.operatorBonus,
-  pioneer_fee: settings.pioneerFee,
-  pioneer_bonus: settings.pioneerBonus,
-  bonus_threshold: settings.bonusThreshold,
+  user_id: settings.userId,
+  fee: settings.fee,
+  bonus: settings.bonus,
   updated_at: new Date().toISOString(),
 });
 
@@ -278,24 +272,18 @@ export const sbDeleteSchool = async (id) => {
 // ============================================================
 export const sbGetSalarySettings = async () => {
   const { data, error } = await supabase
-    .from('salary_settings')
-    .select('*')
-    .eq('id', 'default')
-    .single();
+    .from('user_salary_settings')
+    .select('*');
   
-  if (error && error.code !== 'PGRST116') {
-    // Ignore not found error (PGRST116) and return default object if missing
-    throw error;
-  }
-  
-  return data ? toAppSalarySettings(data) : null;
+  if (error) throw error;
+  return data.map(toAppSalarySettings);
 };
 
 export const sbSaveSalarySettings = async (settings) => {
   const dbData = toDbSalarySettings(settings);
   const { data, error } = await supabase
-    .from('salary_settings')
-    .upsert(dbData, { onConflict: 'id' })
+    .from('user_salary_settings')
+    .upsert(dbData, { onConflict: 'user_id' })
     .select()
     .single();
 

@@ -1,4 +1,4 @@
-import { INITIAL_CITIES, INITIAL_USERS, INITIAL_EVENTS, INITIAL_SCHOOLS, INITIAL_SALARY_SETTINGS } from '../data/mockData';
+import { INITIAL_CITIES, INITIAL_USERS, INITIAL_EVENTS, INITIAL_SCHOOLS, INITIAL_USER_SALARY_SETTINGS } from '../data/mockData';
 
 const KEYS = {
   CITIES: 'eduevent_cities',
@@ -31,7 +31,7 @@ export const initStorage = () => {
     localStorage.setItem(KEYS.SCHOOLS, JSON.stringify(INITIAL_SCHOOLS));
   }
   if (!localStorage.getItem(KEYS.SALARY_SETTINGS)) {
-    localStorage.setItem(KEYS.SALARY_SETTINGS, JSON.stringify(INITIAL_SALARY_SETTINGS));
+    localStorage.setItem(KEYS.SALARY_SETTINGS, JSON.stringify(INITIAL_USER_SALARY_SETTINGS));
   }
 };
 
@@ -171,10 +171,17 @@ export const setActiveUserSession = (user) => {
 export const getSalarySettings = () => {
   initStorage();
   const data = localStorage.getItem(KEYS.SALARY_SETTINGS);
-  return data ? JSON.parse(data) : INITIAL_SALARY_SETTINGS;
+  return data ? JSON.parse(data) : INITIAL_USER_SALARY_SETTINGS;
 };
 
-export const saveSalarySettings = (settings) => {
+export const saveSalarySettings = (setting) => {
+  const settings = getSalarySettings();
+  const index = settings.findIndex(s => s.userId === setting.userId);
+  if (index >= 0) {
+    settings[index] = setting;
+  } else {
+    settings.push(setting);
+  }
   localStorage.setItem(KEYS.SALARY_SETTINGS, JSON.stringify(settings));
   return settings;
 };
