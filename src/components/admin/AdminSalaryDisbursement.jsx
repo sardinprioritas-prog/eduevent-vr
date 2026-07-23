@@ -3,7 +3,7 @@ import { useAuth } from '../../context/useAuth';
 import { Wallet, Target, Award, CheckCircle } from 'lucide-react';
 
 export const AdminSalaryDisbursement = () => {
-  const { users, events, salarySettings, handleDisburseFee } = useAuth();
+  const { users, events, salarySettings, payouts, handleDisburseFee } = useAuth();
   const [processingId, setProcessingId] = useState(null);
 
   // Helper to calculate unpaid fee for a specific user
@@ -20,9 +20,17 @@ export const AdminSalaryDisbursement = () => {
       }
     }
 
-    // Get unpaid events for this user's city
+    // Kumpulkan ID event yang sudah dicairkan KHUSUS untuk user ini
+    // (setiap payout menyimpan details.eventIds agar tidak bentrok antar user satu kota)
+    const paidEventIds = new Set(
+      payouts
+        .filter(p => p.userId === user.id)
+        .flatMap(p => p.details?.eventIds || [])
+    );
+
+    // Event belum dibayar = event di kota user yang belum masuk payout user ini
     const unpaidEvents = events.filter(
-      (evt) => evt.cityName === user.city && !evt.payoutId
+      (evt) => evt.cityName === user.city && !paidEventIds.has(evt.id)
     );
 
     const totalStudents = unpaidEvents.reduce((sum, evt) => sum + (parseInt(evt.participatingStudents, 10) || 0), 0);
@@ -62,7 +70,7 @@ export const AdminSalaryDisbursement = () => {
         ...user,
         feeData: calculateUnpaidFee(user)
       }));
-  }, [users, events, salarySettings]);
+  }, [users, events, salarySettings, payouts]);
 
   const onDisburse = async (userData) => {
     if (userData.feeData.totalSalary === 0) return;
@@ -76,6 +84,8 @@ export const AdminSalaryDisbursement = () => {
         totalStudents: userData.feeData.totalStudents,
         uniqueEventDays: userData.feeData.uniqueEventDays,
         isBonusAchieved: userData.feeData.isBonusAchieved,
+        // Simpan ID event yang dicairkan agar kalkulasi berikutnya akurat per-user
+        eventIds: userData.feeData.eventIdsToUpdate,
       };
       await handleDisburseFee(
         userData.id,

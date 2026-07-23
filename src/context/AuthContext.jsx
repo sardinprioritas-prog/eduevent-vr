@@ -38,6 +38,7 @@ import {
   sbGetPayouts,
   sbSavePayout,
   subscribeToEvents,
+  subscribeToPayouts,
 } from '../services/supabaseService';
 
 import { isSupabaseConfigured } from '../services/supabaseClient';
@@ -181,11 +182,22 @@ export const AuthProvider = ({ children }) => {
 
     // Aktifkan Realtime hanya jika Supabase dikonfigurasi
     if (isSupabaseConfigured) {
-      const unsubscribe = subscribeToEvents((newEvents) => {
+      const unsubscribeEvents = subscribeToEvents((newEvents) => {
         setEvents(newEvents);
         localStorage.setItem('eduevent_events', JSON.stringify(newEvents));
       });
-      return unsubscribe;
+
+      // Subscribe juga ke payouts agar portal operator/pioneer otomatis
+      // menerima riwayat pencairan tanpa perlu refresh manual
+      const unsubscribePayouts = subscribeToPayouts((newPayouts) => {
+        setPayouts(newPayouts);
+        localStorage.setItem('eduevent_payouts', JSON.stringify(newPayouts));
+      });
+
+      return () => {
+        unsubscribeEvents();
+        unsubscribePayouts();
+      };
     }
   }, [refreshData]);
 

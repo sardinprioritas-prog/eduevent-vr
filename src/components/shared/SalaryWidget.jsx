@@ -3,7 +3,7 @@ import { useAuth } from '../../context/useAuth';
 import { Wallet, TrendingUp, Target, Award } from 'lucide-react';
 
 export const SalaryWidget = ({ role = 'operator' }) => {
-  const { events, currentUser, salarySettings } = useAuth();
+  const { events, currentUser, salarySettings, payouts } = useAuth();
 
   const { fee, bonus, totalParticipating, uniqueEventDays } = useMemo(() => {
     // 1. Dapatkan setting fee personal untuk currentUser
@@ -18,18 +18,25 @@ export const SalaryWidget = ({ role = 'operator' }) => {
       }
     }
 
-    // 2. Hitung jumlah partisipan & hari event di kota yang sama pada minggu ini
+    // 2. Kumpulkan ID event yang sudah dicairkan untuk currentUser ini
+    const paidEventIds = new Set(
+      payouts
+        .filter(p => p.userId === currentUser?.id)
+        .flatMap(p => p.details?.eventIds || [])
+    );
+
+    // 3. Hitung hanya event di kota yang sama yang BELUM dicairkan untuk user ini
     const userCity = currentUser?.city;
     
-    const cityEventsThisWeek = events.filter((evt) => {
-      return evt.cityName === userCity && !evt.payoutId;
+    const cityEventsUnpaid = events.filter((evt) => {
+      return evt.cityName === userCity && !paidEventIds.has(evt.id);
     });
 
-    const totalStudents = cityEventsThisWeek.reduce((sum, evt) => {
+    const totalStudents = cityEventsUnpaid.reduce((sum, evt) => {
       return sum + (parseInt(evt.participatingStudents, 10) || 0);
     }, 0);
 
-    const uniqueDates = new Set(cityEventsThisWeek.map(evt => evt.date));
+    const uniqueDates = new Set(cityEventsUnpaid.map(evt => evt.date));
     
     return {
       fee: baseFee,
@@ -37,7 +44,7 @@ export const SalaryWidget = ({ role = 'operator' }) => {
       totalParticipating: totalStudents,
       uniqueEventDays: uniqueDates.size
     };
-  }, [events, currentUser, salarySettings]);
+  }, [events, currentUser, salarySettings, payouts]);
 
   // Perhitungan final
   const baseSalary = totalParticipating * fee;

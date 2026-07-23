@@ -367,3 +367,30 @@ export const subscribeToEvents = (callback) => {
 
   return () => supabase.removeChannel(channel);
 };
+
+/**
+ * Berlangganan perubahan realtime pada tabel payouts.
+ * Penting agar portal operator/pioneer otomatis menerima riwayat pencairan
+ * segera setelah admin melakukan proses pencairan — tanpa perlu refresh manual.
+ * Mengembalikan fungsi unsubscribe.
+ */
+export const subscribeToPayouts = (callback) => {
+  const channel = supabase
+    .channel('payouts-realtime')
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'payouts' },
+      async () => {
+        try {
+          const payouts = await sbGetPayouts();
+          callback(payouts);
+        } catch (err) {
+          console.warn('[Supabase Realtime] Gagal refresh payouts:', err);
+        }
+      }
+    )
+    .subscribe();
+
+  return () => supabase.removeChannel(channel);
+};
+
