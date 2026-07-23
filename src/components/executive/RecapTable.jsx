@@ -54,9 +54,23 @@ export const RecapTable = ({ selectedCity }) => {
   };
 
   // Kalkulasi Summary
-  const totalSchools = new Set(filteredEvents.map(e => e.schoolName)).size;
-  const totalDapodik = filteredEvents.reduce((sum, e) => sum + (Number(e.dapodikStudents) || 0), 0);
-  const totalParticipating = filteredEvents.reduce((sum, e) => sum + (Number(e.participatingStudents) || 0), 0);
+  const uniqueSchoolsMap = new Map();
+  let totalParticipating = 0;
+
+  filteredEvents.forEach(e => {
+    totalParticipating += (Number(e.participatingStudents) || 0);
+    const schoolKey = `${e.cityName}_${e.schoolName}`;
+    if (!uniqueSchoolsMap.has(schoolKey)) {
+      uniqueSchoolsMap.set(schoolKey, Number(e.dapodikStudents) || 0);
+    }
+  });
+
+  const totalSchools = uniqueSchoolsMap.size;
+  let totalDapodik = 0;
+  uniqueSchoolsMap.forEach(dapodik => {
+    totalDapodik += dapodik;
+  });
+
   const totalConversionRate = totalDapodik > 0 ? ((totalParticipating / totalDapodik) * 100).toFixed(1) : 0;
 
   // Export to Excel
