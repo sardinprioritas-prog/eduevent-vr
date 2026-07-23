@@ -12,8 +12,15 @@ export const initStorage = () => {
   if (!localStorage.getItem(KEYS.CITIES)) {
     localStorage.setItem(KEYS.CITIES, JSON.stringify(INITIAL_CITIES));
   }
-  if (!localStorage.getItem(KEYS.USERS)) {
+  let existingUsers = localStorage.getItem(KEYS.USERS);
+  if (!existingUsers) {
     localStorage.setItem(KEYS.USERS, JSON.stringify(INITIAL_USERS));
+  } else {
+    // Migration: jika user belum punya passcode (dari versi sebelumnya), reset ke INITIAL_USERS
+    const parsed = JSON.parse(existingUsers);
+    if (parsed.length > 0 && parsed[0].passcode === undefined) {
+      localStorage.setItem(KEYS.USERS, JSON.stringify(INITIAL_USERS));
+    }
   }
   if (!localStorage.getItem(KEYS.EVENTS)) {
     localStorage.setItem(KEYS.EVENTS, JSON.stringify(INITIAL_EVENTS));
