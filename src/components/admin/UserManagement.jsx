@@ -88,6 +88,20 @@ export const UserManagement = () => {
             Pimpinan / Executive
           </span>
         );
+      case 'kadin':
+        return (
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+            <UserCheck className="w-3 h-3 mr-1 text-amber-400" />
+            Kepala Dinas
+          </span>
+        );
+      case 'pioneer':
+        return (
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-rose-500/20 text-rose-300 border border-rose-500/30">
+            <Shield className="w-3 h-3 mr-1 text-rose-400" />
+            Pioneer
+          </span>
+        );
       default:
         return null;
     }
@@ -175,12 +189,21 @@ export const UserManagement = () => {
               <label className="block text-xs font-medium text-slate-400 mb-1">Role / Hak Akses</label>
               <select
                 value={formData.role}
-                onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                onChange={(e) => {
+                  const newRole = e.target.value;
+                  setFormData({ 
+                    ...formData, 
+                    role: newRole,
+                    city: newRole === 'pimpinan' ? 'Semua Wilayah' : formData.city 
+                  });
+                }}
                 className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-purple-500 font-semibold text-purple-300"
               >
                 <option value="operator">Operator (Data Entry)</option>
                 <option value="admin">Admin (System Management)</option>
                 <option value="pimpinan">Pimpinan (Executive Analytics)</option>
+                <option value="kadin">Kepala Dinas</option>
+                <option value="pioneer">Pioneer</option>
               </select>
             </div>
             <div>
@@ -188,8 +211,10 @@ export const UserManagement = () => {
               <select
                 value={formData.city}
                 onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-purple-500"
+                disabled={formData.role === 'pimpinan'}
+                className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-purple-500 disabled:opacity-50"
               >
+                <option value="Semua Wilayah">Semua Wilayah</option>
                 {cities.map((c) => (
                   <option key={c.id} value={c.name}>
                     {c.name}

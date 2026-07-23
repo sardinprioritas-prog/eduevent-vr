@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS users (
   name        TEXT NOT NULL,
   email       TEXT NOT NULL UNIQUE,
   role        TEXT NOT NULL DEFAULT 'operator'
-                CHECK (role IN ('operator', 'admin', 'pimpinan', 'kadin')),
+                CHECK (role IN ('operator', 'admin', 'pimpinan', 'kadin', 'pioneer')),
   city        TEXT,
   passcode    TEXT NOT NULL DEFAULT '123456',
   active      BOOLEAN NOT NULL DEFAULT true,
