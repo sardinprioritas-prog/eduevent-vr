@@ -2,15 +2,16 @@ import React, { useState } from 'react';
 import { useAuth } from '../../context/useAuth';
 import { History, Search, Edit3, Trash2, Calendar, MapPin, Users, Award, CheckCircle } from 'lucide-react';
 
-export const InputHistoryTable = ({ onEditEvent }) => {
-  const { events, handleDeleteEvent } = useAuth();
+export const InputHistoryTable = ({ onEditEvent, readOnly = false }) => {
+  const { events, handleDeleteEvent, currentUser } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
 
-  const filteredEvents = events.filter(
-    (e) =>
-      e.schoolName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      e.cityName.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Tampilkan hanya event dari kota currentUser (operator/pioneer)
+  const filteredEvents = events.filter((e) => {
+    const matchesSearch = e.schoolName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          e.cityName.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesSearch && e.cityName === currentUser?.city;
+  });
 
   return (
     <div className="glass-card rounded-2xl p-6 border border-slate-800 shadow-2xl">
@@ -58,7 +59,7 @@ export const InputHistoryTable = ({ onEditEvent }) => {
                 <th className="py-3 px-4 text-center">Partisipan / Dapodik</th>
                 <th className="py-3 px-4 text-center">Konversi %</th>
                 <th className="py-3 px-4 text-center">Status Fee</th>
-                <th className="py-3 px-4 text-right">Aksi</th>
+                {!readOnly && <th className="py-3 px-4 text-right">Aksi</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/60 text-slate-200">
@@ -133,24 +134,26 @@ export const InputHistoryTable = ({ onEditEvent }) => {
                       )}
                     </td>
 
-                    <td className="py-3 px-4 text-right">
-                      <div className="flex items-center justify-end space-x-2">
-                        <button
-                          onClick={() => onEditEvent(item)}
-                          className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors"
-                          title="Edit Kegiatan"
-                        >
-                          <Edit3 className="w-4 h-4 text-amber-400" />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteEvent(item.id)}
-                          className="p-1.5 rounded-lg bg-slate-800 hover:bg-rose-950/60 text-slate-300 hover:text-rose-400 transition-colors border border-transparent hover:border-rose-800/40"
-                          title="Hapus Kegiatan"
-                        >
-                          <Trash2 className="w-4 h-4 text-rose-400" />
-                        </button>
-                      </div>
-                    </td>
+                    {!readOnly && (
+                      <td className="py-3 px-4 text-right">
+                        <div className="flex items-center justify-end space-x-2">
+                          <button
+                            onClick={() => onEditEvent(item)}
+                            className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors"
+                            title="Edit Kegiatan"
+                          >
+                            <Edit3 className="w-4 h-4 text-amber-400" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteEvent(item.id)}
+                            className="p-1.5 rounded-lg bg-slate-800 hover:bg-rose-950/60 text-slate-300 hover:text-rose-400 transition-colors border border-transparent hover:border-rose-800/40"
+                            title="Hapus Kegiatan"
+                          >
+                            <Trash2 className="w-4 h-4 text-rose-400" />
+                          </button>
+                        </div>
+                      </td>
+                    )}
                   </tr>
                 );
               })}

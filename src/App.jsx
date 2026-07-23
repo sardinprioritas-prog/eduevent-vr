@@ -150,6 +150,8 @@ const PioneerView = () => {
   return (
     <div className="space-y-8">
       <SalaryWidget role="pioneer" />
+      <SchoolManagement />
+      <InputHistoryTable readOnly={true} />
       <PayoutHistoryTable />
     </div>
   );

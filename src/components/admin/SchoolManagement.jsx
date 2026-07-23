@@ -3,14 +3,24 @@ import { useAuth } from '../../context/useAuth';
 import { PlusCircle, Pencil, Trash2, Building2, MapPin, Users, Calendar, AlertCircle } from 'lucide-react';
 
 export const SchoolManagement = () => {
-  const { schools, cities, handleSaveSchool, handleDeleteSchool } = useAuth();
+  const { schools, cities, handleSaveSchool, handleDeleteSchool, currentUser } = useAuth();
   
   const [showForm, setShowForm] = useState(false);
   const [editingSchool, setEditingSchool] = useState(null);
-  
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Filter cities: jika bukan admin/pimpinan, hanya tampilkan kota currentUser
+  const activeCities = cities.filter(c => {
+    if (c.active === false) return false;
+    if (currentUser?.role !== 'admin' && currentUser?.role !== 'pimpinan') {
+      return c.name === currentUser?.city;
+    }
+    return true;
+  });
+
   // Default form state
   const [formData, setFormData] = useState({
-    cityId: cities.length > 0 ? cities[0].id : '',
+    cityId: activeCities.length > 0 ? activeCities[0].id : '',
     name: '',
     studentCount: 0,
     demoDate: '',
@@ -18,13 +28,17 @@ export const SchoolManagement = () => {
     active: true,
   });
 
-  const [searchQuery, setSearchQuery] = useState('');
-
-  const activeCities = cities.filter(c => c.active !== false);
-
-  const filteredSchools = schools.filter(
-    (s) => s.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredSchools = schools.filter((s) => {
+    const matchesSearch = s.name.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    // Filter by city for non-admin/pimpinan
+    if (currentUser?.role !== 'admin' && currentUser?.role !== 'pimpinan') {
+      const schoolCity = cities.find(c => c.id === s.cityId);
+      return matchesSearch && schoolCity?.name === currentUser?.city;
+    }
+    
+    return matchesSearch;
+  });
 
   const resetForm = () => {
     setFormData({
