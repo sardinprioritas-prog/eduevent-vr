@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { useAuth } from './context/useAuth';
 import { Header } from './components/common/Header';
@@ -9,15 +10,14 @@ import { InputHistoryTable } from './components/operator/InputHistoryTable';
 import { CityManagement } from './components/admin/CityManagement';
 import { UserManagement } from './components/admin/UserManagement';
 import { ExecutiveDashboard } from './components/executive/ExecutiveDashboard';
-import { Building2, UserCheck, Shield, BarChart3, MapPin, Loader2 } from 'lucide-react';
+import { LandingPage } from './components/LandingPage';
+import { Login } from './components/auth/Login';
+import { ProtectedRoute } from './components/auth/ProtectedRoute';
+import { MapPin, Loader2 } from 'lucide-react';
 
-const MainContent = () => {
-  const { currentUser, kadinCity, isSyncing, dbMode } = useAuth();
-  const [editingEvent, setEditingEvent] = useState(null);
+const DashboardLayout = ({ role, children }) => {
+  const { kadinCity, isSyncing, dbMode } = useAuth();
 
-  const role = currentUser?.role || 'operator';
-
-  // Role label & accent colors
   const roleConfig = {
     operator: {
       label: 'OPERATOR',
@@ -49,16 +49,11 @@ const MainContent = () => {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col selection:bg-indigo-500 selection:text-white">
-      {/* Header with Quick Role Switcher */}
       <Header />
 
-      {/* Role Notice & Sub-navigation */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
-
-        {/* Role Description Banner */}
         <div className="mb-6 flex items-center justify-between p-4 rounded-xl bg-slate-900/60 border border-slate-800 backdrop-blur-md">
           <div className="flex items-center space-x-3 min-w-0">
-            {/* Animated status dot */}
             <div className="relative flex-shrink-0">
               <div className={`w-2.5 h-2.5 rounded-full ${rc.dot}`} />
               <div className={`absolute inset-0 w-2.5 h-2.5 rounded-full ${rc.ping} animate-ping opacity-60`} />
@@ -71,7 +66,6 @@ const MainContent = () => {
             <span className="text-slate-600 hidden sm:inline">|</span>
             <span className="text-xs text-slate-400 hidden sm:inline truncate">{rc.desc}</span>
 
-            {/* Kadin city badge */}
             {role === 'kadin' && (
               <span className="hidden md:flex items-center space-x-1 px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-[11px] font-bold flex-shrink-0">
                 <MapPin className="w-3 h-3" />
@@ -80,7 +74,6 @@ const MainContent = () => {
             )}
           </div>
 
-          {/* DB sync status indicator */}
           <div className="flex-shrink-0 hidden sm:flex items-center space-x-2">
             {isSyncing && (
               <span className="flex items-center space-x-1 text-[11px] text-amber-400">
@@ -100,63 +93,103 @@ const MainContent = () => {
           </div>
         </div>
 
-        {/* ── Dynamic Role Views ── */}
-        {role === 'operator' && (
-          <div className="space-y-8 animate-fadeIn">
-            <EventInputForm
-              editingEvent={editingEvent}
-              onCancelEdit={() => setEditingEvent(null)}
-            />
-            <InputHistoryTable
-              onEditEvent={(evt) => {
-                setEditingEvent(evt);
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-              }}
-            />
-          </div>
-        )}
-
-        {role === 'admin' && (
-          <div className="space-y-8 animate-fadeIn">
-            <CityManagement />
-            <UserManagement />
-          </div>
-        )}
-
-        {(role === 'pimpinan' || role === 'kadin') && (
-          <div className="animate-fadeIn">
-            <ExecutiveDashboard />
-          </div>
-        )}
+        <div className="animate-fadeIn">
+          {children}
+        </div>
       </main>
 
-      {/* ── Footer ── */}
       <footer className="bg-slate-900/80 border-t border-slate-800/80 py-5 text-xs text-slate-500">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-3">
-          {/* Left: copyright */}
           <span>© 2026 EduEvent VR Monitoring System. All rights reserved.</span>
-
-          {/* Right: tech stack + sync indicator */}
           <div className="flex items-center space-x-4">
             <span className="hidden md:inline text-slate-600">
               React · Tailwind CSS · Recharts · Supabase
             </span>
-            {/* ← Live DB sync status pill */}
             <SyncIndicator />
           </div>
         </div>
       </footer>
 
-      {/* Toast Alert */}
       <Toast />
     </div>
   );
 };
 
+const OperatorView = () => {
+  const [editingEvent, setEditingEvent] = useState(null);
+  return (
+    <div className="space-y-8">
+      <EventInputForm
+        editingEvent={editingEvent}
+        onCancelEdit={() => setEditingEvent(null)}
+      />
+      <InputHistoryTable
+        onEditEvent={(evt) => {
+          setEditingEvent(evt);
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }}
+      />
+    </div>
+  );
+};
+
+const AdminView = () => (
+  <div className="space-y-8">
+    <CityManagement />
+    <UserManagement />
+  </div>
+);
+
+const AppRoutes = () => {
+  const { currentUser } = useAuth();
+  
+  return (
+    <Routes>
+      <Route path="/" element={currentUser ? <Navigate to={`/${currentUser.role}`} replace /> : <LandingPage />} />
+      
+      {/* Login Routes */}
+      <Route path="/login/operator" element={currentUser ? <Navigate to="/operator" /> : <Login role="operator" />} />
+      <Route path="/login/admin" element={currentUser ? <Navigate to="/admin" /> : <Login role="admin" />} />
+      <Route path="/login/pimpinan" element={currentUser ? <Navigate to="/pimpinan" /> : <Login role="pimpinan" />} />
+      <Route path="/login/kadin" element={currentUser ? <Navigate to="/kadin" /> : <Login role="kadin" />} />
+
+      {/* Protected Dashboards */}
+      <Route path="/operator" element={
+        <ProtectedRoute role="operator">
+          <DashboardLayout role="operator"><OperatorView /></DashboardLayout>
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/admin" element={
+        <ProtectedRoute role="admin">
+          <DashboardLayout role="admin"><AdminView /></DashboardLayout>
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/pimpinan" element={
+        <ProtectedRoute role="pimpinan">
+          <DashboardLayout role="pimpinan"><ExecutiveDashboard /></DashboardLayout>
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/kadin" element={
+        <ProtectedRoute role="kadin">
+          <DashboardLayout role="kadin"><ExecutiveDashboard /></DashboardLayout>
+        </ProtectedRoute>
+      } />
+
+      {/* Catch-all redirect */}
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
+};
+
 export default function App() {
   return (
-    <AuthProvider>
-      <MainContent />
-    </AuthProvider>
+    <BrowserRouter>
+      <AuthProvider>
+        <AppRoutes />
+      </AuthProvider>
+    </BrowserRouter>
   );
 }

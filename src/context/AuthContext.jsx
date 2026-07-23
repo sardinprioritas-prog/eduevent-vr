@@ -45,6 +45,32 @@ export const AuthProvider = ({ children }) => {
   const [dbMode, setDbMode]             = useState('local'); // 'supabase' | 'local'
 
   // ============================================================
+  // AUTHENTICATION (LOGIN/LOGOUT)
+  // ============================================================
+  const login = (role, city, passcode) => {
+    // Cari user yang cocok
+    const user = users.find(u => {
+      if (role === 'operator' || role === 'kadin') {
+        return u.role === role && u.city === city && u.passcode === passcode;
+      }
+      return u.role === role && u.passcode === passcode;
+    });
+
+    if (user) {
+      setCurrentUser(user);
+      setActiveUserSession(user);
+      if (user.city) setKadinCity(user.city);
+      return true;
+    }
+    return false;
+  };
+
+  const logout = () => {
+    setCurrentUser(null);
+    localStorage.removeItem('eduevent_active_user'); // Clear session
+  };
+
+  // ============================================================
   // TOAST
   // ============================================================
   const showToast = (message, type = 'success') => {
@@ -77,11 +103,13 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem('eduevent_users', JSON.stringify(loadedUsers));
         localStorage.setItem('eduevent_events', JSON.stringify(loadedEvents));
 
-        // Set active user
+        // Set active user if there is a session
         const loadedActiveUser = getActiveUser();
-        setCurrentUser(loadedActiveUser || loadedUsers[0]);
-        if (loadedActiveUser?.city) {
-          setKadinCity(loadedActiveUser.city);
+        if (loadedActiveUser) {
+          setCurrentUser(loadedActiveUser);
+          if (loadedActiveUser.city) {
+            setKadinCity(loadedActiveUser.city);
+          }
         }
 
         setIsSyncing(false);
@@ -102,9 +130,11 @@ export const AuthProvider = ({ children }) => {
     setUsers(loadedUsers);
     setCities(loadedCities);
     setEvents(loadedEvents);
-    setCurrentUser(loadedActiveUser || loadedUsers[0]);
-    if (loadedActiveUser?.city) {
-      setKadinCity(loadedActiveUser.city);
+    if (loadedActiveUser) {
+      setCurrentUser(loadedActiveUser);
+      if (loadedActiveUser.city) {
+        setKadinCity(loadedActiveUser.city);
+      }
     }
     setDbMode('local');
     setIsSyncing(false);
@@ -292,6 +322,8 @@ export const AuthProvider = ({ children }) => {
         isSyncing,
         dbMode,
         isSupabaseConfigured,
+        login,
+        logout,
       }}
     >
       {children}

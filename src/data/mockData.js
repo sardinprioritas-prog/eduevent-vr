@@ -15,6 +15,7 @@ export const INITIAL_USERS = [
     role: 'operator',
     active: true,
     city: 'Bone',
+    passcode: 'op123',
   },
   {
     id: 'usr-2',
@@ -23,6 +24,7 @@ export const INITIAL_USERS = [
     role: 'admin',
     active: true,
     city: 'Makassar',
+    passcode: 'ad123',
   },
   {
     id: 'usr-3',
@@ -31,6 +33,7 @@ export const INITIAL_USERS = [
     role: 'pimpinan',
     active: true,
     city: 'Makassar',
+    passcode: 'pim123',
   },
   {
     id: 'usr-4',
@@ -39,6 +42,7 @@ export const INITIAL_USERS = [
     role: 'kadin',
     active: true,
     city: 'Bone',
+    passcode: 'kad123',
   },
 ];
 

@@ -22,6 +22,7 @@ CREATE TABLE IF NOT EXISTS users (
   role        TEXT NOT NULL DEFAULT 'operator'
                 CHECK (role IN ('operator', 'admin', 'pimpinan', 'kadin')),
   city        TEXT,
+  passcode    TEXT NOT NULL DEFAULT '123456',
   active      BOOLEAN NOT NULL DEFAULT true,
   created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
 );
@@ -73,11 +74,11 @@ INSERT INTO cities (id, name, province, active) VALUES
   ('city-6', 'Maros',    'Sulawesi Selatan', true)
 ON CONFLICT (id) DO NOTHING;
 
-INSERT INTO users (id, name, email, role, city, active) VALUES
-  ('usr-1', 'Budi Santoso',             'operator@eduevent.id',       'operator', 'Bone',     true),
-  ('usr-2', 'Siti Aminah',              'admin@eduevent.id',          'admin',    'Makassar', true),
-  ('usr-3', 'Dr. Hendra Wijaya',        'pimpinan@eduevent.id',       'pimpinan', 'Makassar', true),
-  ('usr-4', 'Drs. H. Andi Syamsul, M.Si.', 'kadin.bone@eduevent.id', 'kadin',    'Bone',     true)
+INSERT INTO users (id, name, email, role, city, passcode, active) VALUES
+  ('usr-1', 'Budi Santoso',             'operator@eduevent.id',       'operator', 'Bone',     'op123',  true),
+  ('usr-2', 'Siti Aminah',              'admin@eduevent.id',          'admin',    'Makassar', 'ad123',  true),
+  ('usr-3', 'Dr. Hendra Wijaya',        'pimpinan@eduevent.id',       'pimpinan', 'Makassar', 'pim123', true),
+  ('usr-4', 'Drs. H. Andi Syamsul, M.Si.', 'kadin.bone@eduevent.id', 'kadin',    'Bone',     'kad123', true)
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO events (id, school_name, date, city_id, city_name, duration, session, dapodik_students, participating_students, operator_name) VALUES

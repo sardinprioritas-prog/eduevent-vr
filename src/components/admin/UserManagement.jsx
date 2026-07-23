@@ -12,6 +12,7 @@ export const UserManagement = () => {
     email: '',
     role: 'operator',
     city: cities[0]?.name || 'Bone',
+    passcode: '',
     active: true,
   });
 
@@ -31,7 +32,7 @@ export const UserManagement = () => {
       handleSaveUser(formData);
     }
 
-    setFormData({ name: '', email: '', role: 'operator', city: cities[0]?.name || 'Bone', active: true });
+    setFormData({ name: '', email: '', role: 'operator', city: cities[0]?.name || 'Bone', passcode: '', active: true });
     setShowAddForm(false);
   };
 
@@ -42,6 +43,7 @@ export const UserManagement = () => {
       email: user.email,
       role: user.role || 'operator',
       city: user.city || (cities[0]?.name || 'Bone'),
+      passcode: user.passcode || '',
       active: user.active !== false,
     });
     setShowAddForm(true);
@@ -50,7 +52,7 @@ export const UserManagement = () => {
   const cancelForm = () => {
     setShowAddForm(false);
     setEditingUser(null);
-    setFormData({ name: '', email: '', role: 'operator', city: cities[0]?.name || 'Bone', active: true });
+    setFormData({ name: '', email: '', role: 'operator', city: cities[0]?.name || 'Bone', passcode: '', active: true });
   };
 
   const handleResetPassword = (email) => {
@@ -136,7 +138,7 @@ export const UserManagement = () => {
           <h3 className="text-xs font-bold text-slate-200 uppercase tracking-wider">
             {editingUser ? 'Edit Hak Akses Akun' : 'Daftarkan Akun Pengguna Baru'}
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
             <div>
               <label className="block text-xs font-medium text-slate-400 mb-1">Nama Lengkap</label>
               <input
@@ -156,6 +158,16 @@ export const UserManagement = () => {
                 placeholder="email@eduevent.id"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-purple-500"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-400 mb-1">Passcode</label>
+              <input
+                type="text"
+                placeholder="Contoh: 1234"
+                value={formData.passcode}
+                onChange={(e) => setFormData({ ...formData, passcode: e.target.value })}
                 className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-purple-500"
               />
             </div>
@@ -214,6 +226,7 @@ export const UserManagement = () => {
               <th className="py-3 px-4">Email</th>
               <th className="py-3 px-4">Peran (Role)</th>
               <th className="py-3 px-4">Wilayah Tugas</th>
+              <th className="py-3 px-4">Passcode</th>
               <th className="py-3 px-4 text-center">Status</th>
               <th className="py-3 px-4 text-right">Aksi & Keamanan</th>
             </tr>
@@ -228,6 +241,9 @@ export const UserManagement = () => {
                 </td>
                 <td className="py-3 px-4">{getRoleBadge(u.role)}</td>
                 <td className="py-3 px-4 text-slate-400">{u.city || 'Nasional'}</td>
+                <td className="py-3 px-4">
+                  <span className="text-xs font-mono text-slate-300 bg-slate-800 px-2 py-1 rounded border border-slate-700">{u.passcode || '------'}</span>
+                </td>
                 <td className="py-3 px-4 text-center">
                   {u.active !== false ? (
                     <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-500/20 text-emerald-400">

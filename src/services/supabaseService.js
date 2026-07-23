@@ -33,6 +33,7 @@ const toAppUser = (row) => ({
   email: row.email,
   role: row.role,
   city: row.city,
+  passcode: row.passcode,
   active: row.active,
   createdAt: row.created_at,
 });
@@ -73,6 +74,7 @@ const toDbUser = (u) => ({
   email: u.email,
   role: u.role,
   city: u.city,
+  passcode: u.passcode,
   active: u.active !== false,
 });
 

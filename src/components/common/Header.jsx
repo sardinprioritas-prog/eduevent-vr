@@ -1,27 +1,9 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React from 'react';
 import { useAuth } from '../../context/useAuth';
-import { Glasses, Shield, User, BarChart3, UserCheck, ChevronDown, MapPin, Building2 } from 'lucide-react';
+import { Glasses, Shield, User, BarChart3, UserCheck, Building2, LogOut } from 'lucide-react';
 
 export const Header = () => {
-  const { currentUser, switchRole, cities, switchUser, kadinCity, setKadinCity } = useAuth();
-  const [showKadinDropdown, setShowKadinDropdown] = useState(false);
-  const dropdownRef = useRef(null);
-
-  // Close dropdown on outside click
-  useEffect(() => {
-    const handler = (e) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
-        setShowKadinDropdown(false);
-      }
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, []);
-
-  const handleKadinSelect = (cityName) => {
-    switchRole('kadin', cityName);
-    setShowKadinDropdown(false);
-  };
+  const { currentUser, logout } = useAuth();
 
   const getRoleBadgeStyle = (role) => {
     switch (role) {
@@ -53,8 +35,6 @@ export const Header = () => {
     }
   };
 
-  const isKadin = currentUser?.role === 'kadin';
-
   return (
     <header className="sticky top-0 z-40 bg-slate-900/80 backdrop-blur-md border-b border-slate-800 shadow-xl">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -81,114 +61,21 @@ export const Header = () => {
             </div>
           </div>
 
-          {/* Role Switcher & User Profile */}
+          {/* User Profile & Logout */}
           <div className="flex items-center space-x-4">
-            {/* Quick Role Switcher Bar */}
-            <div className="bg-slate-800/80 p-1 rounded-xl border border-slate-700 flex items-center space-x-1">
-              <span className="text-xs text-slate-400 px-2 font-medium hidden md:inline-block">
-                Simulasi Peran:
-              </span>
-              
-              <button
-                onClick={() => switchRole('operator')}
-                className={`flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                  currentUser?.role === 'operator'
-                    ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/30'
-                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700/50'
-                }`}
-              >
-                <UserCheck className="w-3.5 h-3.5 mr-1" />
-                Operator
-              </button>
-
-              <button
-                onClick={() => switchRole('admin')}
-                className={`flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                  currentUser?.role === 'admin'
-                    ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
-                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700/50'
-                }`}
-              >
-                <Shield className="w-3.5 h-3.5 mr-1" />
-                Admin
-              </button>
-
-              <button
-                onClick={() => switchRole('pimpinan')}
-                className={`flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                  currentUser?.role === 'pimpinan'
-                    ? 'bg-purple-600 text-white shadow-md shadow-purple-600/30'
-                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700/50'
-                }`}
-              >
-                <BarChart3 className="w-3.5 h-3.5 mr-1" />
-                Pimpinan
-              </button>
-
-              {/* Kepala Dinas Button with Dropdown */}
-              <div className="relative" ref={dropdownRef}>
-                <button
-                  onClick={() => setShowKadinDropdown((prev) => !prev)}
-                  className={`flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                    isKadin
-                      ? 'bg-amber-600 text-white shadow-md shadow-amber-600/30'
-                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700/50'
-                  }`}
-                >
-                  <Building2 className="w-3.5 h-3.5 mr-1" />
-                  Kepala Dinas
-                  {isKadin && (
-                    <span className="ml-1.5 px-1.5 py-0.5 rounded bg-amber-500/30 text-amber-200 text-[10px] font-bold border border-amber-400/30">
-                      {kadinCity}
-                    </span>
-                  )}
-                  <ChevronDown
-                    className={`w-3 h-3 ml-1 transition-transform ${showKadinDropdown ? 'rotate-180' : ''}`}
-                  />
-                </button>
-
-                {/* City Dropdown */}
-                {showKadinDropdown && (
-                  <div className="absolute right-0 top-full mt-2 w-56 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl shadow-black/40 overflow-hidden z-50 animate-fadeIn">
-                    <div className="px-3 py-2 border-b border-slate-800">
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center">
-                        <MapPin className="w-3 h-3 mr-1.5 text-amber-400" />
-                        Pilih Wilayah Tugas
-                      </p>
-                    </div>
-                    <div className="py-1 max-h-64 overflow-y-auto">
-                      {cities.map((city) => (
-                        <button
-                          key={city.id}
-                          onClick={() => handleKadinSelect(city.name)}
-                          className={`w-full text-left px-4 py-2.5 text-xs transition-all flex items-center space-x-2 ${
-                            kadinCity === city.name && isKadin
-                              ? 'bg-amber-600/20 text-amber-300 font-bold'
-                              : 'text-slate-300 hover:bg-slate-800 hover:text-white'
-                          }`}
-                        >
-                          <MapPin
-                            className={`w-3.5 h-3.5 flex-shrink-0 ${
-                              kadinCity === city.name && isKadin ? 'text-amber-400' : 'text-slate-500'
-                            }`}
-                          />
-                          <span>{city.name}</span>
-                          {kadinCity === city.name && isKadin && (
-                            <span className="ml-auto text-[10px] text-amber-400 font-bold">✓ Aktif</span>
-                          )}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
+            <button
+              onClick={() => logout()}
+              className="flex items-center space-x-2 px-4 py-2 text-sm font-medium text-red-400 bg-red-500/10 border border-red-500/20 rounded-xl hover:bg-red-500/20 hover:text-red-300 transition-colors"
+            >
+              <LogOut className="w-4 h-4" />
+              <span className="hidden sm:inline">Keluar</span>
+            </button>
 
             {/* Active User Badge */}
-            <div className="hidden lg:flex items-center space-x-3 pl-2 border-l border-slate-800">
+            <div className="hidden lg:flex items-center space-x-3 pl-4 border-l border-slate-800">
               <div className="text-right">
                 <div className="text-xs font-semibold text-slate-200">{currentUser?.name}</div>
-                <div className="text-[10px] text-slate-400">{currentUser?.email}</div>
+                <div className="text-[10px] text-slate-400">{currentUser?.city || 'Admin/Global'}</div>
               </div>
               <div
                 className={`flex items-center px-2.5 py-1 rounded-full border text-xs font-medium ${getRoleBadgeStyle(
