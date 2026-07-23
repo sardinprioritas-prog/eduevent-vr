@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/useAuth';
-import { Lock, MapPin, ArrowRight, ArrowLeft, Building2, UserCheck, Shield, BarChart3 } from 'lucide-react';
+import { Lock, MapPin, ArrowRight, ArrowLeft, Building2, UserCheck, Shield, BarChart3, Target } from 'lucide-react';
 
 export const Login = ({ role }) => {
   const [passcode, setPasscode] = useState('');
@@ -10,13 +10,14 @@ export const Login = ({ role }) => {
   const { login, cities } = useAuth();
   const navigate = useNavigate();
 
-  const needsCitySelection = role === 'operator' || role === 'kadin';
+  const needsCitySelection = role === 'operator' || role === 'kadin' || role === 'pioneer';
 
   const roleConfig = {
     operator: { title: 'Login Operator', icon: <Building2 className="w-6 h-6 text-emerald-400" />, color: 'emerald' },
     admin: { title: 'Login Admin', icon: <Shield className="w-6 h-6 text-blue-400" />, color: 'blue' },
     pimpinan: { title: 'Login Pimpinan', icon: <BarChart3 className="w-6 h-6 text-purple-400" />, color: 'purple' },
     kadin: { title: 'Login Kepala Dinas', icon: <UserCheck className="w-6 h-6 text-amber-400" />, color: 'amber' },
+    pioneer: { title: 'Login Pioneer', icon: <Target className="w-6 h-6 text-rose-400" />, color: 'rose' },
   };
 
   const rc = roleConfig[role];

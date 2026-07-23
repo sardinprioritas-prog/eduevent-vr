@@ -66,7 +66,7 @@ export const AuthProvider = ({ children }) => {
   const login = (role, city, passcode) => {
     // Cari user yang cocok
     const user = users.find(u => {
-      if (role === 'operator' || role === 'kadin') {
+      if (role === 'operator' || role === 'kadin' || role === 'pioneer') {
         return u.role === role && u.city === city && u.passcode === passcode;
       }
       return u.role === role && u.passcode === passcode;
