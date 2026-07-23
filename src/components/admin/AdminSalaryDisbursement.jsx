@@ -46,8 +46,16 @@ export const AdminSalaryDisbursement = () => {
     });
 
     const totalStudents = unpaidEvents.reduce((sum, evt) => sum + (parseInt(evt.participatingStudents, 10) || 0), 0);
-    const uniqueDates = new Set(unpaidEvents.map(evt => evt.date));
-    const uniqueEventDays = uniqueDates.size;
+
+    // Kelompokkan event per tanggal → hitung total siswa per hari
+    const dailyStudentMap = new Map();
+    unpaidEvents.forEach(evt => {
+      const students = parseInt(evt.participatingStudents, 10) || 0;
+      dailyStudentMap.set(evt.date, (dailyStudentMap.get(evt.date) || 0) + students);
+    });
+    const uniqueEventDays = dailyStudentMap.size;
+    // Hari yang memenuhi syarat bonus: siswa >= 250 (sebagai multiplier bonus Pioneer)
+    const qualifyingDays = [...dailyStudentMap.values()].filter(count => count >= 250).length;
 
     let bonusSalary = 0;
     let isBonusAchieved = false;
@@ -56,8 +64,10 @@ export const AdminSalaryDisbursement = () => {
       isBonusAchieved = totalStudents >= 1000;
       bonusSalary = isBonusAchieved ? bonusFee : 0;
     } else if (user.role === 'pioneer') {
-      isBonusAchieved = uniqueEventDays >= 4 && totalStudents >= 250;
-      bonusSalary = isBonusAchieved ? bonusFee * uniqueEventDays : 0;
+      // Syarat: minimal 4 hari event dalam sepekan
+      // Bonus: bonusFee × jumlah hari yang siswanya >= 250
+      isBonusAchieved = uniqueEventDays >= 4 && qualifyingDays > 0;
+      bonusSalary = isBonusAchieved ? bonusFee * qualifyingDays : 0;
     }
 
     const baseSalary = totalStudents * baseFee;
@@ -69,6 +79,7 @@ export const AdminSalaryDisbursement = () => {
       totalSalary,
       totalStudents,
       uniqueEventDays,
+      qualifyingDays,
       unpaidEvents,
       isBonusAchieved,
       eventIdsToUpdate: unpaidEvents.map(e => e.id)
@@ -95,6 +106,7 @@ export const AdminSalaryDisbursement = () => {
         bonusSalary: userData.feeData.bonusSalary,
         totalStudents: userData.feeData.totalStudents,
         uniqueEventDays: userData.feeData.uniqueEventDays,
+        qualifyingDays: userData.feeData.qualifyingDays,
         isBonusAchieved: userData.feeData.isBonusAchieved,
         // Simpan ID event yang dicairkan agar kalkulasi berikutnya akurat per-user
         eventIds: userData.feeData.eventIdsToUpdate,

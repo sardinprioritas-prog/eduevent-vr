@@ -49,7 +49,13 @@ export const PayoutHistoryTable = () => {
                   </td>
                   <td className="py-4 px-4 text-center text-sm">
                     {p.details?.totalStudents || 0} Siswa
-                    {currentUser?.role === 'pioneer' && <div className="text-xs text-slate-500">{p.details?.uniqueEventDays || 0} Hari</div>}
+                    {currentUser?.role === 'pioneer' && (
+                      <div className="text-xs text-slate-500">
+                        {p.details?.qualifyingDays != null
+                          ? `${p.details.qualifyingDays} hari ≥250 siswa (${p.details.uniqueEventDays || 0} hari total)`
+                          : `${p.details?.uniqueEventDays || 0} Hari`}
+                      </div>
+                    )}
                   </td>
                   <td className="py-4 px-4 text-right text-sm">Rp {(p.details?.baseSalary || 0).toLocaleString('id-ID')}</td>
                   <td className="py-4 px-4 text-right text-sm">Rp {(p.details?.bonusSalary || 0).toLocaleString('id-ID')}</td>

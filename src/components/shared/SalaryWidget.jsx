@@ -5,7 +5,7 @@ import { Wallet, TrendingUp, Target, Award } from 'lucide-react';
 export const SalaryWidget = ({ role = 'operator' }) => {
   const { events, currentUser, salarySettings, payouts } = useAuth();
 
-  const { fee, bonus, totalParticipating, uniqueEventDays } = useMemo(() => {
+  const { fee, bonus, totalParticipating, uniqueEventDays, qualifyingDays } = useMemo(() => {
     // 1. Dapatkan setting fee personal untuk currentUser
     let baseFee = 0;
     let bonusFee = 0;
@@ -44,13 +44,21 @@ export const SalaryWidget = ({ role = 'operator' }) => {
       return sum + (parseInt(evt.participatingStudents, 10) || 0);
     }, 0);
 
-    const uniqueDates = new Set(cityEventsUnpaid.map(evt => evt.date));
-    
+    // Kelompokkan per tanggal → hitung siswa harian → qualifying days
+    const dailyStudentMap = new Map();
+    cityEventsUnpaid.forEach(evt => {
+      const students = parseInt(evt.participatingStudents, 10) || 0;
+      dailyStudentMap.set(evt.date, (dailyStudentMap.get(evt.date) || 0) + students);
+    });
+    const totalEventDays = dailyStudentMap.size;
+    const daysAbove250 = [...dailyStudentMap.values()].filter(count => count >= 250).length;
+
     return {
       fee: baseFee,
       bonus: bonusFee,
       totalParticipating: totalStudents,
-      uniqueEventDays: uniqueDates.size
+      uniqueEventDays: totalEventDays,
+      qualifyingDays: daysAbove250,
     };
   }, [events, currentUser, salarySettings, payouts]);
 
@@ -65,9 +73,15 @@ export const SalaryWidget = ({ role = 'operator' }) => {
     bonusSalary = isBonusAchieved ? bonus : 0;
     bonusStatusText = isBonusAchieved ? `Tercapai (>= 1000)` : `Belum (Target: 1000)`;
   } else if (role === 'pioneer') {
-    isBonusAchieved = uniqueEventDays >= 4 && totalParticipating >= 250;
-    bonusSalary = isBonusAchieved ? bonus * uniqueEventDays : 0;
-    bonusStatusText = isBonusAchieved ? `Tercapai (${uniqueEventDays} hari, >= 250 siswa)` : `Belum (Syarat: >=4 hari & >=250 siswa)`;
+    // Syarat: minimal 4 hari event dalam sepekan
+    // Bonus: bonusFee × hari yang siswanya >= 250
+    isBonusAchieved = uniqueEventDays >= 4 && qualifyingDays > 0;
+    bonusSalary = isBonusAchieved ? bonus * qualifyingDays : 0;
+    bonusStatusText = isBonusAchieved
+      ? `Tercapai (${qualifyingDays} hari ≥250 siswa dari ${uniqueEventDays} hari)`
+      : uniqueEventDays < 4
+        ? `Belum (${uniqueEventDays}/4 hari, syarat minimal 4 hari)`
+        : `Belum (0 hari dengan ≥250 siswa)`;
   }
 
   const totalSalary = baseSalary + bonusSalary;
@@ -89,7 +103,9 @@ export const SalaryWidget = ({ role = 'operator' }) => {
         {role === 'pioneer' && (
           <div className="text-right">
             <div className="text-sm font-bold text-indigo-400">{uniqueEventDays} Hari Aktif</div>
-            <div className="text-xs text-slate-400">Belum Dicairkan</div>
+            <div className="text-xs text-slate-400">
+              {qualifyingDays > 0 ? `${qualifyingDays} hari ≥250 siswa` : 'Belum ada hari ≥250 siswa'}
+            </div>
           </div>
         )}
       </div>
@@ -123,7 +139,7 @@ export const SalaryWidget = ({ role = 'operator' }) => {
           <div className="flex flex-col mb-1">
             <div className="flex items-center text-slate-400 text-xs font-semibold uppercase tracking-wider">
               <Award className={`w-3.5 h-3.5 mr-1.5 ${isBonusAchieved ? 'text-emerald-400' : 'text-slate-500'}`} />
-              Bonus {role === 'operator' ? '(Flat)' : '(Pengali)'}
+              Bonus {role === 'operator' ? '(Flat)' : '(Per Hari ≥250)'}
             </div>
             <span className={`text-[10px] mt-1 ${isBonusAchieved ? 'text-emerald-500' : 'text-rose-500/70'}`}>
               {bonusStatusText}
