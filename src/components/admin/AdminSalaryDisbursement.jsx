@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useAuth } from '../../context/useAuth';
 import { Wallet, Target, Award, CheckCircle, FileText } from 'lucide-react';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 
 export const AdminSalaryDisbursement = () => {
   const { users, events, salarySettings, payouts, handleDisburseFee, showToast } = useAuth();
@@ -157,7 +157,7 @@ export const AdminSalaryDisbursement = () => {
       u.feeData.totalSalary > 0 ? 'Belum Cair' : 'Lunas',
     ]);
 
-    doc.autoTable({
+    autoTable(doc, {
       head: [columns],
       body: rows,
       startY: 28,

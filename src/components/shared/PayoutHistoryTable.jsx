@@ -2,7 +2,7 @@ import React from 'react';
 import { useAuth } from '../../context/useAuth';
 import { History, Calendar, FileText } from 'lucide-react';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 
 export const PayoutHistoryTable = () => {
   const { payouts, currentUser, showToast } = useAuth();
@@ -41,7 +41,7 @@ export const PayoutHistoryTable = () => {
       ];
       if (currentUser?.role === 'pioneer') {
         const qDays = p.details?.qualifyingDays != null
-          ? `${p.details.qualifyingDays} hari ≥0250 (${p.details.uniqueEventDays || 0} total)`
+          ? `${p.details.qualifyingDays} hari ≥250 (${p.details.uniqueEventDays || 0} total)`
           : `${p.details?.uniqueEventDays || 0} hari`;
         base.push(qDays);
       }
@@ -53,7 +53,7 @@ export const PayoutHistoryTable = () => {
       return base;
     });
 
-    doc.autoTable({
+    autoTable(doc, {
       head: [columns],
       body: rows,
       startY: 28,

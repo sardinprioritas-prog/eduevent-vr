@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from '../../context/useAuth';
 import { History, Search, Edit3, Trash2, Calendar, MapPin, Users, Award, CheckCircle, FileText } from 'lucide-react';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 
 export const InputHistoryTable = ({ onEditEvent, readOnly = false }) => {
   const { events, handleDeleteEvent, currentUser, showToast } = useAuth();
@@ -53,7 +53,7 @@ export const InputHistoryTable = ({ onEditEvent, readOnly = false }) => {
       ];
     });
 
-    doc.autoTable({
+    autoTable(doc, {
       head: [columns],
       body: rows,
       startY: 28,

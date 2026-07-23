@@ -3,7 +3,7 @@ import { useAuth } from '../../context/useAuth';
 import { Table, Download, FileSpreadsheet, FileText, Filter, RefreshCw, Calendar, MapPin, Lock } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 
 export const RecapTable = ({ selectedCity }) => {
   const { events, cities, showToast } = useAuth();
@@ -138,7 +138,7 @@ export const RecapTable = ({ selectedCity }) => {
       ];
     });
 
-    doc.autoTable({
+    autoTable(doc, {
       head: [tableColumn],
       body: tableRows,
       startY: 28,
