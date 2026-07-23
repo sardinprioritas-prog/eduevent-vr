@@ -78,8 +78,8 @@ const toDbSchool = (sch) => ({
   city_id: sch.cityId,
   name: sch.name,
   student_count: sch.studentCount,
-  demo_date: sch.demoDate,
-  event_date: sch.eventDate,
+  demo_date: sch.demoDate || null,
+  event_date: sch.eventDate || null,
   active: sch.active,
 });
 

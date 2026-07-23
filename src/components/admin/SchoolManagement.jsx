@@ -59,6 +59,8 @@ export const SchoolManagement = () => {
     handleSaveSchool({
       ...(editingSchool ? { id: editingSchool.id } : {}),
       ...formData,
+      demoDate: formData.demoDate || null,
+      eventDate: formData.eventDate || null,
       studentCount: parseInt(formData.studentCount) || 0,
     });
     resetForm();
