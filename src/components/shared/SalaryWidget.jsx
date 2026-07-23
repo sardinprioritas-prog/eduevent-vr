@@ -38,7 +38,7 @@ export const SalaryWidget = ({ role = 'operator' }) => {
     });
 
     const totalStudents = cityEventsThisWeek.reduce((sum, evt) => {
-      return sum + (parseInt(evt.dapodikStudents, 10) ? parseInt(evt.participatingStudents, 10) : 0);
+      return sum + (parseInt(evt.participatingStudents, 10) || 0);
     }, 0);
 
     const uniqueDates = new Set(cityEventsThisWeek.map(evt => evt.date));

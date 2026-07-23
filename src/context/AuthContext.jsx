@@ -286,8 +286,9 @@ export const AuthProvider = ({ children }) => {
   const handleSaveSchool = async (schoolData) => {
     try {
       if (isOnline) {
-        const saved = await sbSaveSchool(schoolData);
-        setSchools(saveSchool(saved)); // Sync local
+        const updatedSchools = await sbSaveSchool(schoolData);
+        setSchools(updatedSchools);
+        localStorage.setItem('eduevent_schools', JSON.stringify(updatedSchools));
       } else {
         setSchools(saveSchool(schoolData));
       }
@@ -301,9 +302,12 @@ export const AuthProvider = ({ children }) => {
   const handleDeleteSchool = async (id) => {
     try {
       if (isOnline) {
-        await sbDeleteSchool(id);
+        const updatedSchools = await sbDeleteSchool(id);
+        setSchools(updatedSchools);
+        localStorage.setItem('eduevent_schools', JSON.stringify(updatedSchools));
+      } else {
+        setSchools(removeSchool(id));
       }
-      setSchools(removeSchool(id));
       showToast('Sekolah berhasil dihapus', 'success');
     } catch (err) {
       console.error(err);

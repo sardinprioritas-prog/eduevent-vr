@@ -251,20 +251,18 @@ export const sbSaveSchool = async (school) => {
   if (!school.id) {
     dbData.id = `sch-${Date.now()}`;
   }
-  const { data, error } = await supabase
+  const { error } = await supabase
     .from('schools')
-    .upsert(dbData, { onConflict: 'id' })
-    .select()
-    .single();
+    .upsert(dbData, { onConflict: 'id' });
 
   if (error) throw error;
-  return toAppSchool(data);
+  return sbGetSchools();
 };
 
 export const sbDeleteSchool = async (id) => {
   const { error } = await supabase.from('schools').delete().eq('id', id);
   if (error) throw error;
-  return id;
+  return sbGetSchools();
 };
 
 // ============================================================
