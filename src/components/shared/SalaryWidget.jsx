@@ -61,7 +61,7 @@ export const SalaryWidget = ({ role = 'operator' }) => {
     <div className="glass-card rounded-2xl p-6 mb-8 border border-slate-800 relative overflow-hidden">
       <div className="absolute top-0 right-0 -mt-8 -mr-8 w-48 h-48 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
       
-      <div className="flex items-center justify-between mb-6 relative z-10 border-b border-slate-800 pb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 relative z-10 border-b border-slate-800 pb-4 gap-4">
         <div className="flex items-center space-x-3">
           <div className="p-2.5 bg-emerald-500/10 text-emerald-400 rounded-xl border border-emerald-500/20">
             <Wallet className="w-5 h-5" />
@@ -79,7 +79,7 @@ export const SalaryWidget = ({ role = 'operator' }) => {
         )}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 relative z-10">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 relative z-10">
         
         {/* Card: Total Siswa */}
         <div className="bg-slate-900/60 p-4 rounded-xl border border-slate-800">

@@ -62,7 +62,7 @@ const DashboardLayout = ({ role, children }) => {
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col selection:bg-indigo-500 selection:text-white">
       <Header />
 
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
         <div className="mb-6 flex items-center justify-between p-4 rounded-xl bg-slate-900/60 border border-slate-800 backdrop-blur-md">
           <div className="flex items-center space-x-3 min-w-0">
             <div className="relative flex-shrink-0">

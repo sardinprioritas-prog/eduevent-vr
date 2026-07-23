@@ -200,7 +200,7 @@ export const SchoolManagement = () => {
 
       {/* Schools Table */}
       <div className="overflow-x-auto">
-        <table className="w-full text-left text-xs border-collapse">
+        <table className="w-full text-left text-xs border-collapse whitespace-nowrap">
           <thead>
             <tr className="border-b border-slate-800 text-slate-400 font-semibold uppercase tracking-wider bg-slate-900/80">
               <th className="py-3 px-4">Nama Sekolah</th>

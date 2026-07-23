@@ -26,7 +26,7 @@ export const PayoutHistoryTable = () => {
         </div>
       ) : (
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+          <table className="w-full text-left border-collapse whitespace-nowrap">
             <thead>
               <tr className="border-b border-slate-800 text-slate-400 text-sm">
                 <th className="py-3 px-4 font-medium">Tanggal Pencairan</th>
