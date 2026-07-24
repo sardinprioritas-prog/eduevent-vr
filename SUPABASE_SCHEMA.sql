@@ -76,6 +76,22 @@ CREATE TABLE IF NOT EXISTS user_salary_settings (
   updated_at       TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+-- 7. TABLE: finances (Manajemen Keuangan & Cashflow)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS finances (
+  id           TEXT PRIMARY KEY DEFAULT ('fin-' || floor(extract(epoch from now()) * 1000)::text),
+  date         DATE NOT NULL DEFAULT CURRENT_DATE,
+  type         TEXT NOT NULL CHECK (type IN ('income', 'expense')),
+  category     TEXT NOT NULL,
+  title        TEXT NOT NULL,
+  amount       NUMERIC NOT NULL DEFAULT 0,
+  city_name    TEXT,
+  school_name  TEXT,
+  ref_no       TEXT,
+  notes        TEXT,
+  created_at   TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
 -- ============================================================
 -- ROW LEVEL SECURITY (RLS)
 -- Menggunakan anon key → policy terbuka untuk MVP
@@ -86,21 +102,24 @@ ALTER TABLE users  ENABLE ROW LEVEL SECURITY;
 ALTER TABLE schools ENABLE ROW LEVEL SECURITY;
 ALTER TABLE events ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_salary_settings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE finances ENABLE ROW LEVEL SECURITY;
 
 -- Drop existing policies jika re-run
-DROP POLICY IF EXISTS "Allow all cities"  ON cities;
-DROP POLICY IF EXISTS "Allow all users"   ON users;
-DROP POLICY IF EXISTS "Allow all schools" ON schools;
-DROP POLICY IF EXISTS "Allow all events"  ON events;
-DROP POLICY IF EXISTS "Allow all salary"  ON user_salary_settings;
-DROP POLICY IF EXISTS "Allow all salary"  ON salary_settings; -- In case of old table
+DROP POLICY IF EXISTS "Allow all cities"   ON cities;
+DROP POLICY IF EXISTS "Allow all users"    ON users;
+DROP POLICY IF EXISTS "Allow all schools"  ON schools;
+DROP POLICY IF EXISTS "Allow all events"   ON events;
+DROP POLICY IF EXISTS "Allow all salary"   ON user_salary_settings;
+DROP POLICY IF EXISTS "Allow all salary"   ON salary_settings; -- In case of old table
+DROP POLICY IF EXISTS "Allow all finances" ON finances;
 
 -- Buka akses penuh via anon key (gunakan untuk MVP/demo)
-CREATE POLICY "Allow all cities"  ON cities  FOR ALL USING (true);
-CREATE POLICY "Allow all users"   ON users   FOR ALL USING (true);
-CREATE POLICY "Allow all schools" ON schools FOR ALL USING (true);
-CREATE POLICY "Allow all events"  ON events  FOR ALL USING (true);
-CREATE POLICY "Allow all salary"  ON user_salary_settings FOR ALL USING (true);
+CREATE POLICY "Allow all cities"   ON cities   FOR ALL USING (true);
+CREATE POLICY "Allow all users"    ON users    FOR ALL USING (true);
+CREATE POLICY "Allow all schools"  ON schools  FOR ALL USING (true);
+CREATE POLICY "Allow all events"   ON events   FOR ALL USING (true);
+CREATE POLICY "Allow all salary"   ON user_salary_settings FOR ALL USING (true);
+CREATE POLICY "Allow all finances" ON finances FOR ALL USING (true);
 
 -- ============================================================
 -- SEED DATA AWAL (Data Contoh Sulawesi Selatan)
@@ -134,6 +153,19 @@ INSERT INTO user_salary_settings (user_id, fee, bonus) VALUES
   ('usr-1', 1000, 500)
 ON CONFLICT (user_id) DO NOTHING;
 
+INSERT INTO finances (id, date, type, category, title, amount, city_name, school_name, ref_no, notes) VALUES
+  ('fin-101', '2026-07-15', 'income',  'Tiket VR Siswa', 'Pemasukan Kegiatan VR SMA Negeri 1 Bone (Hari-1)', 11400000, 'Bone', 'SMA Negeri 1 Bone', 'INV-20260715-01', '380 siswa @ Rp 30.000'),
+  ('fin-102', '2026-07-16', 'income',  'Tiket VR Siswa', 'Pemasukan Kegiatan VR SMA Negeri 1 Bone (Hari-2)', 12300000, 'Bone', 'SMA Negeri 1 Bone', 'INV-20260716-02', '410 siswa @ Rp 30.000'),
+  ('fin-103', '2026-07-17', 'expense', 'Honor Operator & Pioneer', 'Pencairan Honor Event VR SMA Negeri 1 Bone', 1185000, 'Bone', 'SMA Negeri 1 Bone', 'OUT-20260717-01', 'Honor Budi Santoso'),
+  ('fin-104', '2026-07-18', 'income',  'Tiket VR Siswa', 'Pemasukan Kegiatan VR SMK Negeri 2 Parepare', 8850000, 'Parepare', 'SMK Negeri 2 Parepare', 'INV-20260718-03', '295 siswa @ Rp 30.000'),
+  ('fin-105', '2026-07-19', 'expense', 'Operasional Event VR', 'Sewa Transportasi & Konsumsi Tim Lapangan Parepare', 1450000, 'Parepare', 'SMK Negeri 2 Parepare', 'OUT-20260719-02', 'Bensin & konsumsi tim'),
+  ('fin-106', '2026-07-20', 'income',  'Kerjasama Kemitraan Sekolah', 'Paket Kemitraan EduVR SMA Islam Athirah Makassar', 18900000, 'Makassar', 'SMA Islam Athirah Makassar', 'INV-20260720-04', '540 siswa @ Rp 35.000'),
+  ('fin-107', '2026-07-21', 'expense', 'Lisensi & Maintenance Hardware VR', 'Pembaruan Lisensi Software EduVR & Kalibrasi Meta Quest', 4500000, 'Makassar', 'Pusat Edutainment', 'OUT-20260721-03', 'Perawatan rutin hardware'),
+  ('fin-108', '2026-07-22', 'income',  'Tiket VR Siswa', 'Pemasukan Kegiatan VR SMA Negeri 1 Gowa', 13950000, 'Gowa', 'SMA Negeri 1 Gowa', 'INV-20260722-05', '465 siswa @ Rp 30.000'),
+  ('fin-109', '2026-07-23', 'income',  'Sponsorship & Donasi', 'Sponsorship CSR Telkomsel untuk Edukasi VR Sekolah', 25000000, 'Makassar', 'Pusat Edutainment', 'SP-20260723-01', 'Dukungan literasi teknologi'),
+  ('fin-110', '2026-07-24', 'expense', 'Pemasaran & Transportasi', 'Promosi & Biaya Sosialisasi Pioneer Sekolah Wilayah Palopo', 2800000, 'Palopo', 'SMA Negeri 3 Palopo', 'OUT-20260724-04', 'Brosur & Akomodasi')
+ON CONFLICT (id) DO NOTHING;
+
 -- Menambahkan Foreign Key untuk payout_id pada events
 ALTER TABLE events
   ADD CONSTRAINT fk_events_payout_id
@@ -148,7 +180,10 @@ CREATE INDEX IF NOT EXISTS idx_events_city_name ON events(city_name);
 CREATE INDEX IF NOT EXISTS idx_events_date      ON events(date);
 CREATE INDEX IF NOT EXISTS idx_events_city_id   ON events(city_id);
 CREATE INDEX IF NOT EXISTS idx_users_role       ON users(role);
+CREATE INDEX IF NOT EXISTS idx_finances_date     ON finances(date);
+CREATE INDEX IF NOT EXISTS idx_finances_type     ON finances(type);
 
 -- ============================================================
 -- SELESAI! Cek tabel di: Table Editor (sidebar kiri Supabase)
 -- ============================================================
+

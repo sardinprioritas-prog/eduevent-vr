@@ -71,6 +71,20 @@ const toAppEvent = (row) => ({
   createdAt: row.created_at,
 });
 
+const toAppFinance = (row) => ({
+  id: row.id,
+  date: row.date,
+  type: row.type,
+  category: row.category,
+  title: row.title,
+  amount: Number(row.amount),
+  cityName: row.city_name,
+  schoolName: row.school_name,
+  refNo: row.ref_no,
+  notes: row.notes,
+  createdAt: row.created_at,
+});
+
 /**
  * Ubah format app (camelCase) → Supabase row (snake_case)
  */
@@ -368,12 +382,6 @@ export const subscribeToEvents = (callback) => {
   return () => supabase.removeChannel(channel);
 };
 
-/**
- * Berlangganan perubahan realtime pada tabel payouts.
- * Penting agar portal operator/pioneer otomatis menerima riwayat pencairan
- * segera setelah admin melakukan proses pencairan — tanpa perlu refresh manual.
- * Mengembalikan fungsi unsubscribe.
- */
 export const subscribeToPayouts = (callback) => {
   const channel = supabase
     .channel('payouts-realtime')
@@ -393,4 +401,75 @@ export const subscribeToPayouts = (callback) => {
 
   return () => supabase.removeChannel(channel);
 };
+
+const toDbFinance = (item) => ({
+  id: item.id,
+  date: item.date,
+  type: item.type,
+  category: item.category,
+  title: item.title,
+  amount: item.amount,
+  city_name: item.cityName || null,
+  school_name: item.schoolName || null,
+  ref_no: item.refNo || null,
+  notes: item.notes || null,
+});
+
+// ============================================================
+// FINANCES API (Supabase Online)
+// ============================================================
+export const sbGetFinances = async () => {
+  const { data, error } = await supabase
+    .from('finances')
+    .select('*')
+    .order('date', { ascending: false });
+
+  if (error) throw error;
+  return data.map(toAppFinance);
+};
+
+export const sbSaveFinance = async (financeItem) => {
+  const dbData = toDbFinance(financeItem);
+  if (!financeItem.id) {
+    dbData.id = `fin-${Date.now()}`;
+  }
+  const { error } = await supabase
+    .from('finances')
+    .upsert(dbData, { onConflict: 'id' });
+
+  if (error) throw error;
+  return sbGetFinances();
+};
+
+export const sbDeleteFinance = async (id) => {
+  const { error } = await supabase.from('finances').delete().eq('id', id);
+  if (error) throw error;
+  return sbGetFinances();
+};
+
+/**
+ * Berlangganan perubahan realtime pada tabel finances.
+ * Setiap ada transaksi ditambahkan/diubah di device lain (misal di HP),
+ * laptop & device lain langsung ter-update secara otomatis secara online!
+ */
+export const subscribeToFinances = (callback) => {
+  const channel = supabase
+    .channel('finances-realtime')
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'finances' },
+      async () => {
+        try {
+          const finances = await sbGetFinances();
+          callback(finances);
+        } catch (err) {
+          console.warn('[Supabase Realtime] Gagal refresh finances:', err);
+        }
+      }
+    )
+    .subscribe();
+
+  return () => supabase.removeChannel(channel);
+};
+
 

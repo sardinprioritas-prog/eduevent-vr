@@ -39,8 +39,22 @@ export const initStorage = () => {
   if (!localStorage.getItem(KEYS.PAYOUTS)) {
     localStorage.setItem(KEYS.PAYOUTS, JSON.stringify([]));
   }
-  if (!localStorage.getItem(KEYS.FINANCES)) {
+  let existingFinances = localStorage.getItem(KEYS.FINANCES);
+  if (!existingFinances) {
     localStorage.setItem(KEYS.FINANCES, JSON.stringify(INITIAL_FINANCIAL_TRANSACTIONS));
+  } else {
+    // Migration: Jika finances lokal di browser pengguna belum memiliki data demo pemasukan (misal hanya 1 pengeluaran pencairan), gabungkan data demo
+    try {
+      const parsed = JSON.parse(existingFinances);
+      if (!Array.isArray(parsed) || parsed.length === 0 || !parsed.some((f) => f.type === 'income')) {
+        const existingIds = new Set(Array.isArray(parsed) ? parsed.map((p) => p.id) : []);
+        const newDemo = INITIAL_FINANCIAL_TRANSACTIONS.filter((item) => !existingIds.has(item.id));
+        const merged = [...newDemo, ...(Array.isArray(parsed) ? parsed : [])];
+        localStorage.setItem(KEYS.FINANCES, JSON.stringify(merged));
+      }
+    } catch (e) {
+      localStorage.setItem(KEYS.FINANCES, JSON.stringify(INITIAL_FINANCIAL_TRANSACTIONS));
+    }
   }
 };
 

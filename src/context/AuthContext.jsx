@@ -42,8 +42,12 @@ import {
   sbSaveSalarySettings,
   sbGetPayouts,
   sbSavePayout,
+  sbGetFinances,
+  sbSaveFinance,
+  sbDeleteFinance,
   subscribeToEvents,
   subscribeToPayouts,
+  subscribeToFinances,
 } from '../services/supabaseService';
 
 import { isSupabaseConfigured } from '../services/supabaseClient';
@@ -111,13 +115,14 @@ export const AuthProvider = ({ children }) => {
 
     if (isSupabaseConfigured) {
       try {
-        const [loadedCities, loadedUsers, loadedEvents, loadedSchools, loadedSalarySettings, loadedPayouts] = await Promise.all([
+        const [loadedCities, loadedUsers, loadedEvents, loadedSchools, loadedSalarySettings, loadedPayouts, loadedFinances] = await Promise.all([
           sbGetCities(),
           sbGetUsers(),
           sbGetEvents(),
           sbGetSchools(),
           sbGetSalarySettings(),
           sbGetPayouts(),
+          sbGetFinances(),
         ]);
 
         setCities(loadedCities);
@@ -126,6 +131,7 @@ export const AuthProvider = ({ children }) => {
         setSchools(loadedSchools);
         setSalarySettings(loadedSalarySettings || getSalarySettings()); // fallback to local if null
         setPayouts(loadedPayouts);
+        setFinances(loadedFinances);
         setIsOnline(true);
         setDbMode('supabase');
 
@@ -135,6 +141,7 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem('eduevent_events', JSON.stringify(loadedEvents));
         localStorage.setItem('eduevent_schools', JSON.stringify(loadedSchools));
         localStorage.setItem('eduevent_payouts', JSON.stringify(loadedPayouts));
+        localStorage.setItem('eduevent_finances', JSON.stringify(loadedFinances));
         if (loadedSalarySettings) {
           localStorage.setItem('eduevent_salary_settings', JSON.stringify(loadedSalarySettings));
         }
@@ -204,9 +211,15 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem('eduevent_payouts', JSON.stringify(newPayouts));
       });
 
+      const unsubscribeFinances = subscribeToFinances((newFinances) => {
+        setFinances(newFinances);
+        localStorage.setItem('eduevent_finances', JSON.stringify(newFinances));
+      });
+
       return () => {
         unsubscribeEvents();
         unsubscribePayouts();
+        unsubscribeFinances();
       };
     }
   }, [refreshData]);
@@ -471,52 +484,99 @@ export const AuthProvider = ({ children }) => {
     showToast('Passcode keuangan berhasil diperbarui', 'success');
   };
 
-  const handleSaveFinance = (financeData) => {
-    const updated = saveFinance(financeData);
-    setFinances(updated);
-    showToast('Transaksi keuangan berhasil disimpan', 'success');
-    return updated;
-  };
-
-  const handleDeleteFinance = (id) => {
-    const updated = removeFinance(id);
-    setFinances(updated);
-    showToast('Transaksi keuangan berhasil dihapus', 'info');
-    return updated;
-  };
-
-  const autoSyncActivityFinances = () => {
-    const currentFinances = getFinances();
-    let addedCount = 0;
-    
-    events.forEach(evt => {
-      const existing = currentFinances.find(f => f.refNo === `EVT-AUTO-${evt.id}`);
-      if (!existing && evt.participatingStudents > 0) {
-        const amount = evt.participatingStudents * 30000;
-        const newFinance = {
-          id: `fin-auto-${evt.id}`,
-          date: evt.date,
-          type: 'income',
-          category: 'Tiket VR Siswa',
-          title: `[Auto-Sync] Kegiatan VR ${evt.schoolName}`,
-          amount: amount,
-          cityName: evt.cityName,
-          schoolName: evt.schoolName,
-          refNo: `EVT-AUTO-${evt.id}`,
-          notes: `Hasil sync otomatis ${evt.participatingStudents} siswa @ Rp 30.000 (Operator: ${evt.operatorName})`,
-          createdAt: new Date().toISOString()
-        };
-        saveFinance(newFinance);
-        addedCount++;
+  const handleSaveFinance = async (financeData) => {
+    try {
+      if (isSupabaseConfigured && dbMode === 'supabase') {
+        const updated = await sbSaveFinance(financeData);
+        setFinances(updated);
+        localStorage.setItem('eduevent_finances', JSON.stringify(updated));
+      } else {
+        const updated = saveFinance(financeData);
+        setFinances(updated);
       }
-    });
+      showToast('Transaksi keuangan berhasil disimpan!', 'success');
+    } catch (err) {
+      console.error(err);
+      showToast('Gagal menyimpan transaksi keuangan: ' + err.message, 'error');
+    }
+  };
 
-    const updated = getFinances();
-    setFinances(updated);
-    if (addedCount > 0) {
-      showToast(`Berhasil menyinkronkan ${addedCount} transaksi dari kegiatan VR!`, 'success');
-    } else {
-      showToast('Seluruh data kegiatan VR telah tersinkronisasi dalam cashflow.', 'info');
+  const handleDeleteFinance = async (id) => {
+    try {
+      if (isSupabaseConfigured && dbMode === 'supabase') {
+        const updated = await sbDeleteFinance(id);
+        setFinances(updated);
+        localStorage.setItem('eduevent_finances', JSON.stringify(updated));
+      } else {
+        const updated = removeFinance(id);
+        setFinances(updated);
+      }
+      showToast('Transaksi keuangan berhasil dihapus', 'info');
+    } catch (err) {
+      console.error(err);
+      showToast('Gagal menghapus transaksi: ' + err.message, 'error');
+    }
+  };
+
+  const autoSyncActivityFinances = async () => {
+    try {
+      let addedCount = 0;
+      for (const evt of events) {
+        const existing = finances.find((f) => f.refNo === `EVT-AUTO-${evt.id}`);
+        if (!existing && evt.participatingStudents > 0) {
+          const amount = evt.participatingStudents * 30000;
+          const newFinance = {
+            id: `fin-auto-${evt.id}`,
+            date: evt.date,
+            type: 'income',
+            category: 'Tiket VR Siswa',
+            title: `[Auto-Sync] Kegiatan VR ${evt.schoolName}`,
+            amount: amount,
+            cityName: evt.cityName,
+            schoolName: evt.schoolName,
+            refNo: `EVT-AUTO-${evt.id}`,
+            notes: `Hasil sync otomatis ${evt.participatingStudents} siswa @ Rp 30.000 (Operator: ${evt.operatorName})`,
+            createdAt: new Date().toISOString(),
+          };
+
+          if (isSupabaseConfigured && dbMode === 'supabase') {
+            await sbSaveFinance(newFinance);
+          } else {
+            saveFinance(newFinance);
+          }
+          addedCount++;
+        }
+      }
+
+      await refreshData();
+      if (addedCount > 0) {
+        showToast(`Berhasil menyinkronkan ${addedCount} transaksi dari kegiatan VR ke database online!`, 'success');
+      } else {
+        showToast('Seluruh data kegiatan VR telah tersinkronisasi dalam cashflow online.', 'info');
+      }
+    } catch (err) {
+      console.error(err);
+      showToast('Gagal melakukan sync activity: ' + err.message, 'error');
+    }
+  };
+
+  const resetToInitialFinances = async () => {
+    try {
+      if (isSupabaseConfigured && dbMode === 'supabase') {
+        for (const item of INITIAL_FINANCIAL_TRANSACTIONS) {
+          await sbSaveFinance(item);
+        }
+        const updated = await sbGetFinances();
+        setFinances(updated);
+        localStorage.setItem('eduevent_finances', JSON.stringify(updated));
+      } else {
+        localStorage.setItem('eduevent_finances', JSON.stringify(INITIAL_FINANCIAL_TRANSACTIONS));
+        setFinances(INITIAL_FINANCIAL_TRANSACTIONS);
+      }
+      showToast('Data transaksi keuangan berhasil dimuat ulang ke database online!', 'success');
+    } catch (err) {
+      console.error(err);
+      showToast('Gagal reset data: ' + err.message, 'error');
     }
   };
 
@@ -540,6 +600,7 @@ export const AuthProvider = ({ children }) => {
         handleSaveFinance,
         handleDeleteFinance,
         autoSyncActivityFinances,
+        resetToInitialFinances,
         toast,
         showToast,
         switchRole,
