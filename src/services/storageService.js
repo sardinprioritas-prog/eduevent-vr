@@ -42,9 +42,6 @@ export const initStorage = () => {
   if (!localStorage.getItem(KEYS.FINANCES)) {
     localStorage.setItem(KEYS.FINANCES, JSON.stringify(INITIAL_FINANCIAL_TRANSACTIONS));
   }
-  if (!localStorage.getItem(KEYS.FINANCE_PASSCODE)) {
-    localStorage.setItem(KEYS.FINANCE_PASSCODE, '8888');
-  }
 };
 
 // Cities API
@@ -236,7 +233,7 @@ export const deleteFinance = (id) => {
 
 export const getFinancePasscode = () => {
   initStorage();
-  return localStorage.getItem(KEYS.FINANCE_PASSCODE) || '8888';
+  return localStorage.getItem(KEYS.FINANCE_PASSCODE) || null;
 };
 
 export const saveFinancePasscode = (newPasscode) => {

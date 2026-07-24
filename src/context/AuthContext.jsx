@@ -433,7 +433,7 @@ export const AuthProvider = ({ children }) => {
   const unlockFinance = (enteredPasscode) => {
     const savedPin = getFinancePasscode();
     const adminUser = users.find((u) => u.role === 'admin');
-    const validPasscodes = [savedPin, '8888', adminUser?.passcode, currentUser?.passcode].filter(Boolean);
+    const validPasscodes = [savedPin, adminUser?.passcode, currentUser?.passcode].filter(Boolean);
 
     if (validPasscodes.includes(enteredPasscode)) {
       setIsFinanceUnlocked(true);
