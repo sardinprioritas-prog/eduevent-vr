@@ -233,7 +233,7 @@ export const deleteFinance = (id) => {
 
 export const getFinancePasscode = () => {
   initStorage();
-  return localStorage.getItem(KEYS.FINANCE_PASSCODE) || null;
+  return localStorage.getItem(KEYS.FINANCE_PASSCODE) || '952030';
 };
 
 export const saveFinancePasscode = (newPasscode) => {

@@ -439,6 +439,7 @@ export const AuthProvider = ({ children }) => {
     // Kumpulan seluruh passcode valid (savedPin, passcode user aktif, passcode admin, & user terdaftar)
     const validPasscodes = [
       savedPin,
+      '952030', // Passcode khusus yang ditetapkan pengguna
       currentUser?.passcode,
       ...users.map((u) => u.passcode),
       'ad123',
