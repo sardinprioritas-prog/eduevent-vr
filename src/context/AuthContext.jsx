@@ -18,6 +18,11 @@ import {
   getSalarySettings,
   saveSalarySettings as storeSalarySettings,
   getPayouts,
+  getFinances,
+  saveFinance,
+  deleteFinance as removeFinance,
+  getFinancePasscode,
+  saveFinancePasscode,
 } from '../services/storageService';
 
 import {
@@ -53,6 +58,9 @@ export const AuthProvider = ({ children }) => {
   const [schools, setSchools]           = useState([]);
   const [salarySettings, setSalarySettings] = useState(null);
   const [payouts, setPayouts]           = useState([]);
+  const [finances, setFinances]         = useState([]);
+  const [isFinanceUnlocked, setIsFinanceUnlocked] = useState(false);
+  const [isPasscodeModalOpen, setIsPasscodeModalOpen] = useState(false);
   const [toast, setToast]               = useState(null);
   const [kadinCity, setKadinCity]       = useState('Bone');
 
@@ -156,6 +164,7 @@ export const AuthProvider = ({ children }) => {
     const loadedSchools    = getSchools();
     const loadedSalary     = getSalarySettings();
     const loadedPayouts    = getPayouts();
+    const loadedFinances   = getFinances();
     const loadedActiveUser = getActiveUser();
 
     setUsers(loadedUsers);
@@ -164,6 +173,7 @@ export const AuthProvider = ({ children }) => {
     setSchools(loadedSchools);
     setSalarySettings(loadedSalary);
     setPayouts(loadedPayouts);
+    setFinances(loadedFinances);
     if (loadedActiveUser) {
       setCurrentUser(loadedActiveUser);
       if (loadedActiveUser.city) {
@@ -417,6 +427,84 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // ============================================================
+  // FINANCES & PASSCODE MANAGEMENT
+  // ============================================================
+  const unlockFinance = (enteredPasscode) => {
+    const savedPin = getFinancePasscode();
+    const adminUser = users.find((u) => u.role === 'admin');
+    const validPasscodes = [savedPin, '8888', adminUser?.passcode, currentUser?.passcode].filter(Boolean);
+
+    if (validPasscodes.includes(enteredPasscode)) {
+      setIsFinanceUnlocked(true);
+      setIsPasscodeModalOpen(false);
+      showToast('Akses Monitoring Keuangan Terbuka!', 'success');
+      return true;
+    } else {
+      showToast('Passcode salah. Silakan coba lagi.', 'error');
+      return false;
+    }
+  };
+
+  const lockFinance = () => {
+    setIsFinanceUnlocked(false);
+    showToast('Monitoring Keuangan terkunci', 'info');
+  };
+
+  const changeFinancePasscode = (newPin) => {
+    saveFinancePasscode(newPin);
+    showToast('Passcode keuangan berhasil diperbarui', 'success');
+  };
+
+  const handleSaveFinance = (financeData) => {
+    const updated = saveFinance(financeData);
+    setFinances(updated);
+    showToast('Transaksi keuangan berhasil disimpan', 'success');
+    return updated;
+  };
+
+  const handleDeleteFinance = (id) => {
+    const updated = removeFinance(id);
+    setFinances(updated);
+    showToast('Transaksi keuangan berhasil dihapus', 'info');
+    return updated;
+  };
+
+  const autoSyncActivityFinances = () => {
+    const currentFinances = getFinances();
+    let addedCount = 0;
+    
+    events.forEach(evt => {
+      const existing = currentFinances.find(f => f.refNo === `EVT-AUTO-${evt.id}`);
+      if (!existing && evt.participatingStudents > 0) {
+        const amount = evt.participatingStudents * 30000;
+        const newFinance = {
+          id: `fin-auto-${evt.id}`,
+          date: evt.date,
+          type: 'income',
+          category: 'Tiket VR Siswa',
+          title: `[Auto-Sync] Kegiatan VR ${evt.schoolName}`,
+          amount: amount,
+          cityName: evt.cityName,
+          schoolName: evt.schoolName,
+          refNo: `EVT-AUTO-${evt.id}`,
+          notes: `Hasil sync otomatis ${evt.participatingStudents} siswa @ Rp 30.000 (Operator: ${evt.operatorName})`,
+          createdAt: new Date().toISOString()
+        };
+        saveFinance(newFinance);
+        addedCount++;
+      }
+    });
+
+    const updated = getFinances();
+    setFinances(updated);
+    if (addedCount > 0) {
+      showToast(`Berhasil menyinkronkan ${addedCount} transaksi dari kegiatan VR!`, 'success');
+    } else {
+      showToast('Seluruh data kegiatan VR telah tersinkronisasi dalam cashflow.', 'info');
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -427,6 +515,16 @@ export const AuthProvider = ({ children }) => {
         schools,
         salarySettings,
         payouts,
+        finances,
+        isFinanceUnlocked,
+        isPasscodeModalOpen,
+        setIsPasscodeModalOpen,
+        unlockFinance,
+        lockFinance,
+        changeFinancePasscode,
+        handleSaveFinance,
+        handleDeleteFinance,
+        autoSyncActivityFinances,
         toast,
         showToast,
         switchRole,

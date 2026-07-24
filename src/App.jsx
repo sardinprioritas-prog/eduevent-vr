@@ -15,6 +15,7 @@ import { AdminSalaryDisbursement } from './components/admin/AdminSalaryDisbursem
 import { SalaryWidget } from './components/shared/SalaryWidget';
 import { PayoutHistoryTable } from './components/shared/PayoutHistoryTable';
 import { ExecutiveDashboard } from './components/executive/ExecutiveDashboard';
+import { FinancialManagement } from './components/finance/FinancialManagement';
 import { LandingPage } from './components/LandingPage';
 import { Login } from './components/auth/Login';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
@@ -53,6 +54,12 @@ const DashboardLayout = ({ role, children }) => {
       desc: 'Pantau pencapaian target dan estimasi komisi mingguan.',
       dot: 'bg-indigo-500',
       ping: 'bg-indigo-500',
+    },
+    finance: {
+      label: 'MANAJEMEN KEUANGAN',
+      desc: 'Monitoring arus kas, pemasukan, pengeluaran & profitabilitas terintegrasi (Terproteksi Passcode).',
+      dot: 'bg-emerald-400',
+      ping: 'bg-emerald-400',
     }
   };
 
@@ -217,6 +224,15 @@ const AppRoutes = () => {
       <Route path="/pioneer" element={
         <ProtectedRoute role="pioneer">
           <DashboardLayout role="pioneer"><PioneerView /></DashboardLayout>
+        </ProtectedRoute>
+      } />
+
+      {/* Secret Financial Management Route */}
+      <Route path="/finance" element={
+        <ProtectedRoute allowedRoles={['admin', 'pimpinan', 'operator', 'kadin', 'pioneer']}>
+          <DashboardLayout role="finance">
+            <FinancialManagement />
+          </DashboardLayout>
         </ProtectedRoute>
       } />
 

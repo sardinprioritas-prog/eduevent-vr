@@ -140,3 +140,137 @@ export const INITIAL_EVENTS = [
     createdAt: '2026-07-22T13:00:00Z'
   }
 ];
+
+export const INITIAL_FINANCIAL_TRANSACTIONS = [
+  {
+    id: 'fin-101',
+    date: '2026-07-15',
+    type: 'income',
+    category: 'Tiket VR Siswa',
+    title: 'Pemasukan Kegiatan VR SMA Negeri 1 Bone (Hari-1)',
+    amount: 11400000, // 380 siswa * 30.000
+    cityName: 'Bone',
+    schoolName: 'SMA Negeri 1 Bone',
+    refNo: 'INV-20260715-01',
+    notes: 'Siswa berpartisipasi 380 siswa @ Rp 30.000',
+    createdAt: '2026-07-15T12:00:00Z'
+  },
+  {
+    id: 'fin-102',
+    date: '2026-07-16',
+    type: 'income',
+    category: 'Tiket VR Siswa',
+    title: 'Pemasukan Kegiatan VR SMA Negeri 1 Bone (Hari-2)',
+    amount: 12300000, // 410 siswa * 30.000
+    cityName: 'Bone',
+    schoolName: 'SMA Negeri 1 Bone',
+    refNo: 'INV-20260716-02',
+    notes: 'Siswa berpartisipasi 410 siswa @ Rp 30.000',
+    createdAt: '2026-07-16T15:00:00Z'
+  },
+  {
+    id: 'fin-103',
+    date: '2026-07-17',
+    type: 'expense',
+    category: 'Honor Operator & Pioneer',
+    title: 'Pencairan Honor Event VR SMA Negeri 1 Bone',
+    amount: 1185000, // Fee & Bonus Operator Budi Santoso
+    cityName: 'Bone',
+    schoolName: 'SMA Negeri 1 Bone',
+    refNo: 'OUT-20260717-01',
+    notes: 'Honor Budi Santoso (790 siswa x Rp 1.500)',
+    createdAt: '2026-07-17T10:00:00Z'
+  },
+  {
+    id: 'fin-104',
+    date: '2026-07-18',
+    type: 'income',
+    category: 'Tiket VR Siswa',
+    title: 'Pemasukan Kegiatan VR SMK Negeri 2 Parepare',
+    amount: 8850000, // 295 siswa * 30.000
+    cityName: 'Parepare',
+    schoolName: 'SMK Negeri 2 Parepare',
+    refNo: 'INV-20260718-03',
+    notes: 'Siswa berpartisipasi 295 siswa @ Rp 30.000',
+    createdAt: '2026-07-18T13:30:00Z'
+  },
+  {
+    id: 'fin-105',
+    date: '2026-07-19',
+    type: 'expense',
+    category: 'Operasional Event VR',
+    title: 'Sewa Transportasi & Konsumsi Tim Lapangan Parepare',
+    amount: 1450000,
+    cityName: 'Parepare',
+    schoolName: 'SMK Negeri 2 Parepare',
+    refNo: 'OUT-20260719-02',
+    notes: 'Bensin, konsumsi 3 personil operator & tim VR',
+    createdAt: '2026-07-19T09:00:00Z'
+  },
+  {
+    id: 'fin-106',
+    date: '2026-07-20',
+    type: 'income',
+    category: 'Kerjasama Kemitraan Sekolah',
+    title: 'Paket Kemitraan EduVR SMA Islam Athirah Makassar',
+    amount: 18900000, // 540 siswa * 35.000
+    cityName: 'Makassar',
+    schoolName: 'SMA Islam Athirah Makassar',
+    refNo: 'INV-20260720-04',
+    notes: 'Modul Premium VR Konten Edukasi + Sertifikat',
+    createdAt: '2026-07-20T16:00:00Z'
+  },
+  {
+    id: 'fin-107',
+    date: '2026-07-21',
+    type: 'expense',
+    category: 'Lisensi & Maintenance Hardware VR',
+    title: 'Pembaruan Lisensi Software EduVR & Kalibrasi 10 Headset Meta Quest',
+    amount: 4500000,
+    cityName: 'Makassar',
+    schoolName: 'Pusat Edutainment',
+    refNo: 'OUT-20260721-03',
+    notes: 'Perawatan rutin bulanan perangkat VR & lisensi konten 3D',
+    createdAt: '2026-07-21T11:00:00Z'
+  },
+  {
+    id: 'fin-108',
+    date: '2026-07-22',
+    type: 'income',
+    category: 'Tiket VR Siswa',
+    title: 'Pemasukan Kegiatan VR SMA Negeri 1 Gowa',
+    amount: 13950000, // 465 siswa * 30.000
+    cityName: 'Gowa',
+    schoolName: 'SMA Negeri 1 Gowa',
+    refNo: 'INV-20260722-05',
+    notes: 'Siswa berpartisipasi 465 siswa @ Rp 30.000',
+    createdAt: '2026-07-22T14:30:00Z'
+  },
+  {
+    id: 'fin-109',
+    date: '2026-07-23',
+    type: 'income',
+    category: 'Sponsorship & Donasi',
+    title: 'Sponsorship CSR Telkomsel untuk Edukasi VR Sekolah',
+    amount: 25000000,
+    cityName: 'Makassar',
+    schoolName: 'Pusat Edutainment',
+    refNo: 'SP-20260723-01',
+    notes: 'Dukungan program literasi teknologi sekolah daerah',
+    createdAt: '2026-07-23T10:00:00Z'
+  },
+  {
+    id: 'fin-110',
+    date: '2026-07-24',
+    type: 'expense',
+    category: 'Pemasaran & Transportasi',
+    title: 'Promosi & Biaya Sosialisasi Pioneer Sekolah Wilayah Palopo',
+    amount: 2800000,
+    cityName: 'Palopo',
+    schoolName: 'SMA Negeri 3 Palopo',
+    refNo: 'OUT-20260724-04',
+    notes: 'Brosur, Banner, dan Akomodasi Tim Marketing Pioneer',
+    createdAt: '2026-07-24T08:30:00Z'
+  }
+];
+

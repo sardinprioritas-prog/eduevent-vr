@@ -1,4 +1,4 @@
-import { INITIAL_CITIES, INITIAL_USERS, INITIAL_EVENTS, INITIAL_SCHOOLS, INITIAL_USER_SALARY_SETTINGS } from '../data/mockData';
+import { INITIAL_CITIES, INITIAL_USERS, INITIAL_EVENTS, INITIAL_SCHOOLS, INITIAL_USER_SALARY_SETTINGS, INITIAL_FINANCIAL_TRANSACTIONS } from '../data/mockData';
 
 const KEYS = {
   CITIES: 'eduevent_cities',
@@ -8,6 +8,8 @@ const KEYS = {
   SALARY_SETTINGS: 'eduevent_salary_settings',
   PAYOUTS: 'eduevent_payouts',
   ACTIVE_USER: 'eduevent_active_user',
+  FINANCES: 'eduevent_finances',
+  FINANCE_PASSCODE: 'eduevent_finance_passcode',
 };
 
 // Initialize Storage if empty
@@ -36,6 +38,12 @@ export const initStorage = () => {
   }
   if (!localStorage.getItem(KEYS.PAYOUTS)) {
     localStorage.setItem(KEYS.PAYOUTS, JSON.stringify([]));
+  }
+  if (!localStorage.getItem(KEYS.FINANCES)) {
+    localStorage.setItem(KEYS.FINANCES, JSON.stringify(INITIAL_FINANCIAL_TRANSACTIONS));
+  }
+  if (!localStorage.getItem(KEYS.FINANCE_PASSCODE)) {
+    localStorage.setItem(KEYS.FINANCE_PASSCODE, '8888');
   }
 };
 
@@ -195,3 +203,45 @@ export const getPayouts = () => {
   initStorage();
   return JSON.parse(localStorage.getItem(KEYS.PAYOUTS) || '[]');
 };
+
+// Finances API
+export const getFinances = () => {
+  initStorage();
+  return JSON.parse(localStorage.getItem(KEYS.FINANCES) || '[]');
+};
+
+export const saveFinance = (financeItem) => {
+  const finances = getFinances();
+  let updated;
+  if (financeItem.id) {
+    updated = finances.map((f) => (f.id === financeItem.id ? { ...f, ...financeItem } : f));
+  } else {
+    const newFinance = {
+      ...financeItem,
+      id: `fin-${Date.now()}`,
+      createdAt: new Date().toISOString(),
+    };
+    updated = [newFinance, ...finances];
+  }
+  localStorage.setItem(KEYS.FINANCES, JSON.stringify(updated));
+  return updated;
+};
+
+export const deleteFinance = (id) => {
+  const finances = getFinances();
+  const updated = finances.filter((f) => f.id !== id);
+  localStorage.setItem(KEYS.FINANCES, JSON.stringify(updated));
+  return updated;
+};
+
+export const getFinancePasscode = () => {
+  initStorage();
+  return localStorage.getItem(KEYS.FINANCE_PASSCODE) || '8888';
+};
+
+export const saveFinancePasscode = (newPasscode) => {
+  initStorage();
+  localStorage.setItem(KEYS.FINANCE_PASSCODE, newPasscode);
+  return newPasscode;
+};
+
