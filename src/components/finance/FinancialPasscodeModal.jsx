@@ -100,7 +100,7 @@ export const FinancialPasscodeModal = ({ isOpen, onClose, onSuccessNavigate = '/
                 autoCapitalize="none"
                 autoCorrect="off"
                 spellCheck="false"
-                placeholder="Masukkan Passcode (cth: ad123)"
+                placeholder="Masukkan Passcode Rahasia"
                 autoFocus
                 className="w-full pl-10 pr-10 py-3 bg-slate-950 border border-slate-700 rounded-xl text-slate-100 placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-center font-mono tracking-widest text-lg font-bold transition-all"
               />
@@ -155,13 +155,6 @@ export const FinancialPasscodeModal = ({ isOpen, onClose, onSuccessNavigate = '/
               <span>{errorMsg}</span>
             </div>
           )}
-
-          <div className="p-3 bg-slate-950/60 rounded-xl border border-slate-800/60 text-[11px] text-slate-400 flex items-center justify-between">
-            <span>Gunakan Passcode Login Akun:</span>
-            <code className="px-2 py-0.5 bg-blue-500/10 border border-blue-500/30 text-blue-400 rounded font-mono font-bold">
-              {currentUser?.passcode || 'ad123 / pim123'}
-            </code>
-          </div>
 
           {/* Action Buttons */}
           <div className="flex items-center space-x-3 pt-2">
