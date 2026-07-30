@@ -17,6 +17,7 @@ import { PayoutHistoryTable } from './components/shared/PayoutHistoryTable';
 import { ExecutiveDashboard } from './components/executive/ExecutiveDashboard';
 import { FinancialManagement } from './components/finance/FinancialManagement';
 import { LandingPage } from './components/LandingPage';
+import { SchoolPortal } from './components/school/SchoolPortal';
 import { Login } from './components/auth/Login';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { MapPin, Loader2 } from 'lucide-react';
@@ -60,6 +61,12 @@ const DashboardLayout = ({ role, children }) => {
       desc: 'Monitoring arus kas, pemasukan, pengeluaran & profitabilitas terintegrasi (Terproteksi Passcode).',
       dot: 'bg-emerald-400',
       ping: 'bg-emerald-400',
+    },
+    sekolah: {
+      label: 'PORTAL SEKOLAH',
+      desc: 'Pendaftaran mandiri dan penginputan jumlah siswa per rombel kelas.',
+      dot: 'bg-indigo-500',
+      ping: 'bg-indigo-500',
     }
   };
 
@@ -234,6 +241,13 @@ const AppRoutes = () => {
             <FinancialManagement />
           </DashboardLayout>
         </ProtectedRoute>
+      } />
+
+      {/* Public School Portal Route */}
+      <Route path="/sekolah" element={
+        <DashboardLayout role="sekolah">
+          <SchoolPortal />
+        </DashboardLayout>
       } />
 
       {/* Catch-all redirect */}

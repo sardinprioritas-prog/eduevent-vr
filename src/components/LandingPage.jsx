@@ -1,11 +1,19 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Building2, Shield, UserCheck, BarChart3, ArrowRight, Target } from 'lucide-react';
+import { Building2, Shield, UserCheck, BarChart3, ArrowRight, Target, GraduationCap } from 'lucide-react';
 
 export const LandingPage = () => {
   const navigate = useNavigate();
 
   const portals = [
+    {
+      id: 'sekolah',
+      title: 'Portal Sekolah',
+      desc: 'Pendaftaran mandiri & input jumlah siswa per kelas',
+      icon: <GraduationCap className="w-8 h-8 text-indigo-400" />,
+      color: 'bg-indigo-500/10 border-indigo-500/30 hover:bg-indigo-500/20',
+      path: '/sekolah',
+    },
     {
       id: 'operator',
       title: 'Portal Operator',

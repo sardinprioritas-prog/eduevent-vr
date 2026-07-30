@@ -23,6 +23,9 @@ import {
   deleteFinance as removeFinance,
   getFinancePasscode,
   saveFinancePasscode,
+  getSchoolRegistrations,
+  saveSchoolRegistration,
+  deleteSchoolRegistration,
 } from '../services/storageService';
 
 import {
@@ -67,6 +70,7 @@ export const AuthProvider = ({ children }) => {
   const [isPasscodeModalOpen, setIsPasscodeModalOpen] = useState(false);
   const [toast, setToast]               = useState(null);
   const [kadinCity, setKadinCity]       = useState('Bone');
+  const [schoolRegistrations, setSchoolRegistrations] = useState([]);
 
   // Supabase sync state
   const [isOnline, setIsOnline]         = useState(false);
@@ -132,6 +136,7 @@ export const AuthProvider = ({ children }) => {
         setSalarySettings(loadedSalarySettings || getSalarySettings()); // fallback to local if null
         setPayouts(loadedPayouts);
         setFinances(loadedFinances);
+        setSchoolRegistrations(getSchoolRegistrations());
         setIsOnline(true);
         setDbMode('supabase');
 
@@ -187,6 +192,7 @@ export const AuthProvider = ({ children }) => {
         setKadinCity(loadedActiveUser.city);
       }
     }
+    setSchoolRegistrations(getSchoolRegistrations());
     setDbMode('local');
     setIsSyncing(false);
   }, []);
@@ -374,6 +380,31 @@ export const AuthProvider = ({ children }) => {
     } catch (err) {
       console.error(err);
       showToast('Gagal menyimpan pengaturan: ' + err.message, 'error');
+    }
+  };
+
+  // ============================================================
+  // REGISTRASI PORTAL SEKOLAH HANDLERS
+  // ============================================================
+  const handleSaveSchoolRegistration = async (registrationData) => {
+    try {
+      const updated = saveSchoolRegistration(registrationData);
+      setSchoolRegistrations(updated);
+      showToast(registrationData.id ? 'Data registrasi sekolah berhasil diperbarui' : 'Registrasi sekolah baru berhasil ditambahkan', 'success');
+    } catch (err) {
+      console.error(err);
+      showToast('Gagal menyimpan registrasi sekolah: ' + err.message, 'error');
+    }
+  };
+
+  const handleDeleteSchoolRegistration = async (id) => {
+    try {
+      const updated = deleteSchoolRegistration(id);
+      setSchoolRegistrations(updated);
+      showToast('Data registrasi sekolah berhasil dihapus', 'warning');
+    } catch (err) {
+      console.error(err);
+      showToast('Gagal menghapus registrasi sekolah: ' + err.message, 'error');
     }
   };
 
@@ -624,6 +655,9 @@ export const AuthProvider = ({ children }) => {
         handleDeleteSchool,
         handleSaveSalarySettings,
         handleDisburseFee,
+        schoolRegistrations,
+        handleSaveSchoolRegistration,
+        handleDeleteSchoolRegistration,
       }}
     >
       {children}

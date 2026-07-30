@@ -10,6 +10,7 @@ const KEYS = {
   ACTIVE_USER: 'eduevent_active_user',
   FINANCES: 'eduevent_finances',
   FINANCE_PASSCODE: 'eduevent_finance_passcode',
+  SCHOOL_REGISTRATIONS: 'eduevent_school_registrations',
 };
 
 // Initialize Storage if empty
@@ -55,6 +56,9 @@ export const initStorage = () => {
     } catch (e) {
       localStorage.setItem(KEYS.FINANCES, JSON.stringify(INITIAL_FINANCIAL_TRANSACTIONS));
     }
+  }
+  if (!localStorage.getItem(KEYS.SCHOOL_REGISTRATIONS)) {
+    localStorage.setItem(KEYS.SCHOOL_REGISTRATIONS, JSON.stringify([]));
   }
 };
 
@@ -254,5 +258,35 @@ export const saveFinancePasscode = (newPasscode) => {
   initStorage();
   localStorage.setItem(KEYS.FINANCE_PASSCODE, newPasscode);
   return newPasscode;
+};
+
+// School Registrations API
+export const getSchoolRegistrations = () => {
+  initStorage();
+  return JSON.parse(localStorage.getItem(KEYS.SCHOOL_REGISTRATIONS) || '[]');
+};
+
+export const saveSchoolRegistration = (registration) => {
+  const list = getSchoolRegistrations();
+  let updated;
+  if (registration.id) {
+    updated = list.map((item) => (item.id === registration.id ? { ...item, ...registration } : item));
+  } else {
+    const newReg = {
+      ...registration,
+      id: `reg-${Date.now()}`,
+      createdAt: new Date().toISOString(),
+    };
+    updated = [newReg, ...list];
+  }
+  localStorage.setItem(KEYS.SCHOOL_REGISTRATIONS, JSON.stringify(updated));
+  return updated;
+};
+
+export const deleteSchoolRegistration = (id) => {
+  const list = getSchoolRegistrations();
+  const updated = list.filter((item) => item.id !== id);
+  localStorage.setItem(KEYS.SCHOOL_REGISTRATIONS, JSON.stringify(updated));
+  return updated;
 };
 
