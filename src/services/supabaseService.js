@@ -473,3 +473,97 @@ export const subscribeToFinances = (callback) => {
 };
 
 
+// ============================================================
+// SCHOOL REGISTRATIONS API (Supabase Online)
+// ============================================================
+
+/**
+ * Transformasi row Supabase (snake_case) → format app (camelCase)
+ */
+const toAppSchoolReg = (row) => ({
+  id: row.id,
+  pjName: row.pj_name,
+  cityId: row.city_id,
+  cityName: row.city_name,
+  schoolId: row.school_id,
+  schoolName: row.school_name,
+  rombelCount: row.rombel_count,
+  classDetails: row.class_details || {},
+  totalStudents: row.total_students,
+  createdAt: row.created_at,
+  updatedAt: row.updated_at,
+});
+
+/**
+ * Transformasi format app (camelCase) → Supabase row (snake_case)
+ */
+const toDbSchoolReg = (reg) => ({
+  id: reg.id,
+  pj_name: reg.pjName,
+  city_id: reg.cityId,
+  city_name: reg.cityName,
+  school_id: reg.schoolId || null,
+  school_name: reg.schoolName,
+  rombel_count: reg.rombelCount,
+  class_details: reg.classDetails || {},
+  total_students: reg.totalStudents,
+});
+
+export const sbGetSchoolRegistrations = async () => {
+  const { data, error } = await supabase
+    .from('school_registrations')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return data.map(toAppSchoolReg);
+};
+
+export const sbSaveSchoolRegistration = async (registration) => {
+  const dbData = toDbSchoolReg(registration);
+  if (!registration.id) {
+    // INSERT baru
+    dbData.id = `reg-${Date.now()}`;
+  }
+  const { error } = await supabase
+    .from('school_registrations')
+    .upsert(dbData, { onConflict: 'id' });
+
+  if (error) throw error;
+  return sbGetSchoolRegistrations();
+};
+
+export const sbDeleteSchoolRegistration = async (id) => {
+  const { error } = await supabase
+    .from('school_registrations')
+    .delete()
+    .eq('id', id);
+
+  if (error) throw error;
+  return sbGetSchoolRegistrations();
+};
+
+/**
+ * Berlangganan perubahan realtime pada tabel school_registrations.
+ * Setiap Guru PJ menyimpan/mengubah data di device manapun,
+ * semua pengguna portal langsung melihat data terbaru.
+ */
+export const subscribeToSchoolRegistrations = (callback) => {
+  const channel = supabase
+    .channel('school-registrations-realtime')
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'school_registrations' },
+      async () => {
+        try {
+          const regs = await sbGetSchoolRegistrations();
+          callback(regs);
+        } catch (err) {
+          console.warn('[Supabase Realtime] Gagal refresh school_registrations:', err);
+        }
+      }
+    )
+    .subscribe();
+
+  return () => supabase.removeChannel(channel);
+};

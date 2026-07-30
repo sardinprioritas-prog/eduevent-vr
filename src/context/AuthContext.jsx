@@ -51,7 +51,12 @@ import {
   subscribeToEvents,
   subscribeToPayouts,
   subscribeToFinances,
+  sbGetSchoolRegistrations,
+  sbSaveSchoolRegistration as sbSaveSchoolReg,
+  sbDeleteSchoolRegistration as sbDeleteSchoolReg,
+  subscribeToSchoolRegistrations,
 } from '../services/supabaseService';
+
 
 import { isSupabaseConfigured } from '../services/supabaseClient';
 
@@ -119,7 +124,7 @@ export const AuthProvider = ({ children }) => {
 
     if (isSupabaseConfigured) {
       try {
-        const [loadedCities, loadedUsers, loadedEvents, loadedSchools, loadedSalarySettings, loadedPayouts, loadedFinances] = await Promise.all([
+        const [loadedCities, loadedUsers, loadedEvents, loadedSchools, loadedSalarySettings, loadedPayouts, loadedFinances, loadedSchoolRegs] = await Promise.all([
           sbGetCities(),
           sbGetUsers(),
           sbGetEvents(),
@@ -127,6 +132,7 @@ export const AuthProvider = ({ children }) => {
           sbGetSalarySettings(),
           sbGetPayouts(),
           sbGetFinances(),
+          sbGetSchoolRegistrations(),
         ]);
 
         setCities(loadedCities);
@@ -136,7 +142,7 @@ export const AuthProvider = ({ children }) => {
         setSalarySettings(loadedSalarySettings || getSalarySettings()); // fallback to local if null
         setPayouts(loadedPayouts);
         setFinances(loadedFinances);
-        setSchoolRegistrations(getSchoolRegistrations());
+        setSchoolRegistrations(loadedSchoolRegs);
         setIsOnline(true);
         setDbMode('supabase');
 
@@ -222,13 +228,20 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem('eduevent_finances', JSON.stringify(newFinances));
       });
 
+      // Realtime untuk school_registrations agar semua Guru PJ melihat data terkini
+      const unsubscribeSchoolRegs = subscribeToSchoolRegistrations((newRegs) => {
+        setSchoolRegistrations(newRegs);
+      });
+
       return () => {
         unsubscribeEvents();
         unsubscribePayouts();
         unsubscribeFinances();
+        unsubscribeSchoolRegs();
       };
     }
   }, [refreshData]);
+
 
   // ============================================================
   // ROLE SWITCHING
@@ -388,9 +401,21 @@ export const AuthProvider = ({ children }) => {
   // ============================================================
   const handleSaveSchoolRegistration = async (registrationData) => {
     try {
-      const updated = saveSchoolRegistration(registrationData);
+      let updated;
+      if (isSupabaseConfigured && dbMode === 'supabase') {
+        // Simpan ke Supabase (online, realtime)
+        updated = await sbSaveSchoolReg(registrationData);
+      } else {
+        // Fallback ke localStorage jika offline
+        updated = saveSchoolRegistration(registrationData);
+      }
       setSchoolRegistrations(updated);
-      showToast(registrationData.id ? 'Data registrasi sekolah berhasil diperbarui' : 'Registrasi sekolah baru berhasil ditambahkan', 'success');
+      showToast(
+        registrationData.id
+          ? 'Data jumlah siswa berhasil diperbarui'
+          : 'Registrasi sekolah baru berhasil disimpan',
+        'success'
+      );
     } catch (err) {
       console.error(err);
       showToast('Gagal menyimpan registrasi sekolah: ' + err.message, 'error');
@@ -399,7 +424,12 @@ export const AuthProvider = ({ children }) => {
 
   const handleDeleteSchoolRegistration = async (id) => {
     try {
-      const updated = deleteSchoolRegistration(id);
+      let updated;
+      if (isSupabaseConfigured && dbMode === 'supabase') {
+        updated = await sbDeleteSchoolReg(id);
+      } else {
+        updated = deleteSchoolRegistration(id);
+      }
       setSchoolRegistrations(updated);
       showToast('Data registrasi sekolah berhasil dihapus', 'warning');
     } catch (err) {
@@ -407,6 +437,7 @@ export const AuthProvider = ({ children }) => {
       showToast('Gagal menghapus registrasi sekolah: ' + err.message, 'error');
     }
   };
+
 
   // ============================================================
   // EVENT HANDLERS (Hybrid CRUD)

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../context/useAuth';
 import { 
   GraduationCap, 
@@ -11,7 +11,12 @@ import {
   CheckCircle, 
   AlertCircle,
   FileSpreadsheet,
-  X
+  X,
+  RefreshCw,
+  ShieldCheck,
+  ShieldAlert,
+  Pencil,
+  Loader2,
 } from 'lucide-react';
 
 export const SchoolPortal = () => {
@@ -39,14 +44,19 @@ export const SchoolPortal = () => {
   const [activeTab, setActiveTab] = useState('input'); // 'input' | 'riwayat'
   const [selectedReg, setSelectedReg] = useState(null); // For detail modal
 
-  // Reset/re-initialize classDetails when rombelCount changes
+  // ── Sync State ─────────────────────────────────────────────
+  // 'idle' | 'checking' | 'matched' | 'not_found'
+  const [syncStatus, setSyncStatus] = useState('idle');
+  const [editingRegId, setEditingRegId] = useState(null); // ID reg yang sedang diedit
+  const syncDebounceRef = useRef(null);
+
+  // ── Reset/re-initialize classDetails when rombelCount changes ──
   useEffect(() => {
     const rc = parseInt(formData.rombelCount) || 1;
     const newDetails = {};
     for (let grade = 1; grade <= 6; grade++) {
       for (let r = 0; r < rc; r++) {
         const className = `${grade}${String.fromCharCode(65 + r)}`;
-        // Keep existing value if it matches, otherwise default to empty string or 0
         newDetails[className] = classDetails[className] !== undefined ? classDetails[className] : '';
       }
     }
@@ -54,7 +64,7 @@ export const SchoolPortal = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formData.rombelCount]);
 
-  // Recalculate total students in real-time
+  // ── Recalculate total students in real-time ───────────────
   useEffect(() => {
     const sum = Object.values(classDetails).reduce((acc, curr) => {
       const val = parseInt(curr) || 0;
@@ -63,12 +73,67 @@ export const SchoolPortal = () => {
     setTotalStudents(sum);
   }, [classDetails]);
 
-  // Filter schools based on selected city
+  // ── Auto-Sync: trigger debounced check saat 3 field terisi ──
+  const finalSchoolName = formData.isManualSchool
+    ? formData.manualSchoolName.trim()
+    : formData.schoolName;
+
+  useEffect(() => {
+    const pjReady   = formData.pjName.trim().length > 0;
+    const cityReady = formData.cityId.length > 0;
+    const schoolReady = finalSchoolName.length > 0;
+
+    if (!pjReady || !cityReady || !schoolReady) {
+      // Reset sync state jika salah satu field dikosongkan
+      if (syncStatus !== 'idle') {
+        setSyncStatus('idle');
+        setEditingRegId(null);
+        setClassDetails({});
+      }
+      return;
+    }
+
+    // Debounce 500ms agar tidak terlalu agresif saat mengetik
+    if (syncDebounceRef.current) clearTimeout(syncDebounceRef.current);
+    syncDebounceRef.current = setTimeout(() => {
+      setSyncStatus('checking');
+
+      const matched = schoolRegistrations.find((reg) => {
+        const pjMatch     = reg.pjName.trim().toLowerCase() === formData.pjName.trim().toLowerCase();
+        const cityMatch   = reg.cityId === formData.cityId;
+        const schoolMatch = reg.schoolName.trim().toLowerCase() === finalSchoolName.toLowerCase();
+        return pjMatch && cityMatch && schoolMatch;
+      });
+
+      if (matched) {
+        setSyncStatus('matched');
+        setEditingRegId(matched.id);
+        // Pre-fill data lama
+        setFormData(prev => ({ ...prev, rombelCount: matched.rombelCount }));
+        setClassDetails(matched.classDetails || {});
+      } else {
+        setSyncStatus('not_found');
+        setEditingRegId(null);
+        // Reset classDetails agar fresh input
+        setClassDetails({});
+      }
+    }, 500);
+
+    return () => {
+      if (syncDebounceRef.current) clearTimeout(syncDebounceRef.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formData.pjName, formData.cityId, formData.schoolId, formData.manualSchoolName, schoolRegistrations]);
+
+  // ── Filter schools based on selected city ────────────────
   const filteredSchools = schools.filter(s => s.cityId === formData.cityId && s.active !== false);
 
   const handleCityChange = (e) => {
     const cId = e.target.value;
     const city = cities.find(c => c.id === cId);
+    setSyncStatus('idle');
+    setEditingRegId(null);
+    setClassDetails({});
     setFormData({
       ...formData,
       cityId: cId,
@@ -82,6 +147,9 @@ export const SchoolPortal = () => {
 
   const handleSchoolChange = (e) => {
     const val = e.target.value;
+    setSyncStatus('idle');
+    setEditingRegId(null);
+    setClassDetails({});
     if (val === 'manual') {
       setFormData({
         ...formData,
@@ -102,7 +170,6 @@ export const SchoolPortal = () => {
   };
 
   const handleClassValueChange = (className, value) => {
-    // Only accept numeric inputs
     if (value === '' || (/^\d+$/.test(value) && parseInt(value) >= 0)) {
       setClassDetails({
         ...classDetails,
@@ -114,7 +181,6 @@ export const SchoolPortal = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    // Validation
     if (!formData.pjName.trim()) {
       alert('Nama Guru Penanggung Jawab wajib diisi!');
       return;
@@ -123,18 +189,14 @@ export const SchoolPortal = () => {
       alert('Silakan pilih Wilayah terlebih dahulu!');
       return;
     }
-    
-    const finalSchoolName = formData.isManualSchool 
-      ? formData.manualSchoolName.trim() 
-      : formData.schoolName;
-
     if (!finalSchoolName) {
       alert('Nama Sekolah tidak boleh kosong!');
       return;
     }
 
-    // Save registration
     const registrationData = {
+      // Jika editingRegId ada → UPDATE, jika tidak → INSERT baru
+      ...(editingRegId ? { id: editingRegId } : {}),
       pjName: formData.pjName.trim(),
       cityId: formData.cityId,
       cityName: formData.cityName,
@@ -160,7 +222,27 @@ export const SchoolPortal = () => {
     });
     setClassDetails({});
     setTotalStudents(0);
+    setSyncStatus('idle');
+    setEditingRegId(null);
     setActiveTab('riwayat');
+  };
+
+  // Helper: reset identitas untuk edit ulang
+  const handleResetIdentity = () => {
+    setSyncStatus('idle');
+    setEditingRegId(null);
+    setClassDetails({});
+    setFormData(prev => ({
+      ...prev,
+      pjName: '',
+      cityId: '',
+      cityName: '',
+      schoolId: '',
+      schoolName: '',
+      isManualSchool: false,
+      manualSchoolName: '',
+      rombelCount: 1,
+    }));
   };
 
   // Helper to generate dynamic grade columns
@@ -171,6 +253,71 @@ export const SchoolPortal = () => {
     }
     return arr;
   };
+
+  // ── Sync Banner Component ─────────────────────────────────
+  const SyncBanner = () => {
+    if (syncStatus === 'idle') return null;
+
+    if (syncStatus === 'checking') {
+      return (
+        <div className="flex items-center space-x-3 p-4 rounded-xl bg-slate-800/60 border border-slate-700/60 animate-pulse">
+          <Loader2 className="w-5 h-5 text-indigo-400 animate-spin shrink-0" />
+          <p className="text-sm text-slate-300">Mengecek sinkronisasi data...</p>
+        </div>
+      );
+    }
+
+    if (syncStatus === 'matched') {
+      return (
+        <div className="flex items-start space-x-4 p-5 rounded-xl bg-emerald-950/40 border border-emerald-500/30 animate-fadeIn">
+          <ShieldCheck className="w-6 h-6 text-emerald-400 shrink-0 mt-0.5" />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-bold text-emerald-300">Data Ditemukan — Mode Edit</p>
+            <p className="text-xs text-emerald-400/80 mt-0.5">
+              Identitas Guru PJ, Wilayah, dan Sekolah cocok. Data jumlah siswa sebelumnya telah dimuat. 
+              Silakan perbarui dan klik <strong>"Perbarui Data Siswa"</strong>.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={handleResetIdentity}
+            className="shrink-0 flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold transition-all"
+          >
+            <RefreshCw className="w-3 h-3" />
+            <span>Ganti</span>
+          </button>
+        </div>
+      );
+    }
+
+    if (syncStatus === 'not_found') {
+      return (
+        <div className="flex items-start space-x-4 p-5 rounded-xl bg-amber-950/30 border border-amber-500/30 animate-fadeIn">
+          <ShieldAlert className="w-6 h-6 text-amber-400 shrink-0 mt-0.5" />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-bold text-amber-300">Belum Ada Data — Pendaftaran Baru</p>
+            <p className="text-xs text-amber-400/80 mt-0.5">
+              Tidak ditemukan data registrasi untuk kombinasi Guru PJ, Wilayah, dan Sekolah ini.
+              Silakan isi jumlah siswa dan klik <strong>"Simpan Pendaftaran"</strong>.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={handleResetIdentity}
+            className="shrink-0 flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold transition-all"
+          >
+            <RefreshCw className="w-3 h-3" />
+            <span>Ganti</span>
+          </button>
+        </div>
+      );
+    }
+
+    return null;
+  };
+
+  // ── Apakah form kelas boleh ditampilkan ───────────────────
+  const showClassSection = syncStatus === 'matched' || syncStatus === 'not_found';
 
   return (
     <div className="space-y-8 pb-10">
@@ -188,7 +335,7 @@ export const SchoolPortal = () => {
             Portal Pendaftaran Sekolah
           </h1>
           <p className="text-slate-300 text-sm md:text-base leading-relaxed mb-6">
-            Silakan masukkan data pendaftaran siswa untuk kegiatan Virtual Reality (VR) di sekolah Anda. Sistem akan mengelompokkan input jumlah siswa berdasarkan tingkatan kelas dan rombongan belajar (rombel) secara otomatis.
+            Silakan masukkan data pendaftaran siswa untuk kegiatan Virtual Reality (VR). Sistem akan otomatis menyinkronkan data berdasarkan identitas Guru PJ, Wilayah, dan Nama Sekolah.
           </p>
           
           <div className="flex items-center space-x-2">
@@ -225,13 +372,16 @@ export const SchoolPortal = () => {
         /* Form Card */
         <form onSubmit={handleSubmit} className="glass-card rounded-2xl p-6 md:p-8 border border-slate-800 shadow-2xl space-y-8">
           
-          {/* Section 1: Validation & Metadata */}
+          {/* Section 1: Identitas Guru PJ & Sekolah */}
           <div className="space-y-6">
             <div className="flex items-center space-x-3 pb-3 border-b border-slate-800/60">
               <div className="p-2 bg-indigo-500/10 text-indigo-400 rounded-lg">
                 <User className="w-5 h-5" />
               </div>
-              <h2 className="text-lg font-bold text-slate-100">Informasi Penanggung Jawab & Sekolah</h2>
+              <div>
+                <h2 className="text-lg font-bold text-slate-100">Identitas Guru PJ & Sekolah</h2>
+                <p className="text-xs text-slate-500">Isi ketiga field berikut — sistem akan otomatis menyinkronkan data Anda.</p>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -252,7 +402,7 @@ export const SchoolPortal = () => {
                   />
                 </div>
                 <p className="text-[10px] text-slate-400">
-                  Nama guru/staf penanggung jawab yang melakukan pengisian untuk validasi data pendaftaran.
+                  Nama harus sama persis dengan yang pernah diinput sebelumnya untuk sinkronisasi data.
                 </p>
               </div>
 
@@ -304,7 +454,7 @@ export const SchoolPortal = () => {
                 </div>
               </div>
 
-              {/* Manual School Name (If selected manual) */}
+              {/* Manual School Name */}
               {formData.isManualSchool && (
                 <div className="space-y-2 animate-fadeIn">
                   <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider">
@@ -323,9 +473,37 @@ export const SchoolPortal = () => {
                   </div>
                 </div>
               )}
+            </div>
+
+            {/* Sync Banner */}
+            <SyncBanner />
+          </div>
+
+          {/* Section 2: Input Jumlah Siswa (hanya tampil setelah sync) */}
+          {showClassSection && (
+            <div className="space-y-6 animate-fadeIn">
+              <div className="flex items-center justify-between pb-3 border-b border-slate-800/60">
+                <div className="flex items-center space-x-3">
+                  <div className="p-2 bg-indigo-500/10 text-indigo-400 rounded-lg">
+                    <FileSpreadsheet className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-bold text-slate-100">
+                      {syncStatus === 'matched' ? 'Edit Jumlah Siswa Per Kelas' : 'Input Jumlah Siswa Per Kelas'}
+                    </h2>
+                    <p className="text-xs text-slate-500">Tingkat 1 – 6, berdasarkan rombongan belajar.</p>
+                  </div>
+                </div>
+                {syncStatus === 'matched' && (
+                  <span className="flex items-center space-x-1.5 px-2.5 py-1 rounded-lg bg-emerald-950/60 border border-emerald-600/30 text-emerald-400 text-[10px] font-bold">
+                    <Pencil className="w-3 h-3" />
+                    <span>Mode Edit</span>
+                  </span>
+                )}
+              </div>
 
               {/* Jumlah Rombel */}
-              <div className="space-y-2">
+              <div className="max-w-xs space-y-2">
                 <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider">
                   Jumlah Rombel Per Tingkatan <span className="text-rose-500">*</span>
                 </label>
@@ -346,89 +524,106 @@ export const SchoolPortal = () => {
                   />
                 </div>
                 <p className="text-[10px] text-slate-400">
-                  Misal diinput 2: maka kelas 1 terdiri dari 1A, 1B; kelas 2: 2A, 2B, dst sampai kelas 6. (Maksimal 10 rombel)
+                  Misal diinput 2: kelas 1 terdiri dari 1A, 1B; dst. (Maks. 10 rombel)
                 </p>
               </div>
-            </div>
-          </div>
 
-          {/* Section 2: Dynamic Class Inputs */}
-          <div className="space-y-6">
-            <div className="flex items-center space-x-3 pb-3 border-b border-slate-800/60">
-              <div className="p-2 bg-indigo-500/10 text-indigo-400 rounded-lg">
-                <FileSpreadsheet className="w-5 h-5" />
-              </div>
-              <h2 className="text-lg font-bold text-slate-100">Input Jumlah Siswa Per Kelas (Tingkat 1 - 6)</h2>
-            </div>
+              {/* Dynamic Class Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {[1, 2, 3, 4, 5, 6].map((grade) => {
+                  const subdivisions = getSubdivisions(formData.rombelCount);
+                  return (
+                    <div 
+                      key={grade} 
+                      className="p-5 rounded-2xl bg-slate-900/60 border border-slate-800/80 hover:border-slate-700/60 transition-all flex flex-col space-y-4 shadow-md"
+                    >
+                      <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                        <span className="text-sm font-bold text-indigo-400">Kelas {grade}</span>
+                        <span className="text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded">
+                          {subdivisions.length} Rombel
+                        </span>
+                      </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[1, 2, 3, 4, 5, 6].map((grade) => {
-                const subdivisions = getSubdivisions(formData.rombelCount);
-                return (
-                  <div 
-                    key={grade} 
-                    className="p-5 rounded-2xl bg-slate-900/60 border border-slate-800/80 hover:border-slate-700/60 transition-all flex flex-col space-y-4 shadow-md"
-                  >
-                    <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-                      <span className="text-sm font-bold text-indigo-400">Kelas {grade}</span>
-                      <span className="text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded">
-                        {subdivisions.length} Rombel
-                      </span>
+                      <div className="grid grid-cols-2 gap-3">
+                        {subdivisions.map((letter) => {
+                          const className = `${grade}${letter}`;
+                          return (
+                            <div key={className} className="space-y-1.5">
+                              <label className="text-[11px] font-bold text-slate-400 tracking-wider">
+                                Rombel {className}
+                              </label>
+                              <input
+                                type="number"
+                                min="0"
+                                placeholder="0"
+                                value={classDetails[className] !== undefined ? classDetails[className] : ''}
+                                onChange={(e) => handleClassValueChange(className, e.target.value)}
+                                className="w-full bg-slate-950 border border-slate-800/80 rounded-xl px-3 py-2 text-xs text-center text-slate-200 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 animate-fadeIn"
+                              />
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
-
-                    <div className="grid grid-cols-2 gap-3">
-                      {subdivisions.map((letter) => {
-                        const className = `${grade}${letter}`;
-                        return (
-                          <div key={className} className="space-y-1.5">
-                            <label className="text-[11px] font-bold text-slate-400 tracking-wider">
-                              Rombel {className}
-                            </label>
-                            <input
-                              type="number"
-                              min="0"
-                              placeholder="0"
-                              value={classDetails[className] !== undefined ? classDetails[className] : ''}
-                              onChange={(e) => handleClassValueChange(className, e.target.value)}
-                              className="w-full bg-slate-950 border border-slate-800/80 rounded-xl px-3 py-2 text-xs text-center text-slate-200 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 animate-fadeIn"
-                            />
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Section 3: Summary Counter & Submit */}
-          <div className="flex flex-col md:flex-row items-center justify-between gap-6 p-6 rounded-2xl bg-indigo-950/20 border border-indigo-500/20">
-            <div className="flex items-center space-x-4">
-              <div className="p-3 bg-indigo-500/10 rounded-xl text-indigo-400 border border-indigo-500/20">
-                <AlertCircle className="w-6 h-6 animate-pulse" />
-              </div>
-              <div>
-                <h3 className="text-sm font-bold text-slate-200">Total Pendaftar Sementara</h3>
-                <p className="text-xs text-slate-400">Akumulasi jumlah siswa dari semua kelas yang telah Anda masukkan.</p>
+                  );
+                })}
               </div>
             </div>
-            
-            <div className="flex items-center space-x-6">
-              <div className="text-center md:text-right">
-                <span className="text-3xl font-extrabold text-white tracking-tight">{totalStudents}</span>
-                <span className="text-xs text-indigo-400 ml-1.5 font-bold">Siswa</span>
-              </div>
+          )}
 
-              <button
-                type="submit"
-                className="px-6 py-3.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm rounded-xl transition-all shadow-lg shadow-indigo-600/30 flex items-center space-x-2"
-              >
-                <CheckCircle className="w-4 h-4" />
-                <span>Simpan Pendaftaran</span>
-              </button>
+          {/* Section 3: Summary Counter & Submit (hanya tampil setelah sync) */}
+          {showClassSection && (
+            <div className="flex flex-col md:flex-row items-center justify-between gap-6 p-6 rounded-2xl bg-indigo-950/20 border border-indigo-500/20 animate-fadeIn">
+              <div className="flex items-center space-x-4">
+                <div className="p-3 bg-indigo-500/10 rounded-xl text-indigo-400 border border-indigo-500/20">
+                  <AlertCircle className="w-6 h-6 animate-pulse" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-slate-200">Total Pendaftar Sementara</h3>
+                  <p className="text-xs text-slate-400">Akumulasi jumlah siswa dari semua kelas yang telah dimasukkan.</p>
+                </div>
+              </div>
+              
+              <div className="flex items-center space-x-6">
+                <div className="text-center md:text-right">
+                  <span className="text-3xl font-extrabold text-white tracking-tight">{totalStudents}</span>
+                  <span className="text-xs text-indigo-400 ml-1.5 font-bold">Siswa</span>
+                </div>
+
+                <button
+                  type="submit"
+                  className={`px-6 py-3.5 font-bold text-sm rounded-xl transition-all shadow-lg flex items-center space-x-2 ${
+                    syncStatus === 'matched'
+                      ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-600/30'
+                      : 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-indigo-600/30'
+                  }`}
+                >
+                  {syncStatus === 'matched' ? (
+                    <>
+                      <Pencil className="w-4 h-4" />
+                      <span>Perbarui Data Siswa</span>
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle className="w-4 h-4" />
+                      <span>Simpan Pendaftaran</span>
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
-          </div>
+          )}
+
+          {/* Placeholder saat belum sync */}
+          {!showClassSection && syncStatus === 'idle' && (
+            <div className="flex flex-col items-center justify-center py-12 rounded-2xl bg-slate-900/40 border border-dashed border-slate-700/60 space-y-3">
+              <div className="p-4 rounded-full bg-indigo-500/10 text-indigo-400">
+                <FileSpreadsheet className="w-8 h-8" />
+              </div>
+              <p className="text-sm font-semibold text-slate-400">Form input jumlah siswa akan muncul di sini</p>
+              <p className="text-xs text-slate-500">Lengkapi Nama Guru PJ, Wilayah, dan Nama Sekolah di atas untuk melanjutkan.</p>
+            </div>
+          )}
 
         </form>
       ) : (
@@ -442,7 +637,7 @@ export const SchoolPortal = () => {
               <div>
                 <h2 className="text-lg font-bold text-slate-100">Riwayat Pendaftaran Sekolah</h2>
                 <p className="text-xs text-slate-400">
-                  Daftar sekolah yang telah menginputkan pendaftaran siswa kegiatan VR.
+                  Daftar sekolah yang telah menginputkan data jumlah siswa.
                 </p>
               </div>
             </div>
