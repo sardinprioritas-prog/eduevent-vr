@@ -24,6 +24,7 @@ export const SchoolPortal = () => {
     cities, 
     schools, 
     schoolRegistrations, 
+    users,
     handleSaveSchoolRegistration, 
     handleDeleteSchoolRegistration 
   } = useAuth();
@@ -50,11 +51,18 @@ export const SchoolPortal = () => {
   const [editingRegId, setEditingRegId] = useState(null); // ID reg yang sedang diedit
   const syncDebounceRef = useRef(null);
 
+  const finalSchoolName = formData.isManualSchool
+    ? formData.manualSchoolName.trim()
+    : formData.schoolName;
+
+  const isSMP = (finalSchoolName || '').toUpperCase().includes('SMP');
+  const grades = isSMP ? [7, 8, 9] : [1, 2, 3, 4, 5, 6];
+
   // ── Reset/re-initialize classDetails when rombelCount changes ──
   useEffect(() => {
     const rc = parseInt(formData.rombelCount) || 1;
     const newDetails = {};
-    for (let grade = 1; grade <= 6; grade++) {
+    for (let grade of grades) {
       for (let r = 0; r < rc; r++) {
         const className = `${grade}${String.fromCharCode(65 + r)}`;
         newDetails[className] = classDetails[className] !== undefined ? classDetails[className] : '';
@@ -62,7 +70,7 @@ export const SchoolPortal = () => {
     }
     setClassDetails(newDetails);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [formData.rombelCount]);
+  }, [formData.rombelCount, isSMP]);
 
   // ── Recalculate total students in real-time ───────────────
   useEffect(() => {
@@ -74,9 +82,7 @@ export const SchoolPortal = () => {
   }, [classDetails]);
 
   // ── Auto-Sync: trigger debounced check saat 3 field terisi ──
-  const finalSchoolName = formData.isManualSchool
-    ? formData.manualSchoolName.trim()
-    : formData.schoolName;
+
 
   useEffect(() => {
     const pjReady   = formData.pjName.trim().length > 0;
@@ -491,7 +497,7 @@ export const SchoolPortal = () => {
                     <h2 className="text-lg font-bold text-slate-100">
                       {syncStatus === 'matched' ? 'Edit Jumlah Siswa Per Kelas' : 'Input Jumlah Siswa Per Kelas'}
                     </h2>
-                    <p className="text-xs text-slate-500">Tingkat 1 – 6, berdasarkan rombongan belajar.</p>
+                    <p className="text-xs text-slate-500">Tingkat {isSMP ? '7 – 9' : '1 – 6'}, berdasarkan rombongan belajar.</p>
                   </div>
                 </div>
                 {syncStatus === 'matched' && (
@@ -524,13 +530,13 @@ export const SchoolPortal = () => {
                   />
                 </div>
                 <p className="text-[10px] text-slate-400">
-                  Misal diinput 2: kelas 1 terdiri dari 1A, 1B; dst. (Maks. 10 rombel)
+                  Misal diinput 2: kelas {isSMP ? '7 terdiri dari 7A, 7B' : '1 terdiri dari 1A, 1B'}; dst. (Maks. 10 rombel)
                 </p>
               </div>
 
               {/* Dynamic Class Grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {[1, 2, 3, 4, 5, 6].map((grade) => {
+                {grades.map((grade) => {
                   const subdivisions = getSubdivisions(formData.rombelCount);
                   return (
                     <div 
@@ -682,7 +688,15 @@ export const SchoolPortal = () => {
                           <button
                             onClick={() => {
                               if (confirm(`Apakah Anda yakin ingin menghapus pendaftaran ${reg.schoolName}?`)) {
-                                handleDeleteSchoolRegistration(reg.id);
+                                const passcode = window.prompt('Masukkan Passcode Pioneer untuk menghapus registrasi ini:');
+                                if (passcode) {
+                                  const isValidPioneer = users?.some(u => u.passcode === passcode && u.role === 'pioneer');
+                                  if (isValidPioneer) {
+                                    handleDeleteSchoolRegistration(reg.id);
+                                  } else {
+                                    alert('Gagal Hapus: Passcode salah atau Anda bukan Pioneer.');
+                                  }
+                                }
                               }
                             }}
                             className="p-1.5 rounded-lg bg-slate-800 hover:bg-rose-950/60 text-slate-300 hover:text-rose-400 transition-colors"
@@ -752,7 +766,7 @@ export const SchoolPortal = () => {
               <div className="space-y-4">
                 <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider">Distribusi Kelas</h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {[1, 2, 3, 4, 5, 6].map((grade) => {
+                  {(selectedReg ? ((selectedReg.schoolName || '').toUpperCase().includes('SMP') ? [7, 8, 9] : [1, 2, 3, 4, 5, 6]) : []).map((grade) => {
                     const subs = getSubdivisions(selectedReg.rombelCount);
                     return (
                       <div key={grade} className="p-4 rounded-xl bg-slate-900 border border-slate-800 flex flex-col space-y-2.5">
