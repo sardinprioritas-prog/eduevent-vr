@@ -99,9 +99,9 @@ export const SchoolPortal = () => {
       setSyncStatus('checking');
 
       const matched = schoolRegistrations.find((reg) => {
-        const pjMatch     = reg.pjName.trim().toLowerCase() === formData.pjName.trim().toLowerCase();
+        const pjMatch     = (reg.pjName || '').trim().toLowerCase() === (formData.pjName || '').trim().toLowerCase();
         const cityMatch   = reg.cityId === formData.cityId;
-        const schoolMatch = reg.schoolName.trim().toLowerCase() === finalSchoolName.toLowerCase();
+        const schoolMatch = (reg.schoolName || '').trim().toLowerCase() === (finalSchoolName || '').trim().toLowerCase();
         return pjMatch && cityMatch && schoolMatch;
       });
 
