@@ -183,6 +183,26 @@ CREATE INDEX IF NOT EXISTS idx_users_role       ON users(role);
 CREATE INDEX IF NOT EXISTS idx_finances_date     ON finances(date);
 CREATE INDEX IF NOT EXISTS idx_finances_type     ON finances(type);
 
+-- 8. TABLE: school_registrations (Pendaftaran Sekolah oleh Guru PJ)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS school_registrations (
+  id              TEXT PRIMARY KEY DEFAULT ('reg-' || floor(extract(epoch from now()) * 1000)::text),
+  pj_name         TEXT NOT NULL,
+  city_id         TEXT NOT NULL REFERENCES cities(id) ON DELETE CASCADE,
+  city_name       TEXT NOT NULL,
+  school_id       TEXT,
+  school_name     TEXT NOT NULL,
+  rombel_count    INTEGER NOT NULL DEFAULT 1 CHECK (rombel_count >= 1),
+  class_details   JSONB,
+  total_students  INTEGER NOT NULL DEFAULT 0 CHECK (total_students >= 0),
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at      TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+ALTER TABLE school_registrations ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Allow all school_registrations" ON school_registrations;
+CREATE POLICY "Allow all school_registrations" ON school_registrations FOR ALL USING (true);
+
 -- ============================================================
 -- SELESAI! Cek tabel di: Table Editor (sidebar kiri Supabase)
 -- ============================================================
