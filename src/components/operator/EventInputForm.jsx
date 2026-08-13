@@ -393,7 +393,8 @@ export const EventInputForm = ({ editingEvent, onCancelEdit }) => {
                 placeholder="Total keseluruhan siswa di sekolah"
                 value={formData.dapodikStudents}
                 onChange={(e) => setFormData({ ...formData, dapodikStudents: e.target.value })}
-                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-emerald-500 transition-all"
+                disabled
+                className="w-full bg-slate-800/50 border border-slate-700/50 rounded-xl px-4 py-2.5 text-sm text-slate-400 cursor-not-allowed opacity-70"
               />
             </div>
 
@@ -409,7 +410,8 @@ export const EventInputForm = ({ editingEvent, onCancelEdit }) => {
                 placeholder="Jumlah aktual yang ikut mencoba VR"
                 value={formData.participatingStudents}
                 onChange={(e) => setFormData({ ...formData, participatingStudents: e.target.value })}
-                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-emerald-500 transition-all"
+                disabled
+                className="w-full bg-slate-800/50 border border-slate-700/50 rounded-xl px-4 py-2.5 text-sm text-slate-400 cursor-not-allowed opacity-70"
               />
             </div>
           </div>
