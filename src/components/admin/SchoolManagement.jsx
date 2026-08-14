@@ -282,6 +282,16 @@ export const SchoolManagement = () => {
           </tbody>
         </table>
       </div>
+
+      {/* Summary Footer */}
+      <div className="mt-4 pt-4 border-t border-slate-800 flex flex-col sm:flex-row justify-between items-center text-xs text-slate-400">
+        <div>
+          Total Sekolah Terdata: <span className="text-slate-200 font-bold">{filteredSchools.length}</span>
+        </div>
+        <div>
+          Total Keseluruhan Siswa: <span className="text-emerald-400 font-bold">{filteredSchools.reduce((sum, school) => sum + (parseInt(school.studentCount) || 0), 0)}</span>
+        </div>
+      </div>
     </div>
   );
 };
