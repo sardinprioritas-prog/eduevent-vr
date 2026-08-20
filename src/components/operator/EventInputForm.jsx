@@ -18,6 +18,7 @@ export const EventInputForm = ({ editingEvent, onCancelEdit }) => {
   //   - Ada event dengan schoolName tersebut di kota yang sama
   //   - KECUALI: sekolah yang sedang diedit (boleh tetap tampil)
   //   - KECUALI: sekolah dengan durasi "2 Hari" tapi baru ada Hari-1 (masih perlu Hari-2)
+  //   - KECUALI: sekolah dengan durasi "3 Hari" yang belum lengkap (Hari-1/2/3)
   const usedSchoolNames = (() => {
     const userCity = currentUser?.city;
     const cityEvents = events.filter(e => e.cityName === userCity);
@@ -37,9 +38,18 @@ export const EventInputForm = ({ editingEvent, onCancelEdit }) => {
       const hasFullday    = evts.some(e => e.session === 'Fullday');
       const hasHari1      = evts.some(e => e.session === 'Hari-1');
       const hasHari2      = evts.some(e => e.session === 'Hari-2');
+      const hasHari3      = evts.some(e => e.session === 'Hari-3');
 
-      // Sekolah selesai jika: sudah Fullday, atau sudah ada Hari-1 DAN Hari-2
-      const isCompleted   = hasFullday || (hasHari1 && hasHari2);
+      // Cek durasi yang digunakan sekolah ini
+      const is3Hari       = evts.some(e => e.duration === '3 Hari');
+
+      // Sekolah selesai jika:
+      //   - Fullday (1 Hari)
+      //   - Hari-1 + Hari-2 (2 Hari Bertahap)
+      //   - Hari-1 + Hari-2 + Hari-3 (3 Hari Bertahap)
+      const isCompleted   = hasFullday
+        || (!is3Hari && hasHari1 && hasHari2)
+        || (is3Hari && hasHari1 && hasHari2 && hasHari3);
 
       if (isCompleted) excluded.add(schoolName);
     });
@@ -83,10 +93,17 @@ export const EventInputForm = ({ editingEvent, onCancelEdit }) => {
         duration: '1 Hari',
         session: 'Fullday', // Auto-filled & locked for 1 Hari
       }));
-    } else {
+    } else if (selectedDuration === '2 Hari') {
       setFormData((prev) => ({
         ...prev,
         duration: '2 Hari',
+        session: prev.session === 'Fullday' || prev.session === 'Hari-3' ? 'Hari-1' : prev.session,
+      }));
+    } else {
+      // 3 Hari
+      setFormData((prev) => ({
+        ...prev,
+        duration: '3 Hari',
         session: prev.session === 'Fullday' ? 'Hari-1' : prev.session,
       }));
     }
@@ -302,6 +319,7 @@ export const EventInputForm = ({ editingEvent, onCancelEdit }) => {
               >
                 <option value="1 Hari">1 Hari (Fullday)</option>
                 <option value="2 Hari">2 Hari (Bertahap)</option>
+                <option value="3 Hari">3 Hari (Bertahap)</option>
               </select>
             </div>
 
@@ -324,7 +342,7 @@ export const EventInputForm = ({ editingEvent, onCancelEdit }) => {
                   className="w-full bg-slate-800/80 border border-slate-700/50 rounded-xl px-4 py-2.5 text-sm text-slate-400 cursor-not-allowed font-semibold"
                 />
               ) : (
-                <div className="grid grid-cols-2 gap-3">
+                <div className={`grid gap-3 ${formData.duration === '3 Hari' ? 'grid-cols-3' : 'grid-cols-2'}`}>
                   <label
                     className={`flex items-center justify-center p-2.5 rounded-xl border text-xs font-semibold cursor-pointer transition-all ${
                       formData.session === 'Hari-1'
@@ -359,6 +377,25 @@ export const EventInputForm = ({ editingEvent, onCancelEdit }) => {
                     />
                     Hari-2
                   </label>
+                  {formData.duration === '3 Hari' && (
+                    <label
+                      className={`flex items-center justify-center p-2.5 rounded-xl border text-xs font-semibold cursor-pointer transition-all ${
+                        formData.session === 'Hari-3'
+                          ? 'bg-emerald-500/20 border-emerald-500 text-emerald-300'
+                          : 'bg-slate-900 border-slate-700 text-slate-400 hover:border-slate-600'
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="session_choice"
+                        value="Hari-3"
+                        checked={formData.session === 'Hari-3'}
+                        onChange={(e) => setFormData({ ...formData, session: e.target.value })}
+                        className="sr-only"
+                      />
+                      Hari-3
+                    </label>
+                  )}
                 </div>
               )}
             </div>

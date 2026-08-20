@@ -310,6 +310,7 @@ export const RecapTable = ({ selectedCity }) => {
               <option value="ALL">Semua Durasi</option>
               <option value="1 Hari">1 Hari</option>
               <option value="2 Hari">2 Hari</option>
+              <option value="3 Hari">3 Hari</option>
             </select>
           </div>
 
