@@ -67,6 +67,7 @@ const toAppEvent = (row) => ({
   dapodikStudents: row.dapodik_students,
   participatingStudents: row.participating_students,
   operatorName: row.operator_name,
+  coOperatorId: row.co_operator_id || null,
   payoutId: row.payout_id,
   createdAt: row.created_at,
 });
@@ -116,6 +117,7 @@ const toDbEvent = (evt) => ({
   dapodik_students: evt.dapodikStudents,
   participating_students: evt.participatingStudents,
   operator_name: evt.operatorName,
+  co_operator_id: evt.coOperatorId || null,
   payout_id: evt.payoutId || null,
 });
 

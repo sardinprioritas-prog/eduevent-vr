@@ -53,9 +53,13 @@ CREATE TABLE IF NOT EXISTS events (
   dapodik_students      INTEGER NOT NULL DEFAULT 0 CHECK (dapodik_students >= 0),
   participating_students INTEGER NOT NULL DEFAULT 0 CHECK (participating_students >= 0),
   operator_name         TEXT,
+  co_operator_id        TEXT REFERENCES users(id) ON DELETE SET NULL,
   payout_id             TEXT,
   created_at            TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+-- Migrasi untuk database yang sudah ada: tambah kolom co_operator_id jika belum ada
+ALTER TABLE events ADD COLUMN IF NOT EXISTS co_operator_id TEXT REFERENCES users(id) ON DELETE SET NULL;
 
 -- 5. TABLE: payouts (Riwayat Pencairan Gaji/Fee)
 -- ============================================================

@@ -12,6 +12,7 @@ import { UserManagement } from './components/admin/UserManagement';
 import { SchoolManagement } from './components/admin/SchoolManagement';
 import { SalarySettings } from './components/admin/SalarySettings';
 import { AdminSalaryDisbursement } from './components/admin/AdminSalaryDisbursement';
+import { AdminEventCollab } from './components/admin/AdminEventCollab';
 import { SalaryWidget } from './components/shared/SalaryWidget';
 import { PayoutHistoryTable } from './components/shared/PayoutHistoryTable';
 import { ExecutiveDashboard } from './components/executive/ExecutiveDashboard';
@@ -179,6 +180,9 @@ const AdminView = () => (
         <AdminSalaryDisbursement />
       </div>
       <SchoolManagement />
+    </div>
+    <div className="mt-8">
+      <AdminEventCollab />
     </div>
     <div className="mt-8">
       <CityManagement />
