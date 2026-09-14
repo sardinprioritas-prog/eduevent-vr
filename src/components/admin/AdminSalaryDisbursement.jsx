@@ -38,10 +38,10 @@ export const AdminSalaryDisbursement = () => {
       .some(p => !p.details?.eventIds);
 
     // Event belum dibayar:
-    // Event masuk hitungan jika user adalah operator utama ATAU co-operator
+    // Event masuk hitungan jika user adalah operator utama ATAU salah satu co-operator
     const unpaidEvents = events.filter((evt) => {
-      const isMainOperator = evt.operatorName === user.name && evt.cityName === user.city;
-      const isCoOperator = evt.coOperatorId === user.id;
+      const isMainOperator = (evt.operatorName || '').trim().toLowerCase() === (user.name || '').trim().toLowerCase();
+      const isCoOperator = Array.isArray(evt.coOperatorIds) && evt.coOperatorIds.includes(user.id);
       if (!isMainOperator && !isCoOperator) return false;
       if (paidEventIds.has(evt.id)) return false;
       if (userHasOldFormatPayout && evt.payoutId) return false;
@@ -49,15 +49,18 @@ export const AdminSalaryDisbursement = () => {
     });
 
     // Hitung total siswa dengan mempertimbangkan split fee:
-    // - Jika ada co_operator_id → fee dibagi 50% (splitFactor = 0.5)
-    // - Jika tidak ada kolaborasi → fee penuh (splitFactor = 1.0)
+    // splitFactor = 1 / totalOperators
+    // totalOperators = 1 (utama) + jumlah co-operator
+    // Contoh: 1 utama + 2 co-op = 3 orang → masing-masing 1/3 ≈ 33.3%
     let weightedStudentTotal = 0;
     const schoolBreakdown = [];
 
     unpaidEvents.forEach(evt => {
       const students = parseInt(evt.participatingStudents, 10) || 0;
-      const isCollaboration = !!evt.coOperatorId;
-      const splitFactor = isCollaboration ? 0.5 : 1.0;
+      const coOpCount = Array.isArray(evt.coOperatorIds) ? evt.coOperatorIds.length : 0;
+      const totalOperators = 1 + coOpCount;  // operator utama + co-operator
+      const isCollaboration = coOpCount > 0;
+      const splitFactor = 1 / totalOperators;
       const effectiveStudents = students * splitFactor;
 
       weightedStudentTotal += effectiveStudents;
@@ -69,6 +72,7 @@ export const AdminSalaryDisbursement = () => {
         effectiveStudents,
         isCollaboration,
         splitFactor,
+        totalOperators,
         session: evt.session,
       });
     });
@@ -103,7 +107,7 @@ export const AdminSalaryDisbursement = () => {
     const totalSalary = baseSalary + bonusSalary;
 
     // Hitung berapa event yang kolaborasi
-    const collabEventCount = unpaidEvents.filter(e => !!e.coOperatorId).length;
+    const collabEventCount = unpaidEvents.filter(e => Array.isArray(e.coOperatorIds) && e.coOperatorIds.length > 0).length;
     
     return {
       baseSalary,
@@ -288,7 +292,7 @@ export const AdminSalaryDisbursement = () => {
                       {feeData.collabEventCount > 0 ? (
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-500/15 text-amber-400 border border-amber-500/30">
                           <Users2 className="w-3 h-3" />
-                          {feeData.collabEventCount} event (50%)
+                          {feeData.collabEventCount} event (bagi rata)
                         </span>
                       ) : (
                         <span className="text-slate-600 text-xs">—</span>
@@ -348,7 +352,7 @@ export const AdminSalaryDisbursement = () => {
                                     {row.isCollaboration ? (
                                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-500/15 text-amber-400 border border-amber-500/30">
                                         <Users2 className="w-3 h-3" />
-                                        Kolaborasi (50%)
+                                        {row.totalOperators} orang ({(row.splitFactor * 100).toFixed(1).replace('.0','')}%)
                                       </span>
                                     ) : (
                                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
