@@ -36,10 +36,10 @@ export const AdminSalaryDisbursement = () => {
       .filter(p => p.userId === user.id)
       .some(p => !p.details?.eventIds);
 
-    // Event masuk hitungan jika user adalah operator utama
+    // Event masuk hitungan jika kota event sama dengan kota user
     const unpaidEvents = events.filter((evt) => {
-      const isMainOperator = (evt.operatorName || '').trim().toLowerCase() === (user.name || '').trim().toLowerCase();
-      if (!isMainOperator) return false;
+      const isSameCity = (evt.cityName || '').trim().toLowerCase() === (user.city || '').trim().toLowerCase();
+      if (!isSameCity) return false;
       if (paidEventIds.has(evt.id)) return false;
       if (userHasOldFormatPayout && evt.payoutId) return false;
       return true;
