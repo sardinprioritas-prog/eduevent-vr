@@ -87,6 +87,7 @@ export const AdminSalaryDisbursement = () => {
     const baseSalary = Math.round(totalStudents * baseFee);
     const totalSalary = baseSalary + bonusSalary;
     
+    return {
       baseSalary,
       bonusSalary,
       totalSalary,
