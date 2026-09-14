@@ -67,7 +67,6 @@ const toAppEvent = (row) => ({
   dapodikStudents: row.dapodik_students,
   participatingStudents: row.participating_students,
   operatorName: row.operator_name,
-  coOperatorId: row.co_operator_id || null,
   payoutId: row.payout_id,
   createdAt: row.created_at,
 });
@@ -117,7 +116,6 @@ const toDbEvent = (evt) => ({
   dapodik_students: evt.dapodikStudents,
   participating_students: evt.participatingStudents,
   operator_name: evt.operatorName,
-  co_operator_id: evt.coOperatorId || null,
   payout_id: evt.payoutId || null,
 });
 
@@ -295,6 +293,26 @@ export const sbSavePayout = async (payout, eventIdsToUpdate) => {
       
     if (updateError) throw updateError;
   }
+
+  return { payouts: await sbGetPayouts(), events: await sbGetEvents() };
+};
+
+export const sbDeletePayout = async (id) => {
+  // 1. Update events to remove payout_id
+  const { error: updateError } = await supabase
+    .from('events')
+    .update({ payout_id: null })
+    .eq('payout_id', id);
+
+  if (updateError) throw updateError;
+
+  // 2. Delete the payout
+  const { error: deleteError } = await supabase
+    .from('payouts')
+    .delete()
+    .eq('id', id);
+
+  if (deleteError) throw deleteError;
 
   return { payouts: await sbGetPayouts(), events: await sbGetEvents() };
 };
