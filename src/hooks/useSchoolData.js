@@ -1,26 +1,13 @@
 /**
  * useSchoolData.js
- * Hook untuk membaca data sekolah dari file Excel di /public/Book1.xlsx
- * menggunakan SheetJS (xlsx).
- * 
+ * Hook untuk membaca data sekolah dari /public/schoolData.json
+ * yang telah di-generate dari file Excel (Book1.xlsx).
+ *
  * Return: { schoolData, loading, error }
  * schoolData = [{ schoolName, kecamatan }, ...]
  */
 
 import { useState, useEffect } from 'react';
-import * as XLSX from 'xlsx';
-
-// Normalisasi nama kecamatan dari Excel ke format dropdown
-const KECAMATAN_MAP = {
-  'PALU BARAT': 'Palu Barat',
-  'ULUJADI': 'Ulujadi',
-  'PALU SELATAN': 'Palu Selatan',
-  'PALU TIMUR': 'Palu Timur',
-  'PALU UTARA': 'Palu Utara',
-  'MANTIKULORE': 'Montikulore',
-  'TATANGA': 'Tatanga',
-  'TAWAELI': 'Tawaeli',
-};
 
 export const useSchoolData = () => {
   const [schoolData, setSchoolData] = useState([]);
@@ -28,39 +15,23 @@ export const useSchoolData = () => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const loadExcel = async () => {
+    const loadData = async () => {
       try {
         setLoading(true);
-        const response = await fetch('/Book1.xlsx');
-        if (!response.ok) throw new Error('File Excel tidak ditemukan');
-
-        const arrayBuffer = await response.arrayBuffer();
-        const workbook = XLSX.read(arrayBuffer, { type: 'array' });
-
-        const sheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[sheetName];
-        const rawData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-
-        // Skip header row (index 0), parse dari baris 1
-        const parsed = rawData
-          .slice(1)
-          .filter(row => row[0] && row[1])
-          .map(row => ({
-            schoolName: String(row[0]).trim(),
-            kecamatan: KECAMATAN_MAP[String(row[1]).trim().toUpperCase()] || String(row[1]).trim(),
-          }));
-
-        setSchoolData(parsed);
+        const response = await fetch('/schoolData.json');
+        if (!response.ok) throw new Error('File data sekolah tidak ditemukan');
+        const data = await response.json();
+        setSchoolData(data);
         setError(null);
       } catch (err) {
-        console.error('[useSchoolData] Gagal membaca Excel:', err);
+        console.error('[useSchoolData] Gagal memuat data:', err);
         setError(err.message);
       } finally {
         setLoading(false);
       }
     };
 
-    loadExcel();
+    loadData();
   }, []);
 
   return { schoolData, loading, error };
