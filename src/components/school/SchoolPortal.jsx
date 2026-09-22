@@ -3,7 +3,6 @@ import { useAuth } from '../../context/useAuth';
 import { useLocation } from 'react-router-dom';
 import { 
   GraduationCap, 
-  User, 
   MapPin, 
   Building2, 
   ListOrdered, 
@@ -20,10 +19,13 @@ import {
   Loader2,
 } from 'lucide-react';
 
+const KECAMATAN_OPTIONS = [
+  'Palu Barat', 'Ulujadi', 'Palu Selatan', 'Palu Timur', 
+  'Palu Utara', 'Montikulore', 'Tatanga', 'Tawaeli'
+];
+
 export const SchoolPortal = () => {
   const { 
-    cities, 
-    schools, 
     schoolRegistrations, 
     users,
     handleSaveSchoolRegistration, 
@@ -33,28 +35,10 @@ export const SchoolPortal = () => {
   const regionName = location.state?.regionName;
 
   const [formData, setFormData] = useState({
-    pjName: '',
-    cityId: '',
-    cityName: '',
-    schoolId: '',
     schoolName: '',
-    isManualSchool: false,
-    manualSchoolName: '',
+    kecamatan: '',
     rombelCount: 1,
   });
-
-  useEffect(() => {
-    if (regionName && cities.length > 0) {
-      const city = cities.find(c => c.name === regionName);
-      if (city && !formData.cityId) {
-        setFormData(prev => ({
-          ...prev,
-          cityId: city.id,
-          cityName: city.name
-        }));
-      }
-    }
-  }, [regionName, cities, formData.cityId]);
 
   const [classDetails, setClassDetails] = useState({});
   const [totalStudents, setTotalStudents] = useState(0);
@@ -67,11 +51,7 @@ export const SchoolPortal = () => {
   const [editingRegId, setEditingRegId] = useState(null); // ID reg yang sedang diedit
   const syncDebounceRef = useRef(null);
 
-  const finalSchoolName = formData.isManualSchool
-    ? formData.manualSchoolName.trim()
-    : formData.schoolName;
-
-  const isSMP = (finalSchoolName || '').toUpperCase().includes('SMP');
+  const isSMP = (formData.schoolName || '').toUpperCase().includes('SMP');
   const grades = isSMP ? [7, 8, 9] : [1, 2, 3, 4, 5, 6];
 
   // ── Reset/re-initialize classDetails when rombelCount changes ──
@@ -97,15 +77,12 @@ export const SchoolPortal = () => {
     setTotalStudents(sum);
   }, [classDetails]);
 
-  // ── Auto-Sync: trigger debounced check saat 3 field terisi ──
-
-
+  // ── Auto-Sync: trigger debounced check saat 2 field terisi ──
   useEffect(() => {
-    const pjReady   = formData.pjName.trim().length > 0;
-    const cityReady = formData.cityId.length > 0;
-    const schoolReady = finalSchoolName.length > 0;
+    const schoolReady = formData.schoolName.trim().length > 0;
+    const kecamatanReady = formData.kecamatan.length > 0;
 
-    if (!pjReady || !cityReady || !schoolReady) {
+    if (!schoolReady || !kecamatanReady) {
       // Reset sync state jika salah satu field dikosongkan
       if (syncStatus !== 'idle') {
         setSyncStatus('idle');
@@ -121,10 +98,10 @@ export const SchoolPortal = () => {
       setSyncStatus('checking');
 
       const matched = schoolRegistrations.find((reg) => {
-        const pjMatch     = (reg.pjName || '').trim().toLowerCase() === (formData.pjName || '').trim().toLowerCase();
-        const cityMatch   = reg.cityId === formData.cityId;
-        const schoolMatch = (reg.schoolName || '').trim().toLowerCase() === (finalSchoolName || '').trim().toLowerCase();
-        return pjMatch && cityMatch && schoolMatch;
+        const schoolMatch = (reg.schoolName || '').trim().toLowerCase() === formData.schoolName.trim().toLowerCase();
+        const kecamatanMatch = reg.kecamatan === formData.kecamatan;
+        const cityMatch = reg.cityName === (regionName || 'Kota Palu');
+        return schoolMatch && kecamatanMatch && cityMatch;
       });
 
       if (matched) {
@@ -145,52 +122,7 @@ export const SchoolPortal = () => {
       if (syncDebounceRef.current) clearTimeout(syncDebounceRef.current);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [formData.pjName, formData.cityId, formData.schoolId, formData.manualSchoolName, schoolRegistrations]);
-
-  // ── Filter schools based on selected city ────────────────
-  const filteredSchools = schools.filter(s => s.cityId === formData.cityId && s.active !== false);
-
-  const handleCityChange = (e) => {
-    const cId = e.target.value;
-    const city = cities.find(c => c.id === cId);
-    if (regionName) return; // Prevent changing if locked by regionName
-    setSyncStatus('idle');
-    setEditingRegId(null);
-    setClassDetails({});
-    setFormData({
-      ...formData,
-      cityId: cId,
-      cityName: city ? city.name : '',
-      schoolId: '',
-      schoolName: '',
-      isManualSchool: false,
-      manualSchoolName: ''
-    });
-  };
-
-  const handleSchoolChange = (e) => {
-    const val = e.target.value;
-    setSyncStatus('idle');
-    setEditingRegId(null);
-    setClassDetails({});
-    if (val === 'manual') {
-      setFormData({
-        ...formData,
-        schoolId: 'manual',
-        schoolName: '',
-        isManualSchool: true,
-      });
-    } else {
-      const sch = schools.find(s => s.id === val);
-      setFormData({
-        ...formData,
-        schoolId: val,
-        schoolName: sch ? sch.name : '',
-        isManualSchool: false,
-        manualSchoolName: ''
-      });
-    }
-  };
+  }, [formData.schoolName, formData.kecamatan, regionName, schoolRegistrations]);
 
   const handleClassValueChange = (className, value) => {
     if (value === '' || (/^\d+$/.test(value) && parseInt(value) >= 0)) {
@@ -204,43 +136,33 @@ export const SchoolPortal = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    if (!formData.pjName.trim()) {
-      alert('Nama Guru Penanggung Jawab wajib diisi!');
-      return;
-    }
-    if (!formData.cityId) {
-      alert('Silakan pilih Wilayah terlebih dahulu!');
-      return;
-    }
-    if (!finalSchoolName) {
+    if (!formData.schoolName.trim()) {
       alert('Nama Sekolah tidak boleh kosong!');
+      return;
+    }
+    if (!formData.kecamatan) {
+      alert('Silakan pilih Kecamatan terlebih dahulu!');
       return;
     }
 
     const registrationData = {
       // Jika editingRegId ada → UPDATE, jika tidak → INSERT baru
       ...(editingRegId ? { id: editingRegId } : {}),
-      pjName: formData.pjName.trim(),
-      cityId: formData.cityId,
-      cityName: formData.cityName,
-      schoolId: formData.schoolId,
-      schoolName: finalSchoolName,
+      schoolName: formData.schoolName.trim(),
+      kecamatan: formData.kecamatan,
+      cityName: regionName || 'Kota Palu',
       rombelCount: parseInt(formData.rombelCount),
       classDetails: classDetails,
       totalStudents: totalStudents,
+      pjName: '-', // For backwards compatibility
     };
 
     handleSaveSchoolRegistration(registrationData);
 
     // Reset Form
     setFormData({
-      pjName: '',
-      cityId: '',
-      cityName: '',
-      schoolId: '',
       schoolName: '',
-      isManualSchool: false,
-      manualSchoolName: '',
+      kecamatan: '',
       rombelCount: 1,
     });
     setClassDetails({});
@@ -257,26 +179,10 @@ export const SchoolPortal = () => {
     setClassDetails({});
     setFormData(prev => ({
       ...prev,
-      pjName: '',
-      cityId: '',
-      cityName: '',
-      schoolId: '',
       schoolName: '',
-      isManualSchool: false,
-      manualSchoolName: '',
+      kecamatan: '',
       rombelCount: 1,
     }));
-    
-    if (regionName && cities.length > 0) {
-      const city = cities.find(c => c.name === regionName);
-      if (city) {
-        setFormData(prev => ({
-          ...prev,
-          cityId: city.id,
-          cityName: city.name
-        }));
-      }
-    }
   };
 
   // Helper to generate dynamic grade columns
@@ -308,7 +214,7 @@ export const SchoolPortal = () => {
           <div className="flex-1 min-w-0">
             <p className="text-sm font-bold text-emerald-300">Data Ditemukan — Mode Edit</p>
             <p className="text-xs text-emerald-400/80 mt-0.5">
-              Identitas Guru PJ, Wilayah, dan Sekolah cocok. Data jumlah siswa sebelumnya telah dimuat. 
+              Identitas Sekolah dan Kecamatan cocok. Data jumlah siswa sebelumnya telah dimuat. 
               Silakan perbarui dan klik <strong>"Perbarui Data Siswa"</strong>.
             </p>
           </div>
@@ -331,7 +237,7 @@ export const SchoolPortal = () => {
           <div className="flex-1 min-w-0">
             <p className="text-sm font-bold text-amber-300">Belum Ada Data — Pendaftaran Baru</p>
             <p className="text-xs text-amber-400/80 mt-0.5">
-              Tidak ditemukan data registrasi untuk kombinasi Guru PJ, Wilayah, dan Sekolah ini.
+              Tidak ditemukan data registrasi untuk kombinasi Sekolah dan Kecamatan ini.
               Silakan isi jumlah siswa dan klik <strong>"Simpan Pendaftaran"</strong>.
             </p>
           </div>
@@ -374,7 +280,7 @@ export const SchoolPortal = () => {
             </div>
           )}
           <p className="text-slate-300 text-sm md:text-base leading-relaxed mb-6">
-            Silakan masukkan data pendaftaran siswa untuk kegiatan Virtual Reality (VR). Sistem akan otomatis menyinkronkan data berdasarkan identitas Guru PJ, Wilayah, dan Nama Sekolah.
+            Silakan masukkan data pendaftaran siswa untuk kegiatan Virtual Reality (VR). Sistem akan otomatis menyinkronkan data berdasarkan identitas Sekolah dan Kecamatan.
           </p>
           
           <div className="flex items-center space-x-2">
@@ -411,108 +317,57 @@ export const SchoolPortal = () => {
         /* Form Card */
         <form onSubmit={handleSubmit} className="glass-card rounded-2xl p-6 md:p-8 border border-slate-800 shadow-2xl space-y-8">
           
-          {/* Section 1: Identitas Guru PJ & Sekolah */}
+          {/* Section 1: Identitas Sekolah & Kecamatan */}
           <div className="space-y-6">
             <div className="flex items-center space-x-3 pb-3 border-b border-slate-800/60">
               <div className="p-2 bg-indigo-500/10 text-indigo-400 rounded-lg">
-                <User className="w-5 h-5" />
+                <Building2 className="w-5 h-5" />
               </div>
               <div>
-                <h2 className="text-lg font-bold text-slate-100">Identitas Guru PJ & Sekolah</h2>
-                <p className="text-xs text-slate-500">Isi ketiga field berikut — sistem akan otomatis menyinkronkan data Anda.</p>
+                <h2 className="text-lg font-bold text-slate-100">Identitas Sekolah</h2>
+                <p className="text-xs text-slate-500">Isi Nama Sekolah dan Kecamatan.</p>
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Nama Guru PJ */}
-              <div className="space-y-2">
-                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider">
-                  Nama Guru Penanggung Jawab (PJ) <span className="text-rose-500">*</span>
-                </label>
-                <div className="relative">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-                  <input
-                    type="text"
-                    required
-                    placeholder="Contoh: Drs. Ahmad Yani, M.Pd."
-                    value={formData.pjName}
-                    onChange={(e) => setFormData({ ...formData, pjName: e.target.value })}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
-                  />
-                </div>
-                <p className="text-[10px] text-slate-400">
-                  Nama harus sama persis dengan yang pernah diinput sebelumnya untuk sinkronisasi data.
-                </p>
-              </div>
-
-              {/* Wilayah / Kota */}
-              <div className="space-y-2">
-                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider">
-                  Wilayah / Kabupaten / Kota <span className="text-rose-500">*</span>
-                </label>
-                <div className="relative">
-                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-                  <select
-                    required
-                    disabled={!!regionName}
-                    value={formData.cityId}
-                    onChange={handleCityChange}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 appearance-none focus:ring-1 focus:ring-indigo-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <option value="">-- Pilih Wilayah Sekolah --</option>
-                    {cities.filter(c => c.active !== false).map(c => (
-                      <option key={c.id} value={c.id}>{c.name}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              {/* Sekolah */}
+              {/* Nama Sekolah */}
               <div className="space-y-2">
                 <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider">
                   Nama Sekolah <span className="text-rose-500">*</span>
                 </label>
                 <div className="relative">
                   <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-                  <select
+                  <input
+                    type="text"
                     required
-                    disabled={!formData.cityId}
-                    value={formData.isManualSchool ? 'manual' : formData.schoolId}
-                    onChange={handleSchoolChange}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 disabled:opacity-50 appearance-none focus:ring-1 focus:ring-indigo-500 transition-all"
-                  >
-                    <option value="">
-                      {!formData.cityId ? 'Pilih Wilayah Terlebih Dahulu' : '-- Pilih Sekolah --'}
-                    </option>
-                    {filteredSchools.map(s => (
-                      <option key={s.id} value={s.id}>{s.name}</option>
-                    ))}
-                    {formData.cityId && (
-                      <option value="manual">-- Sekolah Lainnya (Input Manual) --</option>
-                    )}
-                  </select>
+                    placeholder="Contoh: SD Negeri 10 Palu"
+                    value={formData.schoolName}
+                    onChange={(e) => setFormData({ ...formData, schoolName: e.target.value })}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
+                  />
                 </div>
               </div>
 
-              {/* Manual School Name */}
-              {formData.isManualSchool && (
-                <div className="space-y-2 animate-fadeIn">
-                  <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider">
-                    Ketik Nama Sekolah Anda <span className="text-rose-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-                    <input
-                      type="text"
-                      required
-                      placeholder="Masukkan nama lengkap sekolah (Contoh: SD Negeri 10 Bone)"
-                      value={formData.manualSchoolName}
-                      onChange={(e) => setFormData({ ...formData, manualSchoolName: e.target.value })}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
-                    />
-                  </div>
+              {/* Kecamatan */}
+              <div className="space-y-2">
+                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider">
+                  Kecamatan <span className="text-rose-500">*</span>
+                </label>
+                <div className="relative">
+                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                  <select
+                    required
+                    value={formData.kecamatan}
+                    onChange={(e) => setFormData({ ...formData, kecamatan: e.target.value })}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 appearance-none focus:ring-1 focus:ring-indigo-500 transition-all"
+                  >
+                    <option value="">-- Pilih Kecamatan --</option>
+                    {KECAMATAN_OPTIONS.map(kec => (
+                      <option key={kec} value={kec}>{kec}</option>
+                    ))}
+                  </select>
                 </div>
-              )}
+              </div>
             </div>
 
             {/* Sync Banner */}
@@ -661,7 +516,7 @@ export const SchoolPortal = () => {
                 <FileSpreadsheet className="w-8 h-8" />
               </div>
               <p className="text-sm font-semibold text-slate-400">Form input jumlah siswa akan muncul di sini</p>
-              <p className="text-xs text-slate-500">Lengkapi Nama Guru PJ, Wilayah, dan Nama Sekolah di atas untuk melanjutkan.</p>
+              <p className="text-xs text-slate-500">Lengkapi Nama Sekolah dan Kecamatan di atas untuk melanjutkan.</p>
             </div>
           )}
 
@@ -696,7 +551,7 @@ export const SchoolPortal = () => {
                   <tr className="border-b border-slate-800 text-slate-400 font-semibold uppercase tracking-wider bg-slate-900/60">
                     <th className="py-3.5 px-4">Nama Sekolah</th>
                     <th className="py-3.5 px-4">Wilayah</th>
-                    <th className="py-3.5 px-4">Nama Guru PJ</th>
+                    <th className="py-3.5 px-4">Kecamatan</th>
                     <th className="py-3.5 px-4 text-center">Jumlah Rombel</th>
                     <th className="py-3.5 px-4 text-center">Total Siswa</th>
                     <th className="py-3.5 px-4 text-right">Aksi</th>
@@ -707,7 +562,7 @@ export const SchoolPortal = () => {
                     <tr key={reg.id} className="hover:bg-slate-800/30 transition-colors">
                       <td className="py-3.5 px-4 font-bold text-slate-100">{reg.schoolName}</td>
                       <td className="py-3.5 px-4 text-slate-400">{reg.cityName}</td>
-                      <td className="py-3.5 px-4 text-slate-300 font-medium">{reg.pjName}</td>
+                      <td className="py-3.5 px-4 text-slate-300 font-medium">{reg.kecamatan || '-'}</td>
                       <td className="py-3.5 px-4 text-center text-slate-300">{reg.rombelCount} Rombel</td>
                       <td className="py-3.5 px-4 text-center font-extrabold text-indigo-300">{reg.totalStudents} siswa</td>
                       <td className="py-3.5 px-4 text-right">
@@ -779,8 +634,8 @@ export const SchoolPortal = () => {
               {/* Metadata Grid */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 rounded-xl bg-slate-950 border border-slate-800/80 text-xs">
                 <div>
-                  <span className="block text-slate-500">Guru PJ</span>
-                  <span className="font-bold text-slate-200">{selectedReg.pjName}</span>
+                  <span className="block text-slate-500">Kecamatan</span>
+                  <span className="font-bold text-slate-200">{selectedReg.kecamatan || '-'}</span>
                 </div>
                 <div>
                   <span className="block text-slate-500">Wilayah</span>
@@ -836,7 +691,6 @@ export const SchoolPortal = () => {
                 Tutup
               </button>
             </div>
-
           </div>
         </div>
       )}
