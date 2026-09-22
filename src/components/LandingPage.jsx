@@ -68,8 +68,11 @@ export const LandingPage = () => {
           <h1 className="text-4xl font-bold text-white mb-4 tracking-tight">
             EduEvent VR Monitoring System
           </h1>
-          <p className="text-slate-400 text-lg max-w-2xl mx-auto">
-            Sistem informasi monitoring pelaksanaan kegiatan Virtual Reality TRIESAKTI EDUTAINMENT
+          <p className="text-slate-400 text-base max-w-xl mx-auto leading-relaxed">
+            Sistem informasi monitoring pelaksanaan kegiatan Outing Class Virtual Reality
+          </p>
+          <p className="text-xl font-extrabold tracking-widest uppercase mt-1 bg-gradient-to-r from-indigo-400 via-violet-400 to-purple-400 bg-clip-text text-transparent drop-shadow-lg">
+            TRIESAKTI EDUTAINMENT
           </p>
         </div>
 
