@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../context/useAuth';
+import { useLocation } from 'react-router-dom';
 import { 
   GraduationCap, 
   User, 
@@ -28,6 +29,8 @@ export const SchoolPortal = () => {
     handleSaveSchoolRegistration, 
     handleDeleteSchoolRegistration 
   } = useAuth();
+  const location = useLocation();
+  const regionName = location.state?.regionName;
 
   const [formData, setFormData] = useState({
     pjName: '',
@@ -39,6 +42,19 @@ export const SchoolPortal = () => {
     manualSchoolName: '',
     rombelCount: 1,
   });
+
+  useEffect(() => {
+    if (regionName && cities.length > 0) {
+      const city = cities.find(c => c.name === regionName);
+      if (city && !formData.cityId) {
+        setFormData(prev => ({
+          ...prev,
+          cityId: city.id,
+          cityName: city.name
+        }));
+      }
+    }
+  }, [regionName, cities, formData.cityId]);
 
   const [classDetails, setClassDetails] = useState({});
   const [totalStudents, setTotalStudents] = useState(0);
@@ -137,6 +153,7 @@ export const SchoolPortal = () => {
   const handleCityChange = (e) => {
     const cId = e.target.value;
     const city = cities.find(c => c.id === cId);
+    if (regionName) return; // Prevent changing if locked by regionName
     setSyncStatus('idle');
     setEditingRegId(null);
     setClassDetails({});
@@ -249,6 +266,17 @@ export const SchoolPortal = () => {
       manualSchoolName: '',
       rombelCount: 1,
     }));
+    
+    if (regionName && cities.length > 0) {
+      const city = cities.find(c => c.name === regionName);
+      if (city) {
+        setFormData(prev => ({
+          ...prev,
+          cityId: city.id,
+          cityName: city.name
+        }));
+      }
+    }
   };
 
   // Helper to generate dynamic grade columns
@@ -421,9 +449,10 @@ export const SchoolPortal = () => {
                   <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                   <select
                     required
+                    disabled={!!regionName}
                     value={formData.cityId}
                     onChange={handleCityChange}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 appearance-none focus:ring-1 focus:ring-indigo-500 transition-all"
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 appearance-none focus:ring-1 focus:ring-indigo-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <option value="">-- Pilih Wilayah Sekolah --</option>
                     {cities.filter(c => c.active !== false).map(c => (

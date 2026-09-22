@@ -40,7 +40,7 @@ export const PortalSekolahModal = ({ isOpen, onClose }) => {
 
     // Success!
     onClose();
-    navigate('/sekolah');
+    navigate('/sekolah', { state: { regionName: region.name } });
   };
 
   return (

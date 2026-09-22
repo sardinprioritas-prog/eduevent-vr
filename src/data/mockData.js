@@ -5,6 +5,11 @@ export const INITIAL_CITIES = [
   { id: 'city-4', name: 'Palopo', province: 'Sulawesi Selatan', active: true },
   { id: 'city-5', name: 'Gowa', province: 'Sulawesi Selatan', active: true },
   { id: 'city-6', name: 'Maros', province: 'Sulawesi Selatan', active: true },
+  { id: 'city-palu', name: 'Kota Palu', province: 'Sulawesi Tengah', active: true },
+  { id: 'city-samarinda', name: 'Samarinda', province: 'Kalimantan Timur', active: true },
+  { id: 'city-balikpapan', name: 'Balikpapan', province: 'Kalimantan Timur', active: true },
+  { id: 'city-tenggarong', name: 'Tenggarong', province: 'Kalimantan Timur', active: true },
+  { id: 'city-baubau', name: 'BauBau', province: 'Sulawesi Tenggara', active: true },
 ];
 
 export const INITIAL_SCHOOLS = [
