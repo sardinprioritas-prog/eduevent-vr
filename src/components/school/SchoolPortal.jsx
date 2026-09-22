@@ -18,7 +18,6 @@ import {
   ShieldAlert,
   Pencil,
   Loader2,
-  Search,
 } from 'lucide-react';
 
 const KECAMATAN_OPTIONS = [
@@ -40,18 +39,9 @@ export const SchoolPortal = () => {
   // Load data sekolah dari Excel
   const { schoolData, loading: excelLoading } = useSchoolData();
 
-  // State autocomplete
-  const [searchQuery, setSearchQuery] = useState('');
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const [highlightedIndex, setHighlightedIndex] = useState(-1);
-  const searchRef = useRef(null);
-  const suggestionsRef = useRef(null);
-
-  // Filter suggestions berdasarkan query
-  const suggestions = searchQuery.length >= 2
-    ? schoolData.filter(s =>
-        s.schoolName.toLowerCase().includes(searchQuery.toLowerCase())
-      ).slice(0, 10)
+  // Sekolah yang tersedia berdasarkan kecamatan terpilih
+  const schoolsByKecamatan = formData.kecamatan
+    ? schoolData.filter(s => s.kecamatan === formData.kecamatan)
     : [];
 
   const [formData, setFormData] = useState({
@@ -60,16 +50,6 @@ export const SchoolPortal = () => {
     rombelCount: 1,
   });
 
-  // Tutup suggestions saat klik di luar
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (searchRef.current && !searchRef.current.contains(e.target)) {
-        setShowSuggestions(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
 
   const [classDetails, setClassDetails] = useState({});
   const [totalStudents, setTotalStudents] = useState(0);
@@ -207,13 +187,11 @@ export const SchoolPortal = () => {
     setActiveTab('riwayat');
   };
 
-  // Reset form dan autocomplete
+  // Reset form
   const handleResetIdentity = () => {
     setSyncStatus('idle');
     setEditingRegId(null);
     setClassDetails({});
-    setSearchQuery('');
-    setShowSuggestions(false);
     setFormData(prev => ({
       ...prev,
       schoolName: '',
@@ -367,147 +345,78 @@ export const SchoolPortal = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Nama Sekolah — Autocomplete dari Excel */}
-              <div className="space-y-2" ref={searchRef}>
-                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider">
-                  Nama Sekolah <span className="text-rose-500">*</span>
-                </label>
-                {excelLoading ? (
-                  <div className="flex items-center space-x-2 p-3 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 text-sm">
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>Memuat data sekolah...</span>
-                  </div>
-                ) : (
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 z-10" />
-                    {formData.schoolName && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setFormData({ ...formData, schoolName: '', kecamatan: '' });
-                          setSearchQuery('');
-                          setShowSuggestions(false);
-                          setSyncStatus('idle');
-                        }}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 z-10 text-slate-500 hover:text-slate-300 transition-colors"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    )}
-                    <input
-                      type="text"
-                      required
-                      autoComplete="off"
-                      placeholder={`Ketik nama sekolah... (${schoolData.length} tersedia)`}
-                      value={formData.schoolName || searchQuery}
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        setSearchQuery(val);
-                        setFormData({ ...formData, schoolName: val, kecamatan: '' });
-                        setShowSuggestions(true);
-                        setHighlightedIndex(-1);
-                        setSyncStatus('idle');
-                      }}
-                      onFocus={() => {
-                        if (searchQuery.length >= 2) setShowSuggestions(true);
-                      }}
-                      onKeyDown={(e) => {
-                        if (!showSuggestions) return;
-                        if (e.key === 'ArrowDown') {
-                          e.preventDefault();
-                          setHighlightedIndex(i => Math.min(i + 1, suggestions.length - 1));
-                        } else if (e.key === 'ArrowUp') {
-                          e.preventDefault();
-                          setHighlightedIndex(i => Math.max(i - 1, 0));
-                        } else if (e.key === 'Enter' && highlightedIndex >= 0) {
-                          e.preventDefault();
-                          const selected = suggestions[highlightedIndex];
-                          setFormData({ ...formData, schoolName: selected.schoolName, kecamatan: selected.kecamatan });
-                          setSearchQuery(selected.schoolName);
-                          setShowSuggestions(false);
-                        } else if (e.key === 'Escape') {
-                          setShowSuggestions(false);
-                        }
-                      }}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-8 py-3 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
-                    />
 
-                    {/* Dropdown Suggestions */}
-                    {showSuggestions && suggestions.length > 0 && (
-                      <ul
-                        ref={suggestionsRef}
-                        className="absolute z-50 left-0 right-0 top-full mt-1 max-h-60 overflow-y-auto bg-slate-900 border border-slate-700 rounded-xl shadow-2xl divide-y divide-slate-800/60"
-                      >
-                        {suggestions.map((s, idx) => (
-                          <li
-                            key={idx}
-                            onMouseDown={(e) => {
-                              e.preventDefault();
-                              setFormData({ ...formData, schoolName: s.schoolName, kecamatan: s.kecamatan });
-                              setSearchQuery(s.schoolName);
-                              setShowSuggestions(false);
-                            }}
-                            className={`flex items-center justify-between px-4 py-3 cursor-pointer transition-colors ${
-                              idx === highlightedIndex
-                                ? 'bg-indigo-600/40 text-white'
-                                : 'hover:bg-slate-800 text-slate-200'
-                            }`}
-                          >
-                            <div className="flex items-center space-x-2">
-                              <Building2 className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
-                              <span className="text-sm font-medium">{s.schoolName}</span>
-                            </div>
-                            <span className="text-[10px] bg-slate-700 text-slate-300 px-2 py-0.5 rounded-full shrink-0 ml-2">
-                              {s.kecamatan}
-                            </span>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-
-                    {/* No results */}
-                    {showSuggestions && searchQuery.length >= 2 && suggestions.length === 0 && (
-                      <div className="absolute z-50 left-0 right-0 top-full mt-1 bg-slate-900 border border-slate-700 rounded-xl p-4 text-sm text-slate-400 shadow-xl">
-                        Sekolah tidak ditemukan. Coba kata kunci lain.
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {/* Kecamatan — auto-filled dari pilihan sekolah, bisa diubah manual */}
+              {/* 1. Kecamatan — dipilih pertama */}
               <div className="space-y-2">
                 <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider">
                   Kecamatan <span className="text-rose-500">*</span>
                 </label>
-                <div className="relative">
-                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-                  <select
-                    required
-                    value={formData.kecamatan}
-                    onChange={(e) => setFormData({ ...formData, kecamatan: e.target.value })}
-                    className={`w-full bg-slate-950 border rounded-xl pl-10 pr-4 py-3 text-sm focus:outline-none appearance-none focus:ring-1 focus:ring-indigo-500 transition-all ${
-                      formData.kecamatan
-                        ? 'border-emerald-600/60 text-emerald-300 focus:border-emerald-500'
-                        : 'border-slate-800 text-slate-200 focus:border-indigo-500'
-                    }`}
-                  >
-                    <option value="">-- Pilih Kecamatan --</option>
-                    {KECAMATAN_OPTIONS.map(kec => (
-                      <option key={kec} value={kec}>{kec}</option>
-                    ))}
-                  </select>
-                  {formData.kecamatan && (
-                    <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center space-x-1 text-emerald-400 text-[10px] font-bold pointer-events-none">
-                      <CheckCircle className="w-3.5 h-3.5" />
-                      <span>Auto</span>
-                    </div>
-                  )}
-                </div>
+                {excelLoading ? (
+                  <div className="flex items-center space-x-2 p-3 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 text-sm">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Memuat data...</span>
+                  </div>
+                ) : (
+                  <div className="relative">
+                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
+                    <select
+                      required
+                      value={formData.kecamatan}
+                      onChange={(e) => {
+                        setFormData({ ...formData, kecamatan: e.target.value, schoolName: '' });
+                        setSyncStatus('idle');
+                        setClassDetails({});
+                        setEditingRegId(null);
+                      }}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 appearance-none focus:ring-1 focus:ring-indigo-500 transition-all"
+                    >
+                      <option value="">-- Pilih Kecamatan --</option>
+                      {KECAMATAN_OPTIONS.map(kec => (
+                        <option key={kec} value={kec}>{kec} ({schoolData.filter(s => s.kecamatan === kec).length} sekolah)</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
                 {formData.kecamatan && (
-                  <p className="text-[10px] text-emerald-400/80">Kecamatan otomatis terisi dari data sekolah.</p>
+                  <p className="text-[10px] text-indigo-400/80">
+                    {schoolsByKecamatan.length} sekolah tersedia di {formData.kecamatan}
+                  </p>
                 )}
               </div>
+
+              {/* 2. Nama Sekolah — dropdown berdasarkan kecamatan terpilih */}
+              <div className="space-y-2">
+                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider">
+                  Nama Sekolah <span className="text-rose-500">*</span>
+                </label>
+                <div className="relative">
+                  <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
+                  <select
+                    required
+                    disabled={!formData.kecamatan || excelLoading}
+                    value={formData.schoolName}
+                    onChange={(e) => {
+                      setFormData({ ...formData, schoolName: e.target.value });
+                      setSyncStatus('idle');
+                    }}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 appearance-none focus:ring-1 focus:ring-indigo-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <option value="">
+                      {!formData.kecamatan ? 'Pilih Kecamatan Terlebih Dahulu' : '-- Pilih Nama Sekolah --'}
+                    </option>
+                    {schoolsByKecamatan.map((s, idx) => (
+                      <option key={idx} value={s.schoolName}>{s.schoolName}</option>
+                    ))}
+                  </select>
+                </div>
+                {formData.schoolName && (
+                  <p className="text-[10px] text-emerald-400/80 flex items-center space-x-1">
+                    <CheckCircle className="w-3 h-3" />
+                    <span>Sekolah dipilih dari data Excel</span>
+                  </p>
+                )}
+              </div>
+
             </div>
 
             {/* Sync Banner */}
