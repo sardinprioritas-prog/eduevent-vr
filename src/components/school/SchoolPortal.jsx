@@ -18,6 +18,8 @@ import {
   ShieldAlert,
   Pencil,
   Loader2,
+  User,
+  Phone,
 } from 'lucide-react';
 
 const KECAMATAN_OPTIONS = [
@@ -42,6 +44,8 @@ export const SchoolPortal = () => {
   const [formData, setFormData] = useState({
     schoolName: '',
     kecamatan: '',
+    pjName: '',
+    noHp: '',
     rombelCount: 1,
   });
 
@@ -155,6 +159,10 @@ export const SchoolPortal = () => {
       alert('Silakan pilih Kecamatan terlebih dahulu!');
       return;
     }
+    if (!formData.pjName.trim()) {
+      alert('Nama Kepala Sekolah / Guru PJ wajib diisi!');
+      return;
+    }
 
     const currentCityName = regionName || 'Kota Palu';
     const matchedCity = cities.find(c => c.name === currentCityName);
@@ -164,12 +172,13 @@ export const SchoolPortal = () => {
       ...(editingRegId ? { id: editingRegId } : {}),
       schoolName: formData.schoolName.trim(),
       kecamatan: formData.kecamatan,
+      pjName: formData.pjName.trim(),
+      noHp: formData.noHp.trim(),
       cityName: currentCityName,
       cityId: matchedCity?.id || null,
       rombelCount: parseInt(formData.rombelCount),
       classDetails: classDetails,
       totalStudents: totalStudents,
-      pjName: '-', // For backwards compatibility
     };
 
     handleSaveSchoolRegistration(registrationData);
@@ -178,6 +187,8 @@ export const SchoolPortal = () => {
     setFormData({
       schoolName: '',
       kecamatan: '',
+      pjName: '',
+      noHp: '',
       rombelCount: 1,
     });
     setClassDetails({});
@@ -196,6 +207,8 @@ export const SchoolPortal = () => {
       ...prev,
       schoolName: '',
       kecamatan: '',
+      pjName: '',
+      noHp: '',
       rombelCount: 1,
     }));
   };
@@ -417,6 +430,43 @@ export const SchoolPortal = () => {
                 )}
               </div>
 
+            </div>
+
+            {/* 3. Nama Kepala Sekolah / Guru PJ & Nomor HP */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider">
+                  Nama Kepala Sekolah / Guru PJ <span className="text-rose-500">*</span>
+                </label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                  <input
+                    type="text"
+                    required
+                    placeholder="Contoh: Drs. Ahmad Yani, M.Pd."
+                    value={formData.pjName}
+                    onChange={(e) => setFormData({ ...formData, pjName: e.target.value })}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider">
+                  Nomor HP <span className="text-rose-500">*</span>
+                </label>
+                <div className="relative">
+                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                  <input
+                    type="tel"
+                    required
+                    placeholder="Contoh: 08123456789"
+                    value={formData.noHp}
+                    onChange={(e) => setFormData({ ...formData, noHp: e.target.value })}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
+                  />
+                </div>
+              </div>
             </div>
 
             {/* Sync Banner */}
