@@ -503,6 +503,7 @@ export const subscribeToFinances = (callback) => {
 const toAppSchoolReg = (row) => ({
   id: row.id,
   pjName: row.pj_name,
+  noHp: row.no_hp,
   cityId: row.city_id,
   cityName: row.city_name,
   schoolId: row.school_id,
@@ -521,6 +522,7 @@ const toAppSchoolReg = (row) => ({
 const toDbSchoolReg = (reg) => ({
   id: reg.id,
   pj_name: reg.pjName || '-',
+  no_hp: reg.noHp || null,
   city_id: reg.cityId || null,
   city_name: reg.cityName || null,
   school_id: reg.schoolId || null,

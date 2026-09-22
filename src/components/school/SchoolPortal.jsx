@@ -122,8 +122,13 @@ export const SchoolPortal = () => {
       if (matched) {
         setSyncStatus('matched');
         setEditingRegId(matched.id);
-        // Pre-fill data lama
-        setFormData(prev => ({ ...prev, rombelCount: matched.rombelCount }));
+        // Pre-fill data lama termasuk pjName dan noHp
+        setFormData(prev => ({
+          ...prev,
+          rombelCount: matched.rombelCount,
+          pjName: matched.pjName && matched.pjName !== '-' ? matched.pjName : prev.pjName,
+          noHp: matched.noHp || prev.noHp,
+        }));
         setClassDetails(matched.classDetails || {});
       } else {
         setSyncStatus('not_found');
@@ -649,9 +654,10 @@ export const SchoolPortal = () => {
                 <thead>
                   <tr className="border-b border-slate-800 text-slate-400 font-semibold uppercase tracking-wider bg-slate-900/60">
                     <th className="py-3.5 px-4">Nama Sekolah</th>
-                    <th className="py-3.5 px-4">Wilayah</th>
                     <th className="py-3.5 px-4">Kecamatan</th>
-                    <th className="py-3.5 px-4 text-center">Jumlah Rombel</th>
+                    <th className="py-3.5 px-4">Kepala Sekolah / Guru PJ</th>
+                    <th className="py-3.5 px-4">Nomor HP</th>
+                    <th className="py-3.5 px-4 text-center">Rombel</th>
                     <th className="py-3.5 px-4 text-center">Total Siswa</th>
                     <th className="py-3.5 px-4 text-right">Aksi</th>
                   </tr>
@@ -659,9 +665,29 @@ export const SchoolPortal = () => {
                 <tbody className="divide-y divide-slate-800/60 text-slate-200">
                   {schoolRegistrations.map((reg) => (
                     <tr key={reg.id} className="hover:bg-slate-800/30 transition-colors">
-                      <td className="py-3.5 px-4 font-bold text-slate-100">{reg.schoolName}</td>
-                      <td className="py-3.5 px-4 text-slate-400">{reg.cityName}</td>
+                      <td className="py-3.5 px-4">
+                        <div className="font-bold text-slate-100">{reg.schoolName}</div>
+                        <div className="text-[10px] text-slate-500 mt-0.5">{reg.cityName}</div>
+                      </td>
                       <td className="py-3.5 px-4 text-slate-300 font-medium">{reg.kecamatan || '-'}</td>
+                      <td className="py-3.5 px-4">
+                        <div className="text-slate-200 font-semibold">{reg.pjName && reg.pjName !== '-' ? reg.pjName : <span className="text-slate-600 italic">—</span>}</div>
+                      </td>
+                      <td className="py-3.5 px-4">
+                        {reg.noHp ? (
+                          <a
+                            href={`https://wa.me/${reg.noHp.replace(/\D/g,'')}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center space-x-1.5 text-emerald-400 hover:text-emerald-300 font-semibold transition-colors"
+                          >
+                            <Phone className="w-3.5 h-3.5" />
+                            <span>{reg.noHp}</span>
+                          </a>
+                        ) : (
+                          <span className="text-slate-600 italic">—</span>
+                        )}
+                      </td>
                       <td className="py-3.5 px-4 text-center text-slate-300">{reg.rombelCount} Rombel</td>
                       <td className="py-3.5 px-4 text-center font-extrabold text-indigo-300">{reg.totalStudents} siswa</td>
                       <td className="py-3.5 px-4 text-right">
@@ -731,7 +757,7 @@ export const SchoolPortal = () => {
             <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
               
               {/* Metadata Grid */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 rounded-xl bg-slate-950 border border-slate-800/80 text-xs">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 p-4 rounded-xl bg-slate-950 border border-slate-800/80 text-xs">
                 <div>
                   <span className="block text-slate-500">Kecamatan</span>
                   <span className="font-bold text-slate-200">{selectedReg.kecamatan || '-'}</span>
@@ -741,12 +767,46 @@ export const SchoolPortal = () => {
                   <span className="font-bold text-slate-200">{selectedReg.cityName}</span>
                 </div>
                 <div>
-                  <span className="block text-slate-500">Rombel</span>
-                  <span className="font-bold text-slate-200">{selectedReg.rombelCount} Rombel</span>
-                </div>
-                <div>
                   <span className="block text-slate-500">Total Terdaftar</span>
-                  <span className="font-bold text-indigo-400">{selectedReg.totalStudents} siswa</span>
+                  <span className="font-bold text-indigo-400">{selectedReg.totalStudents} siswa ({selectedReg.rombelCount} Rombel)</span>
+                </div>
+              </div>
+
+              {/* Kontak PJ */}
+              <div className="p-4 rounded-xl bg-slate-950 border border-slate-800/80">
+                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Kontak Penanggung Jawab</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="flex items-center space-x-3">
+                    <div className="p-2 rounded-lg bg-indigo-500/10 text-indigo-400">
+                      <User className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <span className="block text-[10px] text-slate-500">Nama Kepsek / Guru PJ</span>
+                      <span className="font-bold text-slate-200 text-sm">
+                        {selectedReg.pjName && selectedReg.pjName !== '-' ? selectedReg.pjName : <span className="text-slate-500 italic">Tidak tersedia</span>}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-400">
+                      <Phone className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <span className="block text-[10px] text-slate-500">Nomor HP (WhatsApp)</span>
+                      {selectedReg.noHp ? (
+                        <a
+                          href={`https://wa.me/${selectedReg.noHp.replace(/\D/g,'')}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="font-bold text-emerald-400 hover:text-emerald-300 text-sm transition-colors"
+                        >
+                          {selectedReg.noHp}
+                        </a>
+                      ) : (
+                        <span className="text-slate-500 italic text-sm">Tidak tersedia</span>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
 
