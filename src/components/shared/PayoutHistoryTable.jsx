@@ -1,13 +1,30 @@
 import React from 'react';
 import { useAuth } from '../../context/useAuth';
-import { History, Calendar, FileText } from 'lucide-react';
+import { History, Calendar, FileText, Trash2 } from 'lucide-react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
 export const PayoutHistoryTable = () => {
-  const { payouts, currentUser, showToast } = useAuth();
+  const { payouts, currentUser, showToast, handleDeletePayout, users } = useAuth();
   
   const userPayouts = payouts.filter(p => p.userId === currentUser?.id);
+
+  const onDeleteClick = async (p) => {
+    const code = prompt('Masukkan Passcode Admin untuk menghapus riwayat ini:');
+    if (!code) return;
+
+    // Cek apakah passcode cocok dengan admin mana pun
+    const validCodes = users.filter(u => u.role === 'admin' || u.role === 'pimpinan').map(u => u.passcode);
+    validCodes.push('ad123', 'pim123');
+
+    if (validCodes.includes(code.trim().toLowerCase())) {
+      if (window.confirm('Yakin ingin menghapus pencairan ini? Event terkait akan kembali berstatus Belum Cair.')) {
+        await handleDeletePayout(p.id);
+      }
+    } else {
+      showToast('Passcode salah. Hanya Admin yang dapat menghapus data ini.', 'error');
+    }
+  };
 
   const exportToPDF = () => {
     if (userPayouts.length === 0) {
@@ -103,6 +120,7 @@ export const PayoutHistoryTable = () => {
                 <th className="py-3 px-4 font-medium text-right">Fee Dasar</th>
                 <th className="py-3 px-4 font-medium text-right">Bonus</th>
                 <th className="py-3 px-4 font-medium text-right text-emerald-400">Total Dibayarkan</th>
+                <th className="py-3 px-4 font-medium text-center">Aksi</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/50">
@@ -130,6 +148,15 @@ export const PayoutHistoryTable = () => {
                   <td className="py-4 px-4 text-right text-sm">Rp {(p.details?.bonusSalary || 0).toLocaleString('id-ID')}</td>
                   <td className="py-4 px-4 text-right font-bold text-emerald-400">
                     Rp {(p.amount || 0).toLocaleString('id-ID')}
+                  </td>
+                  <td className="py-4 px-4 text-center">
+                    <button
+                      onClick={() => onDeleteClick(p)}
+                      className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 transition-colors"
+                      title="Hapus Pencairan (Admin Only)"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
                   </td>
                 </tr>
               ))}

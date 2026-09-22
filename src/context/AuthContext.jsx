@@ -23,6 +23,7 @@ import {
   deleteFinance as removeFinance,
   getFinancePasscode,
   saveFinancePasscode,
+  deletePayout,
   getSchoolRegistrations,
   saveSchoolRegistration,
   deleteSchoolRegistration,
@@ -45,6 +46,7 @@ import {
   sbSaveSalarySettings,
   sbGetPayouts,
   sbSavePayout,
+  sbDeletePayout,
   sbGetFinances,
   sbSaveFinance,
   sbDeleteFinance,
@@ -493,11 +495,41 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem('eduevent_payouts', JSON.stringify(updatedPayouts));
         localStorage.setItem('eduevent_events', JSON.stringify(updatedEvents));
       } else {
-        showToast('Fitur pencairan hanya tersedia dalam mode Supabase', 'warning');
+        const { payouts: updatedPayouts, events: updatedEvents } = savePayout({
+          id: `pyt-${Date.now()}`,
+          userId,
+          amount,
+          details,
+          createdAt: new Date().toISOString()
+        }, eventIdsToUpdate);
+        
+        setPayouts(updatedPayouts);
+        setEvents(updatedEvents);
       }
     } catch (err) {
       console.error(err);
       showToast('Gagal memproses pencairan: ' + err.message, 'error');
+      throw err;
+    }
+  };
+
+  const handleDeletePayout = async (payoutId) => {
+    try {
+      if (dbMode === 'supabase') {
+        const { payouts: updatedPayouts, events: updatedEvents } = await sbDeletePayout(payoutId);
+        setPayouts(updatedPayouts);
+        setEvents(updatedEvents);
+        localStorage.setItem('eduevent_payouts', JSON.stringify(updatedPayouts));
+        localStorage.setItem('eduevent_events', JSON.stringify(updatedEvents));
+      } else {
+        const { payouts: updatedPayouts, events: updatedEvents } = deletePayout(payoutId);
+        setPayouts(updatedPayouts);
+        setEvents(updatedEvents);
+      }
+      showToast('Riwayat pencairan berhasil dihapus', 'warning');
+    } catch (err) {
+      console.error(err);
+      showToast('Gagal menghapus riwayat pencairan: ' + err.message, 'error');
       throw err;
     }
   };
@@ -686,6 +718,7 @@ export const AuthProvider = ({ children }) => {
         handleDeleteSchool,
         handleSaveSalarySettings,
         handleDisburseFee,
+        handleDeletePayout,
         schoolRegistrations,
         handleSaveSchoolRegistration,
         handleDeleteSchoolRegistration,

@@ -36,6 +36,16 @@ export const UserManagement = () => {
     setShowAddForm(false);
   };
 
+  const handleAddNewClick = () => {
+    setShowAddForm(true);
+    setTimeout(() => {
+      const section = document.getElementById('user-management-section');
+      if (section) {
+        section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 100);
+  };
+
   const startEdit = (user) => {
     setEditingUser(user);
     setFormData({
@@ -47,6 +57,12 @@ export const UserManagement = () => {
       active: user.active !== false,
     });
     setShowAddForm(true);
+    setTimeout(() => {
+      const section = document.getElementById('user-management-section');
+      if (section) {
+        section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 100);
   };
 
   const cancelForm = () => {
@@ -108,7 +124,7 @@ export const UserManagement = () => {
   };
 
   return (
-    <div className="glass-card rounded-2xl p-6 border border-slate-800 shadow-2xl">
+    <div id="user-management-section" className="glass-card rounded-2xl p-6 border border-slate-800 shadow-2xl">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 mb-6 border-b border-slate-800">
         <div className="flex items-center space-x-3">
           <div className="p-2.5 bg-purple-500/10 text-purple-400 rounded-xl border border-purple-500/20">
@@ -136,7 +152,7 @@ export const UserManagement = () => {
 
           {!showAddForm && (
             <button
-              onClick={() => setShowAddForm(true)}
+              onClick={handleAddNewClick}
               className="flex items-center px-4 py-2 rounded-xl text-xs font-bold bg-purple-600 hover:bg-purple-500 text-white shadow-lg shadow-purple-600/30 transition-all"
             >
               <Plus className="w-4 h-4 mr-1" />
@@ -152,7 +168,7 @@ export const UserManagement = () => {
           <h3 className="text-xs font-bold text-slate-200 uppercase tracking-wider">
             {editingUser ? 'Edit Hak Akses Akun' : 'Daftarkan Akun Pengguna Baru'}
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
             <div>
               <label className="block text-xs font-medium text-slate-400 mb-1">Nama Lengkap</label>
               <input
@@ -220,6 +236,17 @@ export const UserManagement = () => {
                     {c.name}
                   </option>
                 ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-400 mb-1">Status Akun</label>
+              <select
+                value={formData.active ? 'true' : 'false'}
+                onChange={(e) => setFormData({ ...formData, active: e.target.value === 'true' })}
+                className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-purple-500 font-semibold"
+              >
+                <option value="true">Aktif</option>
+                <option value="false">Non-Aktif</option>
               </select>
             </div>
           </div>

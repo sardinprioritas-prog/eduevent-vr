@@ -1,9 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { PortalSekolahModal } from './school/PortalSekolahModal';
 import { Building2, Shield, UserCheck, BarChart3, ArrowRight, Target, GraduationCap } from 'lucide-react';
 
 export const LandingPage = () => {
   const navigate = useNavigate();
+  const [showPortalModal, setShowPortalModal] = useState(false);
 
   const portals = [
     {
@@ -75,7 +77,7 @@ export const LandingPage = () => {
           {portals.map((p) => (
             <button
               key={p.id}
-              onClick={() => navigate(p.path)}
+              onClick={() => p.id === 'sekolah' ? setShowPortalModal(true) : navigate(p.path)}
               className={`flex items-center p-6 rounded-2xl border transition-all duration-300 text-left group ${p.color}`}
             >
               <div className="p-4 bg-slate-900/50 rounded-xl mr-5 group-hover:scale-110 transition-transform">
@@ -90,6 +92,11 @@ export const LandingPage = () => {
           ))}
         </div>
       </div>
+
+      <PortalSekolahModal 
+        isOpen={showPortalModal} 
+        onClose={() => setShowPortalModal(false)} 
+      />
     </div>
   );
 };

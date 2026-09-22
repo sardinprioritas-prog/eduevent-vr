@@ -219,6 +219,52 @@ export const getPayouts = () => {
   return JSON.parse(localStorage.getItem(KEYS.PAYOUTS) || '[]');
 };
 
+export const savePayout = (payout, eventIdsToUpdate) => {
+  const payouts = getPayouts();
+  const index = payouts.findIndex(p => p.id === payout.id);
+  
+  if (index >= 0) {
+    payouts[index] = { ...payouts[index], ...payout };
+  } else {
+    payouts.push(payout);
+  }
+  
+  localStorage.setItem(KEYS.PAYOUTS, JSON.stringify(payouts));
+
+  // Update events with payoutId
+  if (eventIdsToUpdate && eventIdsToUpdate.length > 0) {
+    const events = getEvents();
+    eventIdsToUpdate.forEach(id => {
+      const evt = events.find(e => e.id === id);
+      if (evt) evt.payoutId = payout.id;
+    });
+    localStorage.setItem(KEYS.EVENTS, JSON.stringify(events));
+  }
+
+  return { payouts, events: getEvents() };
+};
+
+export const deletePayout = (id) => {
+  let payouts = getPayouts();
+  payouts = payouts.filter(p => p.id !== id);
+  localStorage.setItem(KEYS.PAYOUTS, JSON.stringify(payouts));
+
+  // Remove payoutId from events
+  const events = getEvents();
+  let eventsUpdated = false;
+  events.forEach(evt => {
+    if (evt.payoutId === id) {
+      evt.payoutId = null;
+      eventsUpdated = true;
+    }
+  });
+  if (eventsUpdated) {
+    localStorage.setItem(KEYS.EVENTS, JSON.stringify(events));
+  }
+
+  return { payouts, events };
+};
+
 // Finances API
 export const getFinances = () => {
   initStorage();
