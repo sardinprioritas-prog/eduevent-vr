@@ -27,6 +27,7 @@ const KECAMATAN_OPTIONS = [
 export const SchoolPortal = () => {
   const { 
     schoolRegistrations, 
+    cities,
     users,
     handleSaveSchoolRegistration, 
     handleDeleteSchoolRegistration 
@@ -145,12 +146,16 @@ export const SchoolPortal = () => {
       return;
     }
 
+    const currentCityName = regionName || 'Kota Palu';
+    const matchedCity = cities.find(c => c.name === currentCityName);
+
     const registrationData = {
       // Jika editingRegId ada → UPDATE, jika tidak → INSERT baru
       ...(editingRegId ? { id: editingRegId } : {}),
       schoolName: formData.schoolName.trim(),
       kecamatan: formData.kecamatan,
-      cityName: regionName || 'Kota Palu',
+      cityName: currentCityName,
+      cityId: matchedCity?.id || null,
       rombelCount: parseInt(formData.rombelCount),
       classDetails: classDetails,
       totalStudents: totalStudents,

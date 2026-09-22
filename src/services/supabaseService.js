@@ -507,6 +507,7 @@ const toAppSchoolReg = (row) => ({
   cityName: row.city_name,
   schoolId: row.school_id,
   schoolName: row.school_name,
+  kecamatan: row.kecamatan,
   rombelCount: row.rombel_count,
   classDetails: row.class_details || {},
   totalStudents: row.total_students,
@@ -519,11 +520,12 @@ const toAppSchoolReg = (row) => ({
  */
 const toDbSchoolReg = (reg) => ({
   id: reg.id,
-  pj_name: reg.pjName,
-  city_id: reg.cityId,
-  city_name: reg.cityName,
+  pj_name: reg.pjName || '-',
+  city_id: reg.cityId || null,
+  city_name: reg.cityName || null,
   school_id: reg.schoolId || null,
   school_name: reg.schoolName,
+  kecamatan: reg.kecamatan || null,
   rombel_count: reg.rombelCount,
   class_details: reg.classDetails || {},
   total_students: reg.totalStudents,
