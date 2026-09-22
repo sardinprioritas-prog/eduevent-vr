@@ -69,7 +69,7 @@ export const LandingPage = () => {
             EduEvent VR Monitoring System
           </h1>
           <p className="text-slate-400 text-lg max-w-2xl mx-auto">
-            Sistem informasi monitoring pelaksanaan kegiatan Virtual Reality di lingkungan pendidikan Provinsi Sulawesi Selatan.
+            Sistem informasi monitoring pelaksanaan kegiatan Virtual Reality TRIESAKTI EDUTAINMENT
           </p>
         </div>
 
