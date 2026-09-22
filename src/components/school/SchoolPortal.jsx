@@ -368,6 +368,11 @@ export const SchoolPortal = () => {
           <h1 className="text-3xl md:text-5xl font-extrabold text-white tracking-tight mb-4 bg-gradient-to-r from-white via-slate-100 to-indigo-200 bg-clip-text text-transparent">
             Portal Pendaftaran Sekolah
           </h1>
+          {regionName && (
+            <div className="inline-block mb-4 px-4 py-1.5 rounded-lg bg-indigo-500/20 border border-indigo-500/30 text-indigo-300 font-bold">
+              Wilayah Terpilih: {regionName}
+            </div>
+          )}
           <p className="text-slate-300 text-sm md:text-base leading-relaxed mb-6">
             Silakan masukkan data pendaftaran siswa untuk kegiatan Virtual Reality (VR). Sistem akan otomatis menyinkronkan data berdasarkan identitas Guru PJ, Wilayah, dan Nama Sekolah.
           </p>

@@ -10,6 +10,7 @@ export const Header = () => {
   const location = useLocation();
 
   const isSchoolRoute = location.pathname === '/sekolah';
+  const regionName = location.state?.regionName;
   const displayRole = currentUser?.role || (isSchoolRoute ? 'sekolah' : 'admin');
 
   const handleAdminClick = () => {
@@ -115,7 +116,7 @@ export const Header = () => {
                     {currentUser?.name || (isSchoolRoute ? 'Guru Penanggung Jawab' : 'Sardin Damis')}
                   </div>
                   <div className="text-[10px] text-slate-400">
-                    {currentUser?.city || (isSchoolRoute ? 'Portal Sekolah' : 'Semua Wilayah')}
+                    {currentUser?.city || (isSchoolRoute ? (regionName ? `Wilayah: ${regionName}` : 'Portal Sekolah') : 'Semua Wilayah')}
                   </div>
                 </div>
 
