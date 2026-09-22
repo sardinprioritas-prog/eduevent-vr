@@ -39,16 +39,16 @@ export const SchoolPortal = () => {
   // Load data sekolah dari Excel
   const { schoolData, loading: excelLoading } = useSchoolData();
 
-  // Sekolah yang tersedia berdasarkan kecamatan terpilih
-  const schoolsByKecamatan = formData.kecamatan
-    ? schoolData.filter(s => s.kecamatan === formData.kecamatan)
-    : [];
-
   const [formData, setFormData] = useState({
     schoolName: '',
     kecamatan: '',
     rombelCount: 1,
   });
+
+  // Sekolah yang tersedia berdasarkan kecamatan terpilih (dideklarasikan setelah formData)
+  const schoolsByKecamatan = formData.kecamatan
+    ? schoolData.filter(s => s.kecamatan === formData.kecamatan)
+    : [];
 
 
   const [classDetails, setClassDetails] = useState({});
