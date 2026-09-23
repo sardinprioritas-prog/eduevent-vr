@@ -445,10 +445,6 @@ export const SchoolPortal = () => {
       alert('Nama Kepala Sekolah / Guru PJ wajib diisi!');
       return;
     }
-    if (selectedDates.length === 0) {
-      alert('Silakan pilih tanggal kegiatan di kalender Oktober terlebih dahulu!');
-      return;
-    }
 
     const currentCityName = regionName || 'Kota Palu';
     const matchedCity = cities.find(c => c.name === currentCityName);
@@ -614,7 +610,7 @@ export const SchoolPortal = () => {
             </div>
           )}
           <p className="text-slate-300 text-sm md:text-base leading-relaxed mb-6">
-            Silakan masukkan data pendaftaran siswa untuk kegiatan Virtual Reality (VR). Pilih tanggal kegiatan pada kalender Oktober 2025 sesuai alokasi jumlah siswa.
+            Silakan masukkan data pendaftaran siswa untuk kegiatan Virtual Reality (VR). Anda dapat menyimpan data terlebih dahulu dan memilih tanggal kegiatan (opsional) menyusul.
           </p>
 
           <div className="flex items-center space-x-2">
@@ -888,7 +884,9 @@ export const SchoolPortal = () => {
                   <Calendar className="w-5 h-5" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-bold text-slate-100">Pilih Tanggal Kegiatan</h2>
+                  <h2 className="text-lg font-bold text-slate-100">
+                    Pilih Tanggal Kegiatan <span className="text-sm font-normal text-slate-400 italic">(Opsional)</span>
+                  </h2>
                   <p className="text-xs text-slate-500">
                     Tanggal yang sudah dipesan sekolah lain tidak dapat dipilih kembali.
                   </p>
