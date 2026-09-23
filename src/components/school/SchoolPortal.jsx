@@ -1,15 +1,15 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useAuth } from '../../context/useAuth';
 import { useLocation } from 'react-router-dom';
 import { useSchoolData } from '../../hooks/useSchoolData';
-import { 
-  GraduationCap, 
-  MapPin, 
-  Building2, 
-  ListOrdered, 
-  Trash2, 
-  Eye, 
-  CheckCircle, 
+import {
+  GraduationCap,
+  MapPin,
+  Building2,
+  ListOrdered,
+  Trash2,
+  Eye,
+  CheckCircle,
   AlertCircle,
   FileSpreadsheet,
   X,
@@ -20,25 +20,285 @@ import {
   Loader2,
   User,
   Phone,
+  Calendar,
+  Users,
+  Info,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 
+// ── Konstanta Kecamatan ─────────────────────────────────────────
 const KECAMATAN_OPTIONS = [
-  'Palu Barat', 'Ulujadi', 'Palu Selatan', 'Palu Timur', 
-  'Palu Utara', 'Montikulore', 'Tatanga', 'Tawaeli'
+  'PALU BARAT', 'ULUJADI', 'PALU SELATAN', 'PALU TIMUR',
+  'PALU UTARA', 'MANTIKULORE', 'TATANGA', 'TAWAELI',
 ];
 
+// ── Helper Kalender Oktober ─────────────────────────────────────
+const OCTOBER_YEAR = 2025;
+const OCTOBER_MONTH = 9; // 0-indexed
+
+/**
+ * Kembalikan array tanggal (1..31) untuk bulan Oktober 2025.
+ * Hari pertama minggu: Senin=1…Minggu=0 (getDay() → 0=Sun,6=Sat)
+ */
+const buildOctoberDays = () => {
+  const days = [];
+  const firstDayOfMonth = new Date(OCTOBER_YEAR, OCTOBER_MONTH, 1).getDay(); // 0=Sun
+  // Isi padding awal (Minggu=7 supaya grid mulai dari Senin)
+  const startPad = firstDayOfMonth === 0 ? 6 : firstDayOfMonth - 1;
+  for (let i = 0; i < startPad; i++) days.push(null);
+  for (let d = 1; d <= 31; d++) days.push(d);
+  return days;
+};
+
+const isWeekend = (day) => {
+  const date = new Date(OCTOBER_YEAR, OCTOBER_MONTH, day);
+  const dow = date.getDay(); // 0=Sun, 6=Sat
+  return dow === 0 || dow === 6;
+};
+
+/**
+ * Hitung berapa hari yang dialokasikan berdasarkan jumlah siswa.
+ * <300   → 1 hari
+ * 300-499 (eksklusif 300 & inklusif 499) → 2 hari berturut (tidak termasuk Sabtu/Minggu)
+ * ≥500   → 3 hari berturut (tidak termasuk Sabtu/Minggu)
+ *
+ * Catatan soal: "jika >300 tapi <500" → 2 hari; "jika >590" → 3 hari
+ * Kita terapkan: <300=1, 300–499=2, ≥500=3 (berdasarkan konteks)
+ */
+const getDayCount = (studentCount) => {
+  if (studentCount < 300) return 1;
+  if (studentCount < 500) return 2;
+  return 3;
+};
+
+/**
+ * Dari tanggal awal, hitung array tanggal kegiatan (skip Sabtu/Minggu)
+ */
+const computeActivityDates = (startDay, dayCount) => {
+  const result = [];
+  let current = startDay;
+  while (result.length < dayCount) {
+    if (!isWeekend(current) && current <= 31) {
+      result.push(current);
+    }
+    current++;
+    if (current > 31) break;
+  }
+  return result;
+};
+
+// ── Komponen Kalender Oktober ────────────────────────────────────
+const OctoberCalendar = ({
+  studentCount,
+  bookedDates, // array of day numbers booked by OTHER schools
+  myDates,     // array of day numbers already selected/saved for THIS school
+  onSelectDates,
+  disabled,
+}) => {
+  const days = useMemo(() => buildOctoberDays(), []);
+  const dayCount = getDayCount(studentCount);
+  const [hoveredGroup, setHoveredGroup] = useState(null); // preview dates saat hover
+
+  // Semua tanggal yang sudah terpesan (termasuk milik sekolah lain)
+  const bookedSet = useMemo(() => new Set(bookedDates), [bookedDates]);
+  const mySet = useMemo(() => new Set(myDates), [myDates]);
+
+  const handleDayClick = (day) => {
+    if (disabled || !day || isWeekend(day)) return;
+    if (bookedSet.has(day)) return; // sudah dipakai sekolah lain
+
+    const proposed = computeActivityDates(day, dayCount);
+    // Cek apakah ada konflik dalam range yang diusulkan
+    const conflict = proposed.some(d => bookedSet.has(d));
+    if (conflict) {
+      alert(`Salah satu tanggal dalam rentang yang dipilih (${proposed.join(', ')}) sudah dipesan sekolah lain. Silakan pilih tanggal lain.`);
+      return;
+    }
+    onSelectDates(proposed);
+  };
+
+  const handleDayHover = (day) => {
+    if (disabled || !day || isWeekend(day) || bookedSet.has(day)) {
+      setHoveredGroup(null);
+      return;
+    }
+    const proposed = computeActivityDates(day, dayCount);
+    setHoveredGroup(proposed);
+  };
+
+  const getDayStatus = (day) => {
+    if (!day) return 'empty';
+    if (isWeekend(day)) return 'weekend';
+    if (mySet.has(day)) return 'mine';
+    if (bookedSet.has(day)) return 'booked';
+    if (hoveredGroup && hoveredGroup.includes(day)) return 'preview';
+    return 'available';
+  };
+
+  const dayNames = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
+
+  const getDayLabel = (count) => {
+    const label = ['', '1 hari', '2 hari berturut', '3 hari berturut'];
+    return label[count] || `${count} hari`;
+  };
+
+  return (
+    <div className="space-y-4">
+      {/* Header Info */}
+      <div className="flex items-start space-x-3 p-4 rounded-xl bg-indigo-950/40 border border-indigo-500/20">
+        <Info className="w-4 h-4 text-indigo-400 shrink-0 mt-0.5" />
+        <div className="text-xs text-indigo-300/90 leading-relaxed space-y-1">
+          <p className="font-semibold text-indigo-200">
+            Jumlah Siswa: <span className="text-white">{studentCount}</span> siswa
+            &nbsp;→&nbsp;Alokasi: <span className="text-amber-300 font-bold">{getDayLabel(dayCount)}</span>
+          </p>
+          {dayCount === 1 && (
+            <p>Klik tanggal yang tersedia untuk memilih 1 hari kegiatan.</p>
+          )}
+          {dayCount === 2 && (
+            <p>Klik tanggal awal. Sistem otomatis menentukan <strong>2 hari kerja berurutan</strong> (Sabtu/Minggu dilewati).</p>
+          )}
+          {dayCount === 3 && (
+            <p>Klik tanggal awal. Sistem otomatis menentukan <strong>3 hari kerja berurutan</strong> (Sabtu/Minggu dilewati).</p>
+          )}
+        </div>
+      </div>
+
+      {/* Legend */}
+      <div className="flex flex-wrap gap-3 text-[10px] font-semibold">
+        {[
+          { color: 'bg-indigo-600/80 border-indigo-500', label: 'Terpilih (Sekolah Ini)' },
+          { color: 'bg-slate-700/60 border-slate-600 opacity-50', label: 'Sabtu / Minggu' },
+          { color: 'bg-rose-900/60 border-rose-700/60', label: 'Sudah Dipesan' },
+          { color: 'bg-amber-500/20 border-amber-500/50', label: 'Preview Pilihan' },
+          { color: 'bg-slate-800/80 border-slate-700/60 hover:border-indigo-500', label: 'Tersedia' },
+        ].map(({ color, label }) => (
+          <div key={label} className="flex items-center space-x-1.5">
+            <span className={`w-4 h-4 rounded border ${color} flex-shrink-0`} />
+            <span className="text-slate-400">{label}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* Grid Kalender */}
+      <div className="rounded-2xl overflow-hidden border border-slate-800 bg-slate-900/60">
+        {/* Header bulan */}
+        <div className="flex items-center justify-center gap-2 p-4 bg-indigo-950/40 border-b border-slate-800">
+          <Calendar className="w-4 h-4 text-indigo-400" />
+          <span className="text-sm font-bold text-indigo-200">Oktober 2025</span>
+        </div>
+
+        {/* Nama hari */}
+        <div className="grid grid-cols-7 border-b border-slate-800">
+          {dayNames.map((name, idx) => (
+            <div
+              key={name}
+              className={`py-2 text-center text-[10px] font-bold tracking-wider uppercase ${
+                idx >= 5 ? 'text-slate-600' : 'text-slate-400'
+              }`}
+            >
+              {name}
+            </div>
+          ))}
+        </div>
+
+        {/* Tanggal */}
+        <div className="grid grid-cols-7 gap-px bg-slate-800">
+          {days.map((day, idx) => {
+            const status = getDayStatus(day);
+            const isClickable = day && status !== 'weekend' && status !== 'booked' && !disabled;
+
+            const base = 'flex items-center justify-center text-xs font-bold transition-all duration-150 select-none';
+            const sizeClass = 'aspect-square min-h-[36px] rounded-sm';
+            let colorClass = '';
+            let cursor = 'cursor-default';
+
+            if (status === 'empty') {
+              colorClass = 'bg-slate-950/20';
+            } else if (status === 'weekend') {
+              colorClass = 'bg-slate-900/40 text-slate-700';
+            } else if (status === 'mine') {
+              colorClass = 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30 ring-2 ring-indigo-400/40';
+            } else if (status === 'booked') {
+              colorClass = 'bg-rose-950/60 text-rose-700 line-through';
+            } else if (status === 'preview') {
+              colorClass = 'bg-amber-500/20 text-amber-200 border border-amber-500/50';
+              cursor = 'cursor-pointer';
+            } else {
+              // available
+              colorClass = `bg-slate-900 text-slate-200 ${isClickable ? 'hover:bg-indigo-900/50 hover:text-indigo-200 hover:border-indigo-500/50 border border-slate-800' : 'border border-slate-800/40'}`;
+              cursor = isClickable ? 'cursor-pointer' : 'cursor-default';
+            }
+
+            return (
+              <div
+                key={idx}
+                className={`${base} ${sizeClass} ${colorClass} ${cursor}`}
+                onClick={() => day && handleDayClick(day)}
+                onMouseEnter={() => handleDayHover(day)}
+                onMouseLeave={() => setHoveredGroup(null)}
+                title={
+                  status === 'booked'
+                    ? `Tanggal ${day} sudah dipesan sekolah lain`
+                    : status === 'mine'
+                    ? `Tanggal ${day} terpilih untuk sekolah ini`
+                    : status === 'weekend'
+                    ? 'Sabtu / Minggu (tidak tersedia)'
+                    : day
+                    ? `Pilih ${day} Oktober 2025`
+                    : ''
+                }
+              >
+                {day || ''}
+                {status === 'mine' && (
+                  <span className="sr-only">terpilih</span>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Tanggal terpilih */}
+      {myDates && myDates.length > 0 && (
+        <div className="flex items-center space-x-3 p-4 rounded-xl bg-emerald-950/30 border border-emerald-500/25">
+          <CheckCircle className="w-5 h-5 text-emerald-400 shrink-0" />
+          <div>
+            <p className="text-xs font-bold text-emerald-300">Tanggal Kegiatan Terpilih:</p>
+            <p className="text-sm font-extrabold text-white mt-0.5">
+              {myDates.map(d => `${d} Oktober 2025`).join(' • ')}
+            </p>
+          </div>
+          {!disabled && (
+            <button
+              type="button"
+              onClick={() => onSelectDates([])}
+              className="ml-auto p-1.5 rounded-lg bg-rose-900/40 hover:bg-rose-900/70 text-rose-400 hover:text-rose-300 transition-all text-xs"
+              title="Hapus pilihan tanggal"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ── Komponen Utama SchoolPortal ─────────────────────────────────
 export const SchoolPortal = () => {
-  const { 
-    schoolRegistrations, 
+  const {
+    schoolRegistrations,
     cities,
     users,
-    handleSaveSchoolRegistration, 
-    handleDeleteSchoolRegistration 
+    handleSaveSchoolRegistration,
+    handleDeleteSchoolRegistration,
   } = useAuth();
   const location = useLocation();
   const regionName = location.state?.regionName;
 
-  // Load data sekolah dari Excel
+  // Load data sekolah dari Excel (via JSON)
   const { schoolData, loading: excelLoading } = useSchoolData();
 
   const [formData, setFormData] = useState({
@@ -49,25 +309,43 @@ export const SchoolPortal = () => {
     rombelCount: 1,
   });
 
-  // Sekolah yang tersedia berdasarkan kecamatan terpilih (dideklarasikan setelah formData)
+  // Sekolah yang tersedia berdasarkan kecamatan terpilih
   const schoolsByKecamatan = formData.kecamatan
     ? schoolData.filter(s => s.kecamatan === formData.kecamatan)
     : [];
 
+  // Data sekolah yang sedang dipilih (termasuk jumlahSiswa dari Excel)
+  const selectedSchoolData = formData.schoolName
+    ? schoolData.find(s => s.schoolName === formData.schoolName && s.kecamatan === formData.kecamatan)
+    : null;
 
   const [classDetails, setClassDetails] = useState({});
   const [totalStudents, setTotalStudents] = useState(0);
+  const [selectedDates, setSelectedDates] = useState([]); // tanggal kegiatan terpilih
   const [activeTab, setActiveTab] = useState('input'); // 'input' | 'riwayat'
   const [selectedReg, setSelectedReg] = useState(null); // For detail modal
 
-  // ── Sync State ─────────────────────────────────────────────
-  // 'idle' | 'checking' | 'matched' | 'not_found'
-  const [syncStatus, setSyncStatus] = useState('idle');
-  const [editingRegId, setEditingRegId] = useState(null); // ID reg yang sedang diedit
+  // ── Sync State ─────────────────────────────────────────────────
+  const [syncStatus, setSyncStatus] = useState('idle'); // 'idle'|'checking'|'matched'|'not_found'
+  const [editingRegId, setEditingRegId] = useState(null);
   const syncDebounceRef = useRef(null);
 
   const isSMP = (formData.schoolName || '').toUpperCase().includes('SMP');
   const grades = isSMP ? [7, 8, 9] : [1, 2, 3, 4, 5, 6];
+
+  // ── Semua tanggal yang SUDAH dipesan oleh sekolah LAIN ─────────
+  const allBookedDates = useMemo(() => {
+    const booked = new Set();
+    schoolRegistrations.forEach(reg => {
+      // Jangan masukkan tanggal milik sekolah yang sedang diedit
+      if (editingRegId && reg.id === editingRegId) return;
+      (reg.selectedDates || []).forEach(d => booked.add(d));
+    });
+    return Array.from(booked);
+  }, [schoolRegistrations, editingRegId]);
+
+  // ── Jumlah siswa sekolah yang dipilih (dari Excel) ─────────────
+  const excelStudentCount = selectedSchoolData?.jumlahSiswa || 0;
 
   // ── Reset/re-initialize classDetails when rombelCount changes ──
   useEffect(() => {
@@ -83,7 +361,7 @@ export const SchoolPortal = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formData.rombelCount, isSMP]);
 
-  // ── Recalculate total students in real-time ───────────────
+  // ── Recalculate total students in real-time ───────────────────
   useEffect(() => {
     const sum = Object.values(classDetails).reduce((acc, curr) => {
       const val = parseInt(curr) || 0;
@@ -92,22 +370,21 @@ export const SchoolPortal = () => {
     setTotalStudents(sum);
   }, [classDetails]);
 
-  // ── Auto-Sync: trigger debounced check saat 2 field terisi ──
+  // ── Auto-Sync: trigger debounced check saat 2 field terisi ────
   useEffect(() => {
     const schoolReady = formData.schoolName.trim().length > 0;
     const kecamatanReady = formData.kecamatan.length > 0;
 
     if (!schoolReady || !kecamatanReady) {
-      // Reset sync state jika salah satu field dikosongkan
       if (syncStatus !== 'idle') {
         setSyncStatus('idle');
         setEditingRegId(null);
         setClassDetails({});
+        setSelectedDates([]);
       }
       return;
     }
 
-    // Debounce 500ms agar tidak terlalu agresif saat mengetik
     if (syncDebounceRef.current) clearTimeout(syncDebounceRef.current);
     syncDebounceRef.current = setTimeout(() => {
       setSyncStatus('checking');
@@ -122,7 +399,6 @@ export const SchoolPortal = () => {
       if (matched) {
         setSyncStatus('matched');
         setEditingRegId(matched.id);
-        // Pre-fill data lama termasuk pjName dan noHp
         setFormData(prev => ({
           ...prev,
           rombelCount: matched.rombelCount,
@@ -130,11 +406,12 @@ export const SchoolPortal = () => {
           noHp: matched.noHp || prev.noHp,
         }));
         setClassDetails(matched.classDetails || {});
+        setSelectedDates(matched.selectedDates || []);
       } else {
         setSyncStatus('not_found');
         setEditingRegId(null);
-        // Reset classDetails agar fresh input
         setClassDetails({});
+        setSelectedDates([]);
       }
     }, 500);
 
@@ -148,7 +425,7 @@ export const SchoolPortal = () => {
     if (value === '' || (/^\d+$/.test(value) && parseInt(value) >= 0)) {
       setClassDetails({
         ...classDetails,
-        [className]: value === '' ? '' : parseInt(value)
+        [className]: value === '' ? '' : parseInt(value),
       });
     }
   };
@@ -168,12 +445,15 @@ export const SchoolPortal = () => {
       alert('Nama Kepala Sekolah / Guru PJ wajib diisi!');
       return;
     }
+    if (selectedDates.length === 0) {
+      alert('Silakan pilih tanggal kegiatan di kalender Oktober terlebih dahulu!');
+      return;
+    }
 
     const currentCityName = regionName || 'Kota Palu';
     const matchedCity = cities.find(c => c.name === currentCityName);
 
     const registrationData = {
-      // Jika editingRegId ada → UPDATE, jika tidak → INSERT baru
       ...(editingRegId ? { id: editingRegId } : {}),
       schoolName: formData.schoolName.trim(),
       kecamatan: formData.kecamatan,
@@ -184,6 +464,7 @@ export const SchoolPortal = () => {
       rombelCount: parseInt(formData.rombelCount),
       classDetails: classDetails,
       totalStudents: totalStudents,
+      selectedDates: selectedDates,
     };
 
     handleSaveSchoolRegistration(registrationData);
@@ -198,6 +479,7 @@ export const SchoolPortal = () => {
     });
     setClassDetails({});
     setTotalStudents(0);
+    setSelectedDates([]);
     setSyncStatus('idle');
     setEditingRegId(null);
     setActiveTab('riwayat');
@@ -208,6 +490,7 @@ export const SchoolPortal = () => {
     setSyncStatus('idle');
     setEditingRegId(null);
     setClassDetails({});
+    setSelectedDates([]);
     setFormData(prev => ({
       ...prev,
       schoolName: '',
@@ -227,7 +510,7 @@ export const SchoolPortal = () => {
     return arr;
   };
 
-  // ── Sync Banner Component ─────────────────────────────────
+  // ── Sync Banner Component ─────────────────────────────────────
   const SyncBanner = () => {
     if (syncStatus === 'idle') return null;
 
@@ -247,7 +530,7 @@ export const SchoolPortal = () => {
           <div className="flex-1 min-w-0">
             <p className="text-sm font-bold text-emerald-300">Data Ditemukan — Mode Edit</p>
             <p className="text-xs text-emerald-400/80 mt-0.5">
-              Identitas Sekolah dan Kecamatan cocok. Data jumlah siswa sebelumnya telah dimuat. 
+              Identitas Sekolah dan Kecamatan cocok. Data jumlah siswa sebelumnya telah dimuat.
               Silakan perbarui dan klik <strong>"Perbarui Data Siswa"</strong>.
             </p>
           </div>
@@ -289,8 +572,26 @@ export const SchoolPortal = () => {
     return null;
   };
 
-  // ── Apakah form kelas boleh ditampilkan ───────────────────
+  // ── Apakah form kelas boleh ditampilkan ──────────────────────
   const showClassSection = syncStatus === 'matched' || syncStatus === 'not_found';
+
+  // ── Badge jumlah siswa dari Excel ────────────────────────────
+  const StudentCountBadge = ({ count }) => {
+    if (!count) return null;
+    const dayCount = getDayCount(count);
+    const colorMap = {
+      1: 'bg-emerald-900/50 border-emerald-600/40 text-emerald-300',
+      2: 'bg-amber-900/40 border-amber-600/40 text-amber-300',
+      3: 'bg-rose-900/40 border-rose-600/40 text-rose-300',
+    };
+    return (
+      <div className={`inline-flex items-center space-x-2 px-3 py-1.5 rounded-lg border text-xs font-semibold ${colorMap[dayCount]}`}>
+        <Users className="w-3.5 h-3.5 shrink-0" />
+        <span>{count} siswa dari Excel</span>
+        <span className="text-[10px] opacity-75">→ {dayCount} hari kegiatan</span>
+      </div>
+    );
+  };
 
   return (
     <div className="space-y-8 pb-10">
@@ -298,7 +599,7 @@ export const SchoolPortal = () => {
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-indigo-900/60 via-purple-900/40 to-slate-900 border border-indigo-500/20 p-8 md:p-12 shadow-2xl">
         <div className="absolute top-0 right-0 -mt-6 -mr-6 w-72 h-72 rounded-full bg-indigo-500/10 blur-3xl pointer-events-none" />
         <div className="absolute bottom-0 left-0 -mb-6 -ml-6 w-72 h-72 rounded-full bg-purple-500/10 blur-3xl pointer-events-none" />
-        
+
         <div className="relative z-10 max-w-3xl">
           <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-xs font-semibold uppercase tracking-wider mb-6">
             <GraduationCap className="w-4 h-4 text-indigo-400" />
@@ -313,9 +614,9 @@ export const SchoolPortal = () => {
             </div>
           )}
           <p className="text-slate-300 text-sm md:text-base leading-relaxed mb-6">
-            Silakan masukkan data pendaftaran siswa untuk kegiatan Virtual Reality (VR). Sistem akan otomatis menyinkronkan data berdasarkan identitas Sekolah dan Kecamatan.
+            Silakan masukkan data pendaftaran siswa untuk kegiatan Virtual Reality (VR). Pilih tanggal kegiatan pada kalender Oktober 2025 sesuai alokasi jumlah siswa.
           </p>
-          
+
           <div className="flex items-center space-x-2">
             <button
               onClick={() => setActiveTab('input')}
@@ -349,7 +650,7 @@ export const SchoolPortal = () => {
       {activeTab === 'input' ? (
         /* Form Card */
         <form onSubmit={handleSubmit} className="glass-card rounded-2xl p-6 md:p-8 border border-slate-800 shadow-2xl space-y-8">
-          
+
           {/* Section 1: Identitas Sekolah & Kecamatan */}
           <div className="space-y-6">
             <div className="flex items-center space-x-3 pb-3 border-b border-slate-800/60">
@@ -358,7 +659,7 @@ export const SchoolPortal = () => {
               </div>
               <div>
                 <h2 className="text-lg font-bold text-slate-100">Identitas Sekolah</h2>
-                <p className="text-xs text-slate-500">Isi Nama Sekolah dan Kecamatan.</p>
+                <p className="text-xs text-slate-500">Pilih Kecamatan lalu pilih nama Sekolah dari data Excel.</p>
               </div>
             </div>
 
@@ -384,13 +685,16 @@ export const SchoolPortal = () => {
                         setFormData({ ...formData, kecamatan: e.target.value, schoolName: '' });
                         setSyncStatus('idle');
                         setClassDetails({});
+                        setSelectedDates([]);
                         setEditingRegId(null);
                       }}
                       className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 appearance-none focus:ring-1 focus:ring-indigo-500 transition-all"
                     >
                       <option value="">-- Pilih Kecamatan --</option>
                       {KECAMATAN_OPTIONS.map(kec => (
-                        <option key={kec} value={kec}>{kec} ({schoolData.filter(s => s.kecamatan === kec).length} sekolah)</option>
+                        <option key={kec} value={kec}>
+                          {kec} ({schoolData.filter(s => s.kecamatan === kec).length} sekolah)
+                        </option>
                       ))}
                     </select>
                   </div>
@@ -402,7 +706,7 @@ export const SchoolPortal = () => {
                 )}
               </div>
 
-              {/* 2. Nama Sekolah — dropdown berdasarkan kecamatan terpilih */}
+              {/* 2. Nama Sekolah — dropdown + tampil jumlah siswa */}
               <div className="space-y-2">
                 <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider">
                   Nama Sekolah <span className="text-rose-500">*</span>
@@ -416,6 +720,7 @@ export const SchoolPortal = () => {
                     onChange={(e) => {
                       setFormData({ ...formData, schoolName: e.target.value });
                       setSyncStatus('idle');
+                      setSelectedDates([]);
                     }}
                     className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 appearance-none focus:ring-1 focus:ring-indigo-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                   >
@@ -423,15 +728,20 @@ export const SchoolPortal = () => {
                       {!formData.kecamatan ? 'Pilih Kecamatan Terlebih Dahulu' : '-- Pilih Nama Sekolah --'}
                     </option>
                     {schoolsByKecamatan.map((s, idx) => (
-                      <option key={idx} value={s.schoolName}>{s.schoolName}</option>
+                      <option key={idx} value={s.schoolName}>
+                        {s.schoolName} ({s.jumlahSiswa} siswa)
+                      </option>
                     ))}
                   </select>
                 </div>
-                {formData.schoolName && (
-                  <p className="text-[10px] text-emerald-400/80 flex items-center space-x-1">
-                    <CheckCircle className="w-3 h-3" />
-                    <span>Sekolah dipilih dari data Excel</span>
-                  </p>
+                {selectedSchoolData && (
+                  <div className="flex flex-col space-y-1.5 mt-2">
+                    <p className="text-[10px] text-emerald-400/80 flex items-center space-x-1">
+                      <CheckCircle className="w-3 h-3" />
+                      <span>Sekolah dipilih dari data Excel</span>
+                    </p>
+                    <StudentCountBadge count={selectedSchoolData.jumlahSiswa} />
+                  </div>
                 )}
               </div>
 
@@ -532,8 +842,8 @@ export const SchoolPortal = () => {
                 {grades.map((grade) => {
                   const subdivisions = getSubdivisions(formData.rombelCount);
                   return (
-                    <div 
-                      key={grade} 
+                    <div
+                      key={grade}
                       className="p-5 rounded-2xl bg-slate-900/60 border border-slate-800/80 hover:border-slate-700/60 transition-all flex flex-col space-y-4 shadow-md"
                     >
                       <div className="flex items-center justify-between border-b border-slate-800 pb-2">
@@ -570,7 +880,41 @@ export const SchoolPortal = () => {
             </div>
           )}
 
-          {/* Section 3: Summary Counter & Submit (hanya tampil setelah sync) */}
+          {/* Section 3: Kalender Oktober (hanya tampil setelah sync DAN sekolah dipilih) */}
+          {showClassSection && selectedSchoolData && (
+            <div className="space-y-4 animate-fadeIn">
+              <div className="flex items-center space-x-3 pb-3 border-b border-slate-800/60">
+                <div className="p-2 bg-violet-500/10 text-violet-400 rounded-lg">
+                  <Calendar className="w-5 h-5" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-slate-100">Pilih Tanggal Kegiatan</h2>
+                  <p className="text-xs text-slate-500">
+                    Tanggal yang sudah dipesan sekolah lain tidak dapat dipilih kembali.
+                  </p>
+                </div>
+              </div>
+
+              <OctoberCalendar
+                studentCount={selectedSchoolData.jumlahSiswa}
+                bookedDates={allBookedDates}
+                myDates={selectedDates}
+                onSelectDates={setSelectedDates}
+                disabled={false}
+              />
+            </div>
+          )}
+
+          {/* Placeholder kalender saat sekolah belum dipilih tapi sync sudah ready */}
+          {showClassSection && !selectedSchoolData && (
+            <div className="flex flex-col items-center justify-center py-10 rounded-2xl bg-slate-900/40 border border-dashed border-slate-700/60 space-y-3">
+              <Calendar className="w-8 h-8 text-violet-400 opacity-60" />
+              <p className="text-sm font-semibold text-slate-400">Kalender akan muncul setelah sekolah dipilih</p>
+              <p className="text-xs text-slate-500">Sistem akan menghitung alokasi hari berdasarkan jumlah siswa dari data Excel.</p>
+            </div>
+          )}
+
+          {/* Section 4: Summary Counter & Submit */}
           {showClassSection && (
             <div className="flex flex-col md:flex-row items-center justify-between gap-6 p-6 rounded-2xl bg-indigo-950/20 border border-indigo-500/20 animate-fadeIn">
               <div className="flex items-center space-x-4">
@@ -580,9 +924,14 @@ export const SchoolPortal = () => {
                 <div>
                   <h3 className="text-sm font-bold text-slate-200">Total Pendaftar Sementara</h3>
                   <p className="text-xs text-slate-400">Akumulasi jumlah siswa dari semua kelas yang telah dimasukkan.</p>
+                  {selectedDates.length > 0 && (
+                    <p className="text-[11px] text-violet-300 mt-1 font-semibold">
+                      📅 Tgl. Kegiatan: {selectedDates.map(d => `${d} Okt`).join(' & ')}
+                    </p>
+                  )}
                 </div>
               </div>
-              
+
               <div className="flex items-center space-x-6">
                 <div className="text-center md:text-right">
                   <span className="text-3xl font-extrabold text-white tracking-tight">{totalStudents}</span>
@@ -636,7 +985,7 @@ export const SchoolPortal = () => {
               <div>
                 <h2 className="text-lg font-bold text-slate-100">Riwayat Pendaftaran Sekolah</h2>
                 <p className="text-xs text-slate-400">
-                  Daftar sekolah yang telah menginputkan data jumlah siswa.
+                  Daftar sekolah yang telah menginputkan data jumlah siswa dan memilih tanggal kegiatan.
                 </p>
               </div>
             </div>
@@ -659,6 +1008,7 @@ export const SchoolPortal = () => {
                     <th className="py-3.5 px-4">Nomor HP</th>
                     <th className="py-3.5 px-4 text-center">Rombel</th>
                     <th className="py-3.5 px-4 text-center">Total Siswa</th>
+                    <th className="py-3.5 px-4 text-center">Tanggal Kegiatan</th>
                     <th className="py-3.5 px-4 text-right">Aksi</th>
                   </tr>
                 </thead>
@@ -671,12 +1021,14 @@ export const SchoolPortal = () => {
                       </td>
                       <td className="py-3.5 px-4 text-slate-300 font-medium">{reg.kecamatan || '-'}</td>
                       <td className="py-3.5 px-4">
-                        <div className="text-slate-200 font-semibold">{reg.pjName && reg.pjName !== '-' ? reg.pjName : <span className="text-slate-600 italic">—</span>}</div>
+                        <div className="text-slate-200 font-semibold">
+                          {reg.pjName && reg.pjName !== '-' ? reg.pjName : <span className="text-slate-600 italic">—</span>}
+                        </div>
                       </td>
                       <td className="py-3.5 px-4">
                         {reg.noHp ? (
                           <a
-                            href={`https://wa.me/${reg.noHp.replace(/\D/g,'')}`}
+                            href={`https://wa.me/${reg.noHp.replace(/\D/g, '')}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="flex items-center space-x-1.5 text-emerald-400 hover:text-emerald-300 font-semibold transition-colors"
@@ -690,6 +1042,20 @@ export const SchoolPortal = () => {
                       </td>
                       <td className="py-3.5 px-4 text-center text-slate-300">{reg.rombelCount} Rombel</td>
                       <td className="py-3.5 px-4 text-center font-extrabold text-indigo-300">{reg.totalStudents} siswa</td>
+                      <td className="py-3.5 px-4 text-center">
+                        {reg.selectedDates && reg.selectedDates.length > 0 ? (
+                          <div className="flex flex-col items-center gap-1">
+                            {reg.selectedDates.map(d => (
+                              <span key={d} className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-md bg-violet-900/40 border border-violet-600/30 text-violet-300 text-[10px] font-bold">
+                                <Calendar className="w-2.5 h-2.5" />
+                                <span>{d} Okt 2025</span>
+                              </span>
+                            ))}
+                          </div>
+                        ) : (
+                          <span className="text-slate-600 italic text-[10px]">Belum dipilih</span>
+                        )}
+                      </td>
                       <td className="py-3.5 px-4 text-right">
                         <div className="flex items-center justify-end space-x-2">
                           <button
@@ -733,7 +1099,7 @@ export const SchoolPortal = () => {
       {selectedReg && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
           <div className="w-full max-w-2xl bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden">
-            
+
             {/* Modal Header */}
             <div className="flex items-center justify-between p-5 border-b border-slate-800 bg-slate-900/80">
               <div className="flex items-center space-x-3">
@@ -755,7 +1121,7 @@ export const SchoolPortal = () => {
 
             {/* Modal Content */}
             <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
-              
+
               {/* Metadata Grid */}
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4 p-4 rounded-xl bg-slate-950 border border-slate-800/80 text-xs">
                 <div>
@@ -771,6 +1137,23 @@ export const SchoolPortal = () => {
                   <span className="font-bold text-indigo-400">{selectedReg.totalStudents} siswa ({selectedReg.rombelCount} Rombel)</span>
                 </div>
               </div>
+
+              {/* Tanggal Kegiatan */}
+              {selectedReg.selectedDates && selectedReg.selectedDates.length > 0 && (
+                <div className="p-4 rounded-xl bg-violet-950/30 border border-violet-500/25">
+                  <h4 className="text-xs font-bold text-violet-300 uppercase tracking-wider mb-3 flex items-center space-x-2">
+                    <Calendar className="w-4 h-4" />
+                    <span>Tanggal Kegiatan VR</span>
+                  </h4>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedReg.selectedDates.map(d => (
+                      <span key={d} className="px-3 py-1.5 rounded-lg bg-violet-900/50 border border-violet-600/40 text-violet-200 text-sm font-bold">
+                        {d} Oktober 2025
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Kontak PJ */}
               <div className="p-4 rounded-xl bg-slate-950 border border-slate-800/80">
@@ -795,7 +1178,7 @@ export const SchoolPortal = () => {
                       <span className="block text-[10px] text-slate-500">Nomor HP (WhatsApp)</span>
                       {selectedReg.noHp ? (
                         <a
-                          href={`https://wa.me/${selectedReg.noHp.replace(/\D/g,'')}`}
+                          href={`https://wa.me/${selectedReg.noHp.replace(/\D/g, '')}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="font-bold text-emerald-400 hover:text-emerald-300 text-sm transition-colors"

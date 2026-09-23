@@ -197,16 +197,25 @@ CREATE INDEX IF NOT EXISTS idx_finances_type     ON finances(type);
 CREATE TABLE IF NOT EXISTS school_registrations (
   id              TEXT PRIMARY KEY DEFAULT ('reg-' || floor(extract(epoch from now()) * 1000)::text),
   pj_name         TEXT NOT NULL,
-  city_id         TEXT NOT NULL REFERENCES cities(id) ON DELETE CASCADE,
+  no_hp           TEXT,
+  city_id         TEXT,
   city_name       TEXT NOT NULL,
   school_id       TEXT,
   school_name     TEXT NOT NULL,
+  kecamatan       TEXT,
   rombel_count    INTEGER NOT NULL DEFAULT 1 CHECK (rombel_count >= 1),
   class_details   JSONB,
   total_students  INTEGER NOT NULL DEFAULT 0 CHECK (total_students >= 0),
+  selected_dates  JSONB DEFAULT '[]'::jsonb,
   created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at      TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+-- Migrasi untuk database yang sudah ada (jalankan jika tabel sudah terbuat)
+ALTER TABLE school_registrations ADD COLUMN IF NOT EXISTS no_hp TEXT;
+ALTER TABLE school_registrations ADD COLUMN IF NOT EXISTS kecamatan TEXT;
+ALTER TABLE school_registrations ADD COLUMN IF NOT EXISTS selected_dates JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE school_registrations ALTER COLUMN city_id DROP NOT NULL;
 
 ALTER TABLE school_registrations ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Allow all school_registrations" ON school_registrations;

@@ -4,7 +4,7 @@
  * yang telah di-generate dari file Excel (Book1.xlsx).
  *
  * Return: { schoolData, loading, error }
- * schoolData = [{ schoolName, kecamatan }, ...]
+ * schoolData = [{ schoolName, kecamatan, jumlahSiswa }, ...]
  */
 
 import { useState, useEffect } from 'react';

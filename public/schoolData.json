@@ -1,726 +1,907 @@
 [
   {
     "schoolName": "SD ALKHAIRAAT 1 PALU",
-    "kecamatan": "Palu Barat"
+    "kecamatan": "PALU BARAT",
+    "jumlahSiswa": 534
   },
   {
     "schoolName": "SD NEGERI 6 PALU",
-    "kecamatan": "Palu Barat"
+    "kecamatan": "PALU BARAT",
+    "jumlahSiswa": 378
   },
   {
     "schoolName": "SD INPRES PERUMNAS",
-    "kecamatan": "Palu Barat"
+    "kecamatan": "PALU BARAT",
+    "jumlahSiswa": 318
   },
   {
     "schoolName": "SD NEGERI 12 PALU",
-    "kecamatan": "Palu Barat"
+    "kecamatan": "PALU BARAT",
+    "jumlahSiswa": 314
   },
   {
     "schoolName": "SD INPRES BUMI BAHARI",
-    "kecamatan": "Palu Barat"
+    "kecamatan": "PALU BARAT",
+    "jumlahSiswa": 287
   },
   {
     "schoolName": "SD NEGERI 2 PALU",
-    "kecamatan": "Palu Barat"
+    "kecamatan": "PALU BARAT",
+    "jumlahSiswa": 274
   },
   {
     "schoolName": "SD INPRES 1 UJUNA",
-    "kecamatan": "Palu Barat"
+    "kecamatan": "PALU BARAT",
+    "jumlahSiswa": 242
   },
   {
     "schoolName": "SD INPRES 1 KAMONJI",
-    "kecamatan": "Palu Barat"
+    "kecamatan": "PALU BARAT",
+    "jumlahSiswa": 194
   },
   {
     "schoolName": "SD KATOLIK  SANTO ANTONIUS PALU",
-    "kecamatan": "Palu Barat"
+    "kecamatan": "PALU BARAT",
+    "jumlahSiswa": 187
   },
   {
     "schoolName": "SDN INPRES 2 UJUNA",
-    "kecamatan": "Palu Barat"
+    "kecamatan": "PALU BARAT",
+    "jumlahSiswa": 181
   },
   {
     "schoolName": "SD NEGERI 4 PALU",
-    "kecamatan": "Palu Barat"
+    "kecamatan": "PALU BARAT",
+    "jumlahSiswa": 170
   },
   {
     "schoolName": "SD INPRES BARU",
-    "kecamatan": "Palu Barat"
+    "kecamatan": "PALU BARAT",
+    "jumlahSiswa": 167
   },
   {
     "schoolName": "SD INPRES 3 LERE",
-    "kecamatan": "Palu Barat"
+    "kecamatan": "PALU BARAT",
+    "jumlahSiswa": 166
   },
   {
     "schoolName": "SD INPRES 2 KAMONJI",
-    "kecamatan": "Palu Barat"
+    "kecamatan": "PALU BARAT",
+    "jumlahSiswa": 164
   },
   {
     "schoolName": "SD NEGERI BALAROA",
-    "kecamatan": "Palu Barat"
+    "kecamatan": "PALU BARAT",
+    "jumlahSiswa": 162
   },
   {
     "schoolName": "SD NEGERI 20 PALU",
-    "kecamatan": "Palu Barat"
+    "kecamatan": "PALU BARAT",
+    "jumlahSiswa": 161
   },
   {
     "schoolName": "SD INPRES 2 LERE",
-    "kecamatan": "Palu Barat"
+    "kecamatan": "PALU BARAT",
+    "jumlahSiswa": 158
   },
   {
     "schoolName": "SD NEGERI 9 PALU",
-    "kecamatan": "Palu Barat"
+    "kecamatan": "PALU BARAT",
+    "jumlahSiswa": 155
   },
   {
     "schoolName": "SD NEGERI 11 PALU",
-    "kecamatan": "Palu Barat"
+    "kecamatan": "PALU BARAT",
+    "jumlahSiswa": 137
   },
   {
     "schoolName": "SD INPRES 1 LERE",
-    "kecamatan": "Palu Barat"
+    "kecamatan": "PALU BARAT",
+    "jumlahSiswa": 135
   },
   {
     "schoolName": "SD INPRES BALAROA",
-    "kecamatan": "Palu Barat"
+    "kecamatan": "PALU BARAT",
+    "jumlahSiswa": 119
   },
   {
     "schoolName": "SD DDI PALU",
-    "kecamatan": "Palu Barat"
+    "kecamatan": "PALU BARAT",
+    "jumlahSiswa": 112
   },
   {
     "schoolName": "SD MUHAMMADIYAH 1 PALU",
-    "kecamatan": "Palu Barat"
+    "kecamatan": "PALU BARAT",
+    "jumlahSiswa": 110
   },
   {
     "schoolName": "SD MUHAMMADIYAH 3 PALU",
-    "kecamatan": "Palu Barat"
+    "kecamatan": "PALU BARAT",
+    "jumlahSiswa": 73
   },
   {
     "schoolName": "SD INPRES BTN SILAE",
-    "kecamatan": "Ulujadi"
+    "kecamatan": "ULUJADI",
+    "jumlahSiswa": 309
   },
   {
     "schoolName": "SD ISLAM CAHAYA KHALIFAH",
-    "kecamatan": "Ulujadi"
+    "kecamatan": "ULUJADI",
+    "jumlahSiswa": 277
   },
   {
     "schoolName": "SDN INPRES SILAE",
-    "kecamatan": "Ulujadi"
+    "kecamatan": "ULUJADI",
+    "jumlahSiswa": 263
   },
   {
     "schoolName": "SD INPRES SALENA PADANJESE",
-    "kecamatan": "Ulujadi"
+    "kecamatan": "ULUJADI",
+    "jumlahSiswa": 195
   },
   {
     "schoolName": "SDN INPRES DONGGALA KODI",
-    "kecamatan": "Ulujadi"
+    "kecamatan": "ULUJADI",
+    "jumlahSiswa": 195
   },
   {
     "schoolName": "SD INPRES TIPO",
-    "kecamatan": "Ulujadi"
+    "kecamatan": "ULUJADI",
+    "jumlahSiswa": 192
   },
   {
     "schoolName": "SD NEGERI WATUSAMPU",
-    "kecamatan": "Ulujadi"
+    "kecamatan": "ULUJADI",
+    "jumlahSiswa": 187
   },
   {
     "schoolName": "SD NEGERI KABONENA",
-    "kecamatan": "Ulujadi"
+    "kecamatan": "ULUJADI",
+    "jumlahSiswa": 175
   },
   {
     "schoolName": "SD NEGERI BULURI",
-    "kecamatan": "Ulujadi"
+    "kecamatan": "ULUJADI",
+    "jumlahSiswa": 167
   },
   {
     "schoolName": "SD NEGERI DONGGALA KODI",
-    "kecamatan": "Ulujadi"
+    "kecamatan": "ULUJADI",
+    "jumlahSiswa": 166
   },
   {
     "schoolName": "SD INPRES WATUSAMPU",
-    "kecamatan": "Ulujadi"
+    "kecamatan": "ULUJADI",
+    "jumlahSiswa": 151
   },
   {
     "schoolName": "SD INPRES KABONENA",
-    "kecamatan": "Ulujadi"
+    "kecamatan": "ULUJADI",
+    "jumlahSiswa": 144
   },
   {
     "schoolName": "SD NEGERI TIPO",
-    "kecamatan": "Ulujadi"
+    "kecamatan": "ULUJADI",
+    "jumlahSiswa": 141
   },
   {
     "schoolName": "SD INPRES KECIL SALENA",
-    "kecamatan": "Ulujadi"
+    "kecamatan": "ULUJADI",
+    "jumlahSiswa": 109
   },
   {
     "schoolName": "SDN INPRES BULURI",
-    "kecamatan": "Ulujadi"
+    "kecamatan": "ULUJADI",
+    "jumlahSiswa": 106
   },
   {
     "schoolName": "SDI RAUDHATUL JANNAH",
-    "kecamatan": "Ulujadi"
+    "kecamatan": "ULUJADI",
+    "jumlahSiswa": 84
   },
   {
     "schoolName": "SD BK LEKATU",
-    "kecamatan": "Ulujadi"
+    "kecamatan": "ULUJADI",
+    "jumlahSiswa": 77
   },
   {
     "schoolName": "SD KECIL WANA",
-    "kecamatan": "Ulujadi"
+    "kecamatan": "ULUJADI",
+    "jumlahSiswa": 29
   },
   {
     "schoolName": "SD ISLAM TERPADU AL FAHMI PALU",
-    "kecamatan": "Palu Selatan"
+    "kecamatan": "PALU SELATAN",
+    "jumlahSiswa": 800
   },
   {
     "schoolName": "SD INPRES 3 BIROBULI",
-    "kecamatan": "Palu Selatan"
+    "kecamatan": "PALU SELATAN",
+    "jumlahSiswa": 758
   },
   {
     "schoolName": "SD NEGERI 1 TATURA",
-    "kecamatan": "Palu Selatan"
+    "kecamatan": "PALU SELATAN",
+    "jumlahSiswa": 572
   },
   {
     "schoolName": "SD INPRES 5 BIROBULI",
-    "kecamatan": "Palu Selatan"
+    "kecamatan": "PALU SELATAN",
+    "jumlahSiswa": 458
   },
   {
     "schoolName": "SD INPRES 4 BIROBULI",
-    "kecamatan": "Palu Selatan"
+    "kecamatan": "PALU SELATAN",
+    "jumlahSiswa": 452
   },
   {
     "schoolName": "SD KRISTEN BALA KESELAMATAN",
-    "kecamatan": "Palu Selatan"
+    "kecamatan": "PALU SELATAN",
+    "jumlahSiswa": 448
   },
   {
     "schoolName": "SD NEGERI 2 TATURA",
-    "kecamatan": "Palu Selatan"
+    "kecamatan": "PALU SELATAN",
+    "jumlahSiswa": 444
   },
   {
     "schoolName": "SD INPRES 3 TATURA",
-    "kecamatan": "Palu Selatan"
+    "kecamatan": "PALU SELATAN",
+    "jumlahSiswa": 348
   },
   {
     "schoolName": "SDN INPRES 1 BIROBULI",
-    "kecamatan": "Palu Selatan"
+    "kecamatan": "PALU SELATAN",
+    "jumlahSiswa": 311
   },
   {
     "schoolName": "SD INPRES 1 TATURA",
-    "kecamatan": "Palu Selatan"
+    "kecamatan": "PALU SELATAN",
+    "jumlahSiswa": 268
   },
   {
     "schoolName": "SDIT BINA ANAK BANGSA",
-    "kecamatan": "Palu Selatan"
+    "kecamatan": "PALU SELATAN",
+    "jumlahSiswa": 259
   },
   {
     "schoolName": "SD INPRES 2 BIROBULI",
-    "kecamatan": "Palu Selatan"
+    "kecamatan": "PALU SELATAN",
+    "jumlahSiswa": 248
   },
   {
     "schoolName": "SD NEGERI BIRO",
-    "kecamatan": "Palu Selatan"
+    "kecamatan": "PALU SELATAN",
+    "jumlahSiswa": 204
   },
   {
     "schoolName": "SD INPRES 2 TATURA",
-    "kecamatan": "Palu Selatan"
+    "kecamatan": "PALU SELATAN",
+    "jumlahSiswa": 157
   },
   {
     "schoolName": "SD NEGERI 1 PETOBO",
-    "kecamatan": "Palu Selatan"
+    "kecamatan": "PALU SELATAN",
+    "jumlahSiswa": 156
   },
   {
     "schoolName": "SD NEGERI 2 PETOBO",
-    "kecamatan": "Palu Selatan"
+    "kecamatan": "PALU SELATAN",
+    "jumlahSiswa": 135
   },
   {
     "schoolName": "SD ISLAM OTAK KANAN",
-    "kecamatan": "Palu Selatan"
+    "kecamatan": "PALU SELATAN",
+    "jumlahSiswa": 132
   },
   {
     "schoolName": "SD INPRES PETOBO",
-    "kecamatan": "Palu Selatan"
+    "kecamatan": "PALU SELATAN",
+    "jumlahSiswa": 125
   },
   {
     "schoolName": "SD KRISTEN GPID PALU",
-    "kecamatan": "Palu Selatan"
+    "kecamatan": "PALU SELATAN",
+    "jumlahSiswa": 113
   },
   {
     "schoolName": "SD ISLAM IQRA PETOBO",
-    "kecamatan": "Palu Selatan"
+    "kecamatan": "PALU SELATAN",
+    "jumlahSiswa": 107
   },
   {
     "schoolName": "SD ISLAM AL AKBAR PETOBO",
-    "kecamatan": "Palu Selatan"
+    "kecamatan": "PALU SELATAN",
+    "jumlahSiswa": 52
   },
   {
     "schoolName": "SD IT AL - JASIYAH PALU",
-    "kecamatan": "Palu Selatan"
+    "kecamatan": "PALU SELATAN",
+    "jumlahSiswa": 50
   },
   {
     "schoolName": "SD IMANUEL",
-    "kecamatan": "Palu Timur"
+    "kecamatan": "PALU TIMUR",
+    "jumlahSiswa": 637
   },
   {
     "schoolName": "SD GAMALIEL",
-    "kecamatan": "Palu Timur"
+    "kecamatan": "PALU TIMUR",
+    "jumlahSiswa": 528
   },
   {
     "schoolName": "SD NEGERI 3 PALU",
-    "kecamatan": "Palu Timur"
+    "kecamatan": "PALU TIMUR",
+    "jumlahSiswa": 526
   },
   {
     "schoolName": "SD NEGERI 25 PALU",
-    "kecamatan": "Palu Timur"
+    "kecamatan": "PALU TIMUR",
+    "jumlahSiswa": 388
   },
   {
     "schoolName": "SD NEGERI 15 PALU",
-    "kecamatan": "Palu Timur"
+    "kecamatan": "PALU TIMUR",
+    "jumlahSiswa": 383
   },
   {
     "schoolName": "SDN INPRES 1 LOLU",
-    "kecamatan": "Palu Timur"
+    "kecamatan": "PALU TIMUR",
+    "jumlahSiswa": 382
   },
   {
     "schoolName": "SD INPRES BUMI SAGU",
-    "kecamatan": "Palu Timur"
+    "kecamatan": "PALU TIMUR",
+    "jumlahSiswa": 323
   },
   {
     "schoolName": "SD NEGERI 22 PALU",
-    "kecamatan": "Palu Timur"
+    "kecamatan": "PALU TIMUR",
+    "jumlahSiswa": 321
   },
   {
     "schoolName": "SD NEGERI 24 PALU",
-    "kecamatan": "Palu Timur"
+    "kecamatan": "PALU TIMUR",
+    "jumlahSiswa": 317
   },
   {
     "schoolName": "SD INPRES 6 LOLU",
-    "kecamatan": "Palu Timur"
+    "kecamatan": "PALU TIMUR",
+    "jumlahSiswa": 317
   },
   {
     "schoolName": "SD NEGERI 10 PALU",
-    "kecamatan": "Palu Timur"
+    "kecamatan": "PALU TIMUR",
+    "jumlahSiswa": 289
   },
   {
     "schoolName": "SD NEGERI 27 PALU",
-    "kecamatan": "Palu Timur"
+    "kecamatan": "PALU TIMUR",
+    "jumlahSiswa": 273
   },
   {
     "schoolName": "SD NEGERI 5 PALU",
-    "kecamatan": "Palu Timur"
+    "kecamatan": "PALU TIMUR",
+    "jumlahSiswa": 245
   },
   {
     "schoolName": "SD MUHAMMADIYAH 2 PALU",
-    "kecamatan": "Palu Timur"
+    "kecamatan": "PALU TIMUR",
+    "jumlahSiswa": 244
   },
   {
     "schoolName": "SD NEGERI 1 PALU",
-    "kecamatan": "Palu Timur"
+    "kecamatan": "PALU TIMUR",
+    "jumlahSiswa": 242
   },
   {
     "schoolName": "SD INPRES 5 LOLU",
-    "kecamatan": "Palu Timur"
+    "kecamatan": "PALU TIMUR",
+    "jumlahSiswa": 208
   },
   {
     "schoolName": "SD STELLA GRACIA SCHOOL",
-    "kecamatan": "Palu Timur"
+    "kecamatan": "PALU TIMUR",
+    "jumlahSiswa": 194
   },
   {
     "schoolName": "SD ZION",
-    "kecamatan": "Palu Timur"
+    "kecamatan": "PALU TIMUR",
+    "jumlahSiswa": 187
   },
   {
     "schoolName": "SD INPRES 2 BESUSU",
-    "kecamatan": "Palu Timur"
+    "kecamatan": "PALU TIMUR",
+    "jumlahSiswa": 141
   },
   {
     "schoolName": "SD INPRES 3 LOLU",
-    "kecamatan": "Palu Timur"
+    "kecamatan": "PALU TIMUR",
+    "jumlahSiswa": 141
   },
   {
     "schoolName": "SDN 26 Palu",
-    "kecamatan": "Palu Timur"
+    "kecamatan": "PALU TIMUR",
+    "jumlahSiswa": 123
   },
   {
     "schoolName": "SD INPRES 4 LOLU",
-    "kecamatan": "Palu Timur"
+    "kecamatan": "PALU TIMUR",
+    "jumlahSiswa": 120
   },
   {
     "schoolName": "SD NEGERI 7 PALU",
-    "kecamatan": "Palu Timur"
+    "kecamatan": "PALU TIMUR",
+    "jumlahSiswa": 112
   },
   {
     "schoolName": "SD NEGERI 13 PALU",
-    "kecamatan": "Palu Timur"
+    "kecamatan": "PALU TIMUR",
+    "jumlahSiswa": 110
   },
   {
     "schoolName": "SD INPRES 1 BESUSU",
-    "kecamatan": "Palu Timur"
+    "kecamatan": "PALU TIMUR",
+    "jumlahSiswa": 108
   },
   {
     "schoolName": "SD NEGERI 17 PALU",
-    "kecamatan": "Palu Timur"
+    "kecamatan": "PALU TIMUR",
+    "jumlahSiswa": 102
   },
   {
     "schoolName": "SD INPRES 2 LOLU",
-    "kecamatan": "Palu Timur"
+    "kecamatan": "PALU TIMUR",
+    "jumlahSiswa": 87
   },
   {
     "schoolName": "SD GOLDEN GATE PALU",
-    "kecamatan": "Palu Timur"
+    "kecamatan": "PALU TIMUR",
+    "jumlahSiswa": 81
   },
   {
     "schoolName": "SD ALKHAIRAAT 2 PALU",
-    "kecamatan": "Palu Timur"
+    "kecamatan": "PALU TIMUR",
+    "jumlahSiswa": 75
   },
   {
     "schoolName": "SD NEGERI 16 PALU",
-    "kecamatan": "Palu Timur"
+    "kecamatan": "PALU TIMUR",
+    "jumlahSiswa": 69
   },
   {
     "schoolName": "SD ISLAM ALHIDAYAH BESUSU",
-    "kecamatan": "Palu Timur"
+    "kecamatan": "PALU TIMUR",
+    "jumlahSiswa": 63
   },
   {
     "schoolName": "SD ADVENT PALU",
-    "kecamatan": "Palu Timur"
+    "kecamatan": "PALU TIMUR",
+    "jumlahSiswa": 40
   },
   {
     "schoolName": "SD NEGERI 3 LAMBARA",
-    "kecamatan": "Tawaeli"
+    "kecamatan": "TAWAELI",
+    "jumlahSiswa": 266
   },
   {
     "schoolName": "SD NEGERI 2 PANAU",
-    "kecamatan": "Tawaeli"
+    "kecamatan": "TAWAELI",
+    "jumlahSiswa": 251
   },
   {
     "schoolName": "SD Islam Terpadu Qurrota Ayun Baiya",
-    "kecamatan": "Tawaeli"
+    "kecamatan": "TAWAELI",
+    "jumlahSiswa": 204
   },
   {
     "schoolName": "SD INPRES 12 BAIYA",
-    "kecamatan": "Tawaeli"
+    "kecamatan": "TAWAELI",
+    "jumlahSiswa": 190
   },
   {
     "schoolName": "SD NEGERI 1 BAIYA",
-    "kecamatan": "Tawaeli"
+    "kecamatan": "TAWAELI",
+    "jumlahSiswa": 181
   },
   {
     "schoolName": "SD INPRES 14 PANTOLOAN",
-    "kecamatan": "Tawaeli"
+    "kecamatan": "TAWAELI",
+    "jumlahSiswa": 155
   },
   {
     "schoolName": "SD NEGERI 10 PANTOLOAN",
-    "kecamatan": "Tawaeli"
+    "kecamatan": "TAWAELI",
+    "jumlahSiswa": 141
   },
   {
     "schoolName": "SD NEGERI 12 LIMRAN",
-    "kecamatan": "Tawaeli"
+    "kecamatan": "TAWAELI",
+    "jumlahSiswa": 107
   },
   {
     "schoolName": "SD INPRES 15 WARA",
-    "kecamatan": "Tawaeli"
+    "kecamatan": "TAWAELI",
+    "jumlahSiswa": 106
   },
   {
     "schoolName": "SD INPRES 13 OVA PANTOLOAN",
-    "kecamatan": "Tawaeli"
+    "kecamatan": "TAWAELI",
+    "jumlahSiswa": 97
   },
   {
     "schoolName": "SD INPRES 9 BAMBA",
-    "kecamatan": "Tawaeli"
+    "kecamatan": "TAWAELI",
+    "jumlahSiswa": 89
   },
   {
     "schoolName": "SD NURUL ISLAM TAWAELI",
-    "kecamatan": "Tawaeli"
+    "kecamatan": "TAWAELI",
+    "jumlahSiswa": 80
   },
   {
     "schoolName": "SD NEGERI 4 BAMBA",
-    "kecamatan": "Tawaeli"
+    "kecamatan": "TAWAELI",
+    "jumlahSiswa": 75
   },
   {
     "schoolName": "SD NEGERI 11 KAYUMABOKO",
-    "kecamatan": "Tawaeli"
+    "kecamatan": "TAWAELI",
+    "jumlahSiswa": 67
   },
   {
     "schoolName": "SD INPRES 11 LIKU",
-    "kecamatan": "Tawaeli"
+    "kecamatan": "TAWAELI",
+    "jumlahSiswa": 60
   },
   {
     "schoolName": "SD INPRES 10 TALISE",
-    "kecamatan": "Tawaeli"
+    "kecamatan": "TAWAELI",
+    "jumlahSiswa": 57
   },
   {
     "schoolName": "SD KARYA THAIYYIBAH BAIYA",
-    "kecamatan": "Tawaeli"
+    "kecamatan": "TAWAELI",
+    "jumlahSiswa": 0
   },
   {
     "schoolName": "SD ISLAM TERPADU BINA INSAN PALU",
-    "kecamatan": "Tatanga"
+    "kecamatan": "TATANGA",
+    "jumlahSiswa": 697
   },
   {
     "schoolName": "SD NEGERI PENGAWU",
-    "kecamatan": "Tatanga"
+    "kecamatan": "TATANGA",
+    "jumlahSiswa": 539
   },
   {
     "schoolName": "SD ISLAM TERPADU PERSIS",
-    "kecamatan": "Tatanga"
+    "kecamatan": "TATANGA",
+    "jumlahSiswa": 513
   },
   {
     "schoolName": "SD INPRES PALUPI",
-    "kecamatan": "Tatanga"
+    "kecamatan": "TATANGA",
+    "jumlahSiswa": 386
   },
   {
     "schoolName": "SD NEGERI PALUPI",
-    "kecamatan": "Tatanga"
+    "kecamatan": "TATANGA",
+    "jumlahSiswa": 345
   },
   {
     "schoolName": "SD IT LUQMANUL HAKIM PALU",
-    "kecamatan": "Tatanga"
+    "kecamatan": "TATANGA",
+    "jumlahSiswa": 227
   },
   {
     "schoolName": "SD INPRES TAVANJUKA",
-    "kecamatan": "Tatanga"
+    "kecamatan": "TATANGA",
+    "jumlahSiswa": 213
   },
   {
     "schoolName": "SD INPRES BOYAOGE",
-    "kecamatan": "Tatanga"
+    "kecamatan": "TATANGA",
+    "jumlahSiswa": 211
   },
   {
     "schoolName": "SD NEGERI 8 PALU",
-    "kecamatan": "Tatanga"
+    "kecamatan": "TATANGA",
+    "jumlahSiswa": 200
   },
   {
     "schoolName": "SD KARUNA DIPA PALU",
-    "kecamatan": "Tatanga"
+    "kecamatan": "TATANGA",
+    "jumlahSiswa": 177
   },
   {
     "schoolName": "SD NEGERI 14 PALU",
-    "kecamatan": "Tatanga"
+    "kecamatan": "TATANGA",
+    "jumlahSiswa": 163
   },
   {
     "schoolName": "SD NEGERI 21 PALU",
-    "kecamatan": "Tatanga"
+    "kecamatan": "TATANGA",
+    "jumlahSiswa": 163
   },
   {
     "schoolName": "SD ISLAM AL-ITIROOF",
-    "kecamatan": "Tatanga"
+    "kecamatan": "TATANGA",
+    "jumlahSiswa": 161
   },
   {
     "schoolName": "SD ISLAM NURUL IKHLAS",
-    "kecamatan": "Tatanga"
+    "kecamatan": "TATANGA",
+    "jumlahSiswa": 157
   },
   {
     "schoolName": "SD INPRES DUYU",
-    "kecamatan": "Tatanga"
+    "kecamatan": "TATANGA",
+    "jumlahSiswa": 152
   },
   {
     "schoolName": "SD NEGERI DUYU",
-    "kecamatan": "Tatanga"
+    "kecamatan": "TATANGA",
+    "jumlahSiswa": 143
   },
   {
     "schoolName": "SD ISLAM AL AZHAR 63 PALU",
-    "kecamatan": "Tatanga"
+    "kecamatan": "TATANGA",
+    "jumlahSiswa": 140
   },
   {
     "schoolName": "SD NEGERI TATANGA",
-    "kecamatan": "Tatanga"
+    "kecamatan": "TATANGA",
+    "jumlahSiswa": 109
   },
   {
     "schoolName": "SD ALAM AL-FATIH PALU",
-    "kecamatan": "Tatanga"
+    "kecamatan": "TATANGA",
+    "jumlahSiswa": 96
   },
   {
     "schoolName": "SD PGRI PALU",
-    "kecamatan": "Tatanga"
+    "kecamatan": "TATANGA",
+    "jumlahSiswa": 94
   },
   {
     "schoolName": "SD ISLAM TERPADU IMAM MUSLIM",
-    "kecamatan": "Tatanga"
+    "kecamatan": "TATANGA",
+    "jumlahSiswa": 47
   },
   {
     "schoolName": "SD INPRES 8 MAMBORO",
-    "kecamatan": "Palu Utara"
+    "kecamatan": "PALU UTARA",
+    "jumlahSiswa": 315
   },
   {
     "schoolName": "SD NEGERI 8 MAMBORO",
-    "kecamatan": "Palu Utara"
+    "kecamatan": "PALU UTARA",
+    "jumlahSiswa": 241
   },
   {
     "schoolName": "SD INPRES 5 TAIPA LAGA",
-    "kecamatan": "Palu Utara"
+    "kecamatan": "PALU UTARA",
+    "jumlahSiswa": 203
   },
   {
     "schoolName": "SD INPRES 4 TAIPA GINGGIRI",
-    "kecamatan": "Palu Utara"
+    "kecamatan": "PALU UTARA",
+    "jumlahSiswa": 191
   },
   {
     "schoolName": "SD NEGERI 9 MAMBORO",
-    "kecamatan": "Palu Utara"
+    "kecamatan": "PALU UTARA",
+    "jumlahSiswa": 163
   },
   {
     "schoolName": "SD NEGERI 7 TAIPA",
-    "kecamatan": "Palu Utara"
+    "kecamatan": "PALU UTARA",
+    "jumlahSiswa": 162
   },
   {
     "schoolName": "SD INPRES 7 LABUAN BARU",
-    "kecamatan": "Palu Utara"
+    "kecamatan": "PALU UTARA",
+    "jumlahSiswa": 160
   },
   {
     "schoolName": "SD INPRES 1 KAYUMALUE PAJEKO",
-    "kecamatan": "Palu Utara"
+    "kecamatan": "PALU UTARA",
+    "jumlahSiswa": 157
   },
   {
     "schoolName": "SD ALKHAIRAAT MAMBORO",
-    "kecamatan": "Palu Utara"
+    "kecamatan": "PALU UTARA",
+    "jumlahSiswa": 156
   },
   {
     "schoolName": "SD NEGERI 6 KAYUMALUE NGAPA",
-    "kecamatan": "Palu Utara"
+    "kecamatan": "PALU UTARA",
+    "jumlahSiswa": 150
   },
   {
     "schoolName": "SD INPRES 3 LAI",
-    "kecamatan": "Palu Utara"
+    "kecamatan": "PALU UTARA",
+    "jumlahSiswa": 134
   },
   {
     "schoolName": "SD INPRES 6 WATUOGE",
-    "kecamatan": "Palu Utara"
+    "kecamatan": "PALU UTARA",
+    "jumlahSiswa": 134
   },
   {
     "schoolName": "SD INPRES 2 KAYUMALUE NGAPA",
-    "kecamatan": "Palu Utara"
+    "kecamatan": "PALU UTARA",
+    "jumlahSiswa": 115
   },
   {
     "schoolName": "SD NEGERI 5 KAYUMALUE NGAPA",
-    "kecamatan": "Palu Utara"
+    "kecamatan": "PALU UTARA",
+    "jumlahSiswa": 110
   },
   {
     "schoolName": "SD Integral Ar-Rahman Hidayatullah",
-    "kecamatan": "Palu Utara"
+    "kecamatan": "PALU UTARA",
+    "jumlahSiswa": 96
   },
   {
     "schoolName": "SD KARYA THAYYIBAH MAMBORO",
-    "kecamatan": "Palu Utara"
+    "kecamatan": "PALU UTARA",
+    "jumlahSiswa": 18
   },
   {
     "schoolName": "SD NEGERI MODEL TERPADU MADANI",
-    "kecamatan": "Montikulore"
+    "kecamatan": "MANTIKULORE",
+    "jumlahSiswa": 700
   },
   {
     "schoolName": "SD AL AZHAR MANDIRI PALU",
-    "kecamatan": "Montikulore"
+    "kecamatan": "MANTIKULORE",
+    "jumlahSiswa": 502
   },
   {
     "schoolName": "SD INPRES 3 TONDO",
-    "kecamatan": "Montikulore"
+    "kecamatan": "MANTIKULORE",
+    "jumlahSiswa": 393
   },
   {
     "schoolName": "SD NEGERI TANAMODINDI",
-    "kecamatan": "Montikulore"
+    "kecamatan": "MANTIKULORE",
+    "jumlahSiswa": 375
   },
   {
     "schoolName": "SDN INPRES 1 LASOANI",
-    "kecamatan": "Montikulore"
+    "kecamatan": "MANTIKULORE",
+    "jumlahSiswa": 364
   },
   {
     "schoolName": "SD NEGERI TONDO",
-    "kecamatan": "Montikulore"
+    "kecamatan": "MANTIKULORE",
+    "jumlahSiswa": 338
   },
   {
     "schoolName": "SD INPRES 2 TANAMODINDI",
-    "kecamatan": "Montikulore"
+    "kecamatan": "MANTIKULORE",
+    "jumlahSiswa": 334
   },
   {
     "schoolName": "SD INPRES 1 TANAMODINDI",
-    "kecamatan": "Montikulore"
+    "kecamatan": "MANTIKULORE",
+    "jumlahSiswa": 324
   },
   {
     "schoolName": "SD INPRES 3 TALISE",
-    "kecamatan": "Montikulore"
+    "kecamatan": "MANTIKULORE",
+    "jumlahSiswa": 307
   },
   {
     "schoolName": "SD NEGERI LASOANI",
-    "kecamatan": "Montikulore"
+    "kecamatan": "MANTIKULORE",
+    "jumlahSiswa": 305
   },
   {
     "schoolName": "SD INTEGRAL HIDAYATULLAH TONDO",
-    "kecamatan": "Montikulore"
+    "kecamatan": "MANTIKULORE",
+    "jumlahSiswa": 305
   },
   {
     "schoolName": "SD NEGERI POBOYA",
-    "kecamatan": "Montikulore"
+    "kecamatan": "MANTIKULORE",
+    "jumlahSiswa": 302
   },
   {
     "schoolName": "SD NEGERI 23 PALU",
-    "kecamatan": "Montikulore"
+    "kecamatan": "MANTIKULORE",
+    "jumlahSiswa": 300
   },
   {
     "schoolName": "SD INPRES 1 TALISE",
-    "kecamatan": "Montikulore"
+    "kecamatan": "MANTIKULORE",
+    "jumlahSiswa": 273
   },
   {
     "schoolName": "SD INPRES 2 TONDO",
-    "kecamatan": "Montikulore"
+    "kecamatan": "MANTIKULORE",
+    "jumlahSiswa": 251
   },
   {
     "schoolName": "SD INPRES 2 LASOANI",
-    "kecamatan": "Montikulore"
+    "kecamatan": "MANTIKULORE",
+    "jumlahSiswa": 217
   },
   {
     "schoolName": "SD KEMALA BHAYANGKARI 01 PALU",
-    "kecamatan": "Montikulore"
+    "kecamatan": "MANTIKULORE",
+    "jumlahSiswa": 211
   },
   {
     "schoolName": "SD INPRES 1 TONDO",
-    "kecamatan": "Montikulore"
+    "kecamatan": "MANTIKULORE",
+    "jumlahSiswa": 208
   },
   {
     "schoolName": "SDN INPRES LIK LAYANA INDAH",
-    "kecamatan": "Montikulore"
+    "kecamatan": "MANTIKULORE",
+    "jumlahSiswa": 199
   },
   {
     "schoolName": "SD Tahfizhul Qur’an Imam Asy-Syathiby Palu",
-    "kecamatan": "Montikulore"
+    "kecamatan": "MANTIKULORE",
+    "jumlahSiswa": 185
   },
   {
     "schoolName": "SDN INPRES 2 TALISE",
-    "kecamatan": "Montikulore"
+    "kecamatan": "MANTIKULORE",
+    "jumlahSiswa": 171
   },
   {
     "schoolName": "SD INPRES 1 KAWATUNA",
-    "kecamatan": "Montikulore"
+    "kecamatan": "MANTIKULORE",
+    "jumlahSiswa": 169
   },
   {
     "schoolName": "SD ALKHAIRAAT TONDO",
-    "kecamatan": "Montikulore"
+    "kecamatan": "MANTIKULORE",
+    "jumlahSiswa": 169
   },
   {
     "schoolName": "SD NEGERI 1 TALISE",
-    "kecamatan": "Montikulore"
+    "kecamatan": "MANTIKULORE",
+    "jumlahSiswa": 168
   },
   {
     "schoolName": "SD NEGERI KAWATUNA",
-    "kecamatan": "Montikulore"
+    "kecamatan": "MANTIKULORE",
+    "jumlahSiswa": 150
   },
   {
     "schoolName": "SD NEGERI 2 TALISE",
-    "kecamatan": "Montikulore"
+    "kecamatan": "MANTIKULORE",
+    "jumlahSiswa": 141
   },
   {
     "schoolName": "SD IT IBNUL MUBAROK",
-    "kecamatan": "Montikulore"
+    "kecamatan": "MANTIKULORE",
+    "jumlahSiswa": 119
   },
   {
     "schoolName": "SD UNGGULAN PUTRA KAILI PERMATA BANGSA",
-    "kecamatan": "Montikulore"
+    "kecamatan": "MANTIKULORE",
+    "jumlahSiswa": 101
   },
   {
     "schoolName": "SD INPRES 2 KAWATUNA",
-    "kecamatan": "Montikulore"
+    "kecamatan": "MANTIKULORE",
+    "jumlahSiswa": 58
   },
   {
     "schoolName": "SD ISLAM AL FATH PALU",
-    "kecamatan": "Montikulore"
+    "kecamatan": "MANTIKULORE",
+    "jumlahSiswa": 56
   },
   {
     "schoolName": "SD IT BAHRUNNAJAAH",
-    "kecamatan": "Montikulore"
+    "kecamatan": "MANTIKULORE",
+    "jumlahSiswa": 56
   }
 ]

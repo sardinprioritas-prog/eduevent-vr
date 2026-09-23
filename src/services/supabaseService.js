@@ -512,6 +512,7 @@ const toAppSchoolReg = (row) => ({
   rombelCount: row.rombel_count,
   classDetails: row.class_details || {},
   totalStudents: row.total_students,
+  selectedDates: row.selected_dates || [],
   createdAt: row.created_at,
   updatedAt: row.updated_at,
 });
@@ -531,6 +532,7 @@ const toDbSchoolReg = (reg) => ({
   rombel_count: reg.rombelCount,
   class_details: reg.classDetails || {},
   total_students: reg.totalStudents,
+  selected_dates: reg.selectedDates || [],
 });
 
 export const sbGetSchoolRegistrations = async () => {
