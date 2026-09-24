@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useAuth } from '../../context/useAuth';
-import { PlusCircle, Pencil, Trash2, Building2, MapPin, Users, Calendar, AlertCircle } from 'lucide-react';
+import { PlusCircle, Pencil, Trash2, Building2, MapPin, Users, Calendar, AlertCircle, Link2, ChevronDown } from 'lucide-react';
 
 export const SchoolManagement = () => {
-  const { schools, cities, handleSaveSchool, handleDeleteSchool, currentUser } = useAuth();
+  const { schools, cities, schoolRegistrations, handleSaveSchool, handleDeleteSchool, currentUser } = useAuth();
   
   const [showForm, setShowForm] = useState(false);
   const [editingSchool, setEditingSchool] = useState(null);
@@ -27,6 +27,46 @@ export const SchoolManagement = () => {
     eventDate: '',
     active: true,
   });
+
+  // Sekolah dari Portal Sekolah yang sudah mendaftar, difilter berdasarkan cityId terpilih
+  const portalSchoolOptions = useMemo(() => {
+    if (!formData.cityId) return [];
+    const selectedCity = cities.find(c => c.id === formData.cityId);
+    if (!selectedCity) return [];
+    // Filter schoolRegistrations berdasarkan nama kota yang cocok
+    return schoolRegistrations.filter(reg => {
+      const regCity = (reg.cityName || '').toLowerCase().trim();
+      const selCity = (selectedCity.name || '').toLowerCase().trim();
+      return regCity === selCity;
+    });
+  }, [schoolRegistrations, formData.cityId, cities]);
+
+  // Handler saat sekolah dipilih dari dropdown Portal
+  const handleSchoolSelect = (schoolName) => {
+    if (!schoolName) {
+      setFormData(prev => ({ ...prev, name: '' }));
+      return;
+    }
+    const reg = portalSchoolOptions.find(r => r.schoolName === schoolName);
+    if (reg) {
+      // Auto-fill jumlah siswa dari totalStudents Portal Sekolah
+      const autoStudentCount = reg.totalStudents || 0;
+      // Auto-fill eventDate dari selectedDates Portal Sekolah (tanggal Oktober pertama → format YYYY-MM-DD)
+      let autoEventDate = '';
+      if (reg.selectedDates && reg.selectedDates.length > 0) {
+        const firstDay = Math.min(...reg.selectedDates);
+        autoEventDate = `2025-10-${String(firstDay).padStart(2, '0')}`;
+      }
+      setFormData(prev => ({
+        ...prev,
+        name: reg.schoolName,
+        studentCount: autoStudentCount,
+        eventDate: autoEventDate,
+      }));
+    } else {
+      setFormData(prev => ({ ...prev, name: schoolName }));
+    }
+  };
 
   const filteredSchools = schools.filter((s) => {
     const matchesSearch = s.name.toLowerCase().includes(searchQuery.toLowerCase());
@@ -139,18 +179,53 @@ export const SchoolManagement = () => {
               </select>
             </div>
             <div className="lg:col-span-1">
-              <label className="block text-xs font-medium text-slate-400 mb-1">Nama Sekolah</label>
-              <input
-                type="text"
-                required
-                placeholder="Contoh: SMA Negeri 1"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-blue-500"
-              />
+              <label className="block text-xs font-medium text-slate-400 mb-1 flex items-center gap-1.5">
+                Nama Sekolah
+                {portalSchoolOptions.length > 0 && (
+                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-indigo-500/15 text-indigo-400 border border-indigo-500/25">
+                    <Link2 className="w-2.5 h-2.5" />
+                    {portalSchoolOptions.length} dari Portal
+                  </span>
+                )}
+              </label>
+              <div className="relative">
+                <select
+                  required
+                  value={formData.name}
+                  onChange={(e) => handleSchoolSelect(e.target.value)}
+                  className="w-full appearance-none bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 pr-8 text-xs text-slate-100 focus:outline-none focus:border-blue-500"
+                >
+                  <option value="">-- Pilih Sekolah --</option>
+                  {portalSchoolOptions.length > 0 ? (
+                    <optgroup label="📋 Terdaftar di Portal Sekolah">
+                      {portalSchoolOptions.map((reg) => (
+                        <option key={reg.id || reg.schoolName} value={reg.schoolName}>
+                          {reg.schoolName}
+                        </option>
+                      ))}
+                    </optgroup>
+                  ) : (
+                    <option disabled value="__empty__">
+                      (Belum ada data dari Portal Sekolah untuk kota ini)
+                    </option>
+                  )}
+                </select>
+                <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500" />
+              </div>
+              {portalSchoolOptions.length === 0 && (
+                <p className="mt-1 text-[10px] text-slate-500 italic">Sekolah muncul otomatis saat terdaftar di Portal Sekolah.</p>
+              )}
             </div>
             <div className="lg:col-span-1">
-              <label className="block text-xs font-medium text-slate-400 mb-1">Jumlah Siswa</label>
+              <label className="block text-xs font-medium text-slate-400 mb-1 flex items-center gap-1.5">
+                Jumlah Siswa
+                {formData.name && portalSchoolOptions.find(r => r.schoolName === formData.name) && (
+                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/25">
+                    <Link2 className="w-2.5 h-2.5" />
+                    Auto
+                  </span>
+                )}
+              </label>
               <input
                 type="number"
                 min="0"
@@ -170,7 +245,15 @@ export const SchoolManagement = () => {
               />
             </div>
             <div className="lg:col-span-1">
-              <label className="block text-xs font-medium text-slate-400 mb-1">Tanggal Event (Opsional)</label>
+              <label className="block text-xs font-medium text-slate-400 mb-1 flex items-center gap-1.5">
+                Tanggal Event (Opsional)
+                {formData.name && portalSchoolOptions.find(r => r.schoolName === formData.name) && (
+                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-purple-500/15 text-purple-400 border border-purple-500/25">
+                    <Link2 className="w-2.5 h-2.5" />
+                    Auto
+                  </span>
+                )}
+              </label>
               <input
                 type="date"
                 value={formData.eventDate}
