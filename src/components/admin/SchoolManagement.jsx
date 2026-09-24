@@ -35,9 +35,14 @@ export const SchoolManagement = () => {
     if (!selectedCity) return [];
     // Filter schoolRegistrations berdasarkan nama kota yang cocok
     return schoolRegistrations.filter(reg => {
-      const regCity = (reg.cityName || '').toLowerCase().trim();
-      const selCity = (selectedCity.name || '').toLowerCase().trim();
-      return regCity === selCity;
+      // 1. Prioritaskan cityId jika tersedia
+      if (reg.cityId && reg.cityId === formData.cityId) return true;
+
+      // 2. Fallback pencocokan nama (abaikan awalan 'kota ')
+      const regCity = (reg.cityName || '').toLowerCase().replace('kota ', '').trim();
+      const selCity = (selectedCity.name || '').toLowerCase().replace('kota ', '').trim();
+      
+      return regCity === selCity || regCity.includes(selCity) || selCity.includes(regCity);
     });
   }, [schoolRegistrations, formData.cityId, cities]);
 
