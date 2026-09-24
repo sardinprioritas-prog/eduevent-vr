@@ -208,6 +208,7 @@ CREATE TABLE IF NOT EXISTS school_registrations (
   class_details   JSONB,
   total_students  INTEGER NOT NULL DEFAULT 0 CHECK (total_students >= 0),
   selected_dates  JSONB DEFAULT '[]'::jsonb,
+  passcode        TEXT,
   created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at      TIMESTAMPTZ NOT NULL DEFAULT now()
 );
@@ -216,6 +217,7 @@ CREATE TABLE IF NOT EXISTS school_registrations (
 ALTER TABLE school_registrations ADD COLUMN IF NOT EXISTS no_hp TEXT;
 ALTER TABLE school_registrations ADD COLUMN IF NOT EXISTS kecamatan TEXT;
 ALTER TABLE school_registrations ADD COLUMN IF NOT EXISTS selected_dates JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE school_registrations ADD COLUMN IF NOT EXISTS passcode TEXT;
 ALTER TABLE school_registrations ALTER COLUMN city_id DROP NOT NULL;
 
 ALTER TABLE school_registrations ENABLE ROW LEVEL SECURITY;

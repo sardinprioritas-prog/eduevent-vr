@@ -515,6 +515,7 @@ const toAppSchoolReg = (row) => ({
   classDetails: row.class_details || {},
   totalStudents: row.total_students,
   selectedDates: row.selected_dates || [],
+  passcode: row.passcode,
   createdAt: row.created_at,
   updatedAt: row.updated_at,
 });
@@ -535,6 +536,7 @@ const toDbSchoolReg = (reg) => ({
   class_details: reg.classDetails || {},
   total_students: reg.totalStudents,
   selected_dates: reg.selectedDates || [],
+  passcode: reg.passcode || null,
 });
 
 export const sbGetSchoolRegistrations = async () => {

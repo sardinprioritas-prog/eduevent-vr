@@ -287,7 +287,13 @@ export const SchoolPortal = () => {
     pjName: '',
     noHp: '',
     rombelCount: 1,
+    passcode: '',
   });
+
+  const [showPasscodeModal, setShowPasscodeModal] = useState(false);
+  const [pendingRegAction, setPendingRegAction] = useState(null);
+  const [inputPasscode, setInputPasscode] = useState('');
+  const [passcodeError, setPasscodeError] = useState('');
 
   // Sekolah yang tersedia berdasarkan kecamatan terpilih
   const schoolsByKecamatan = formData.kecamatan
@@ -426,6 +432,7 @@ export const SchoolPortal = () => {
       pjName: reg.pjName && reg.pjName !== '-' ? reg.pjName : '',
       noHp: reg.noHp || '',
       rombelCount: reg.rombelCount || 1,
+      passcode: reg.passcode || '',
     });
     setClassDetails(reg.classDetails || {});
     setSelectedDates(reg.selectedDates || []);
@@ -434,6 +441,27 @@ export const SchoolPortal = () => {
     setEditingRegId(reg.id);
     setActiveTab('input');
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleRequestEdit = (reg) => {
+    setPendingRegAction({ type: 'edit', reg });
+    setShowPasscodeModal(true);
+    setInputPasscode('');
+    setPasscodeError('');
+  };
+
+  const handleVerifyPasscode = () => {
+    const adminPasscode = 'ADMINVR2026';
+    const reg = pendingRegAction.reg;
+    
+    if (inputPasscode === reg.passcode || inputPasscode === adminPasscode) {
+      setShowPasscodeModal(false);
+      if (pendingRegAction.type === 'edit') {
+        handleEditRegistration(reg);
+      }
+    } else {
+      setPasscodeError('PIN Akses salah! Jika Anda admin, gunakan Master PIN.');
+    }
   };
 
   const handleSubmit = (e) => {
@@ -449,6 +477,10 @@ export const SchoolPortal = () => {
     }
     if (!formData.pjName.trim()) {
       alert('Nama Kepala Sekolah / Guru PJ wajib diisi!');
+      return;
+    }
+    if (!formData.passcode || formData.passcode.length < 4) {
+      alert('Mohon buat PIN Akses minimal 4 karakter!');
       return;
     }
 
@@ -467,6 +499,7 @@ export const SchoolPortal = () => {
       classDetails: classDetails,
       totalStudents: totalStudents,
       selectedDates: selectedDates,
+      passcode: formData.passcode,
     };
 
     handleSaveSchoolRegistration(registrationData);
@@ -478,6 +511,7 @@ export const SchoolPortal = () => {
       pjName: '',
       noHp: '',
       rombelCount: 1,
+      passcode: '',
     });
     setClassDetails({});
     setTotalStudents(0);
@@ -500,6 +534,7 @@ export const SchoolPortal = () => {
       pjName: '',
       noHp: '',
       rombelCount: 1,
+      passcode: '',
     }));
   };
 
@@ -749,8 +784,8 @@ export const SchoolPortal = () => {
 
             </div>
 
-            {/* 3. Nama Kepala Sekolah / Guru PJ & Nomor HP */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* 3. Nama Kepala Sekolah / Guru PJ, Nomor HP, & PIN Akses */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="space-y-2">
                 <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider">
                   Nama Kepala Sekolah / Guru PJ <span className="text-rose-500">*</span>
@@ -783,6 +818,24 @@ export const SchoolPortal = () => {
                     className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
                   />
                 </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider">
+                  Buat PIN Akses <span className="text-rose-500">*</span>
+                </label>
+                <div className="relative">
+                  <ShieldCheck className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                  <input
+                    type="text"
+                    required
+                    placeholder="Minimal 4 karakter (Cth: 1234)"
+                    value={formData.passcode}
+                    onChange={(e) => setFormData({ ...formData, passcode: e.target.value })}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all"
+                  />
+                </div>
+                <p className="text-[10px] text-slate-500 mt-1">Harap catat PIN ini! Digunakan jika Anda ingin mengubah data pendaftaran nanti.</p>
               </div>
             </div>
 
@@ -1053,7 +1106,7 @@ export const SchoolPortal = () => {
                       <td className="py-3.5 px-4 text-right">
                         <div className="flex items-center justify-end space-x-2">
                           <button
-                            onClick={() => handleEditRegistration(reg)}
+                            onClick={() => handleRequestEdit(reg)}
                             className="p-1.5 rounded-lg bg-slate-800 hover:bg-emerald-900/40 text-slate-300 hover:text-emerald-400 transition-colors"
                             title="Edit Data Pendaftaran"
                           >
@@ -1233,6 +1286,61 @@ export const SchoolPortal = () => {
               >
                 Tutup
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Input Passcode */}
+      {showPasscodeModal && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
+          <div className="w-full max-w-sm bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden">
+            <div className="flex items-center justify-between p-5 border-b border-slate-800 bg-slate-900/80">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 bg-rose-500/10 text-rose-400 rounded-lg">
+                  <ShieldCheck className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-white">Keamanan Data</h3>
+                  <p className="text-xs text-slate-400">Otorisasi Perubahan</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowPasscodeModal(false)}
+                className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            
+            <div className="p-6">
+              <p className="text-xs text-slate-300 mb-4 text-center leading-relaxed">
+                Masukkan PIN Akses sekolah ini untuk mengubah data. <br/>
+                Jika Anda Admin, masukkan <span className="font-bold text-indigo-400">Master PIN</span>.
+              </p>
+              
+              <div className="space-y-4">
+                <input
+                  type="password"
+                  placeholder="Masukkan PIN / Master PIN"
+                  value={inputPasscode}
+                  onChange={(e) => setInputPasscode(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-center tracking-widest text-slate-200 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                />
+                
+                {passcodeError && (
+                  <p className="text-xs text-rose-400 text-center font-semibold bg-rose-500/10 py-2 rounded-lg border border-rose-500/20">
+                    {passcodeError}
+                  </p>
+                )}
+                
+                <button
+                  onClick={handleVerifyPasscode}
+                  className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl shadow-lg shadow-indigo-600/20 transition-all"
+                >
+                  Verifikasi Akses
+                </button>
+              </div>
             </div>
           </div>
         </div>
