@@ -36,6 +36,7 @@ CREATE TABLE IF NOT EXISTS schools (
   student_count  INTEGER NOT NULL DEFAULT 0 CHECK (student_count >= 0),
   demo_date      DATE,
   event_date     DATE,
+  assigned_to    TEXT[] DEFAULT '{}',
   active         BOOLEAN NOT NULL DEFAULT true,
   created_at     TIMESTAMPTZ NOT NULL DEFAULT now()
 );
