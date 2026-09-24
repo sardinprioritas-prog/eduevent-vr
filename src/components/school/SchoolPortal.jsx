@@ -419,6 +419,23 @@ export const SchoolPortal = () => {
     }
   };
 
+  const handleEditRegistration = (reg) => {
+    setFormData({
+      schoolName: reg.schoolName || '',
+      kecamatan: reg.kecamatan || '',
+      pjName: reg.pjName && reg.pjName !== '-' ? reg.pjName : '',
+      noHp: reg.noHp || '',
+      rombelCount: reg.rombelCount || 1,
+    });
+    setClassDetails(reg.classDetails || {});
+    setSelectedDates(reg.selectedDates || []);
+    setTotalStudents(reg.totalStudents || 0);
+    setSyncStatus('matched');
+    setEditingRegId(reg.id);
+    setActiveTab('input');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
 
@@ -1035,6 +1052,13 @@ export const SchoolPortal = () => {
                       </td>
                       <td className="py-3.5 px-4 text-right">
                         <div className="flex items-center justify-end space-x-2">
+                          <button
+                            onClick={() => handleEditRegistration(reg)}
+                            className="p-1.5 rounded-lg bg-slate-800 hover:bg-emerald-900/40 text-slate-300 hover:text-emerald-400 transition-colors"
+                            title="Edit Data Pendaftaran"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </button>
                           <button
                             onClick={() => setSelectedReg(reg)}
                             className="p-1.5 rounded-lg bg-slate-800 hover:bg-indigo-900/40 text-slate-300 hover:text-indigo-400 transition-colors"
