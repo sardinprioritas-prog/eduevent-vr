@@ -55,7 +55,7 @@ export const SchoolManagement = () => {
       let autoEventDate = '';
       if (reg.selectedDates && reg.selectedDates.length > 0) {
         const firstDay = Math.min(...reg.selectedDates);
-        autoEventDate = `2025-10-${String(firstDay).padStart(2, '0')}`;
+        autoEventDate = `2026-10-${String(firstDay).padStart(2, '0')}`;
       }
       setFormData(prev => ({
         ...prev,

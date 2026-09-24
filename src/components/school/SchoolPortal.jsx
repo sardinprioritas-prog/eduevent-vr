@@ -34,11 +34,11 @@ const KECAMATAN_OPTIONS = [
 ];
 
 // ── Helper Kalender Oktober ─────────────────────────────────────
-const OCTOBER_YEAR = 2025;
+const OCTOBER_YEAR = 2026;
 const OCTOBER_MONTH = 9; // 0-indexed
 
 /**
- * Kembalikan array tanggal (1..31) untuk bulan Oktober 2025.
+ * Kembalikan array tanggal (1..31) untuk bulan Oktober 2026.
  * Hari pertama minggu: Senin=1…Minggu=0 (getDay() → 0=Sun,6=Sat)
  */
 const buildOctoberDays = () => {
@@ -186,7 +186,7 @@ const OctoberCalendar = ({
         {/* Header bulan */}
         <div className="flex items-center justify-center gap-2 p-4 bg-indigo-950/40 border-b border-slate-800">
           <Calendar className="w-4 h-4 text-indigo-400" />
-          <span className="text-sm font-bold text-indigo-200">Oktober 2025</span>
+          <span className="text-sm font-bold text-indigo-200">Oktober 2026</span>
         </div>
 
         {/* Nama hari */}
@@ -267,7 +267,7 @@ const OctoberCalendar = ({
           <div>
             <p className="text-xs font-bold text-emerald-300">Tanggal Kegiatan Terpilih:</p>
             <p className="text-sm font-extrabold text-white mt-0.5">
-              {myDates.map(d => `${d} Oktober 2025`).join(' • ')}
+              {myDates.map(d => `${d} Oktober 2026`).join(' • ')}
             </p>
           </div>
           {!disabled && (
