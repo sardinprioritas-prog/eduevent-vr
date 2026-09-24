@@ -247,7 +247,13 @@ export const EventInputForm = ({ editingEvent, onCancelEdit }) => {
               {(() => {
                 const totalCity = schools.filter(s => {
                   if (s.cityId !== formData.cityId || s.active === false) return false;
-                  if (currentUser?.role === 'operator' && s.assignedTo && s.assignedTo !== currentUser.id) return false;
+                  if (currentUser?.role === 'operator') {
+                    if (Array.isArray(s.assignedTo)) {
+                      if (s.assignedTo.length > 0 && !s.assignedTo.includes(currentUser.id)) return false;
+                    } else if (s.assignedTo && s.assignedTo !== currentUser.id) {
+                      return false;
+                    }
+                  }
                   return true;
                 }).length;
                 const remaining = totalCity - usedSchoolNames.size;
@@ -279,7 +285,13 @@ export const EventInputForm = ({ editingEvent, onCancelEdit }) => {
               {schools
                 .filter(s => {
                   if (s.cityId !== formData.cityId || s.active === false || usedSchoolNames.has(s.name)) return false;
-                  if (currentUser?.role === 'operator' && s.assignedTo && s.assignedTo !== currentUser.id) return false;
+                  if (currentUser?.role === 'operator') {
+                    if (Array.isArray(s.assignedTo)) {
+                      if (s.assignedTo.length > 0 && !s.assignedTo.includes(currentUser.id)) return false;
+                    } else if (s.assignedTo && s.assignedTo !== currentUser.id) {
+                      return false;
+                    }
+                  }
                   return true;
                 })
                 .map(school => (

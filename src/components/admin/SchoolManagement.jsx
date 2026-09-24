@@ -25,7 +25,7 @@ export const SchoolManagement = () => {
     studentCount: 0,
     demoDate: '',
     eventDate: '',
-    assignedTo: '',
+    assignedTo: [],
     active: true,
   });
 
@@ -107,7 +107,7 @@ export const SchoolManagement = () => {
       studentCount: school.studentCount,
       demoDate: school.demoDate || '',
       eventDate: school.eventDate || '',
-      assignedTo: school.assignedTo || '',
+      assignedTo: Array.isArray(school.assignedTo) ? school.assignedTo : (school.assignedTo ? [school.assignedTo] : []),
       active: school.active !== false,
     });
     setShowForm(true);
@@ -122,7 +122,7 @@ export const SchoolManagement = () => {
       ...formData,
       demoDate: formData.demoDate || null,
       eventDate: formData.eventDate || null,
-      assignedTo: formData.assignedTo || null,
+      assignedTo: Array.isArray(formData.assignedTo) && formData.assignedTo.length > 0 ? formData.assignedTo : null,
       studentCount: parseInt(formData.studentCount) || 0,
     });
     resetForm();
@@ -271,16 +271,40 @@ export const SchoolManagement = () => {
             </div>
             <div className="lg:col-span-1">
               <label className="block text-xs font-medium text-slate-400 mb-1">Ditugaskan Ke</label>
-              <select
-                value={formData.assignedTo}
-                onChange={(e) => setFormData({ ...formData, assignedTo: e.target.value })}
-                className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-blue-500"
-              >
-                <option value="">Semua Operator</option>
-                {users.filter(u => u.role === 'operator' && u.city === getCityName(formData.cityId)).map(op => (
-                  <option key={op.id} value={op.id}>{op.name} (Tim Operator)</option>
-                ))}
-              </select>
+              <div className="flex flex-col gap-2 p-2.5 bg-slate-950 border border-slate-700 rounded-xl max-h-[82px] overflow-y-auto custom-scrollbar">
+                <label className="flex items-center space-x-2 text-[11px] text-slate-200 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={!formData.assignedTo || formData.assignedTo.length === 0}
+                    onChange={(e) => {
+                      if (e.target.checked) setFormData({ ...formData, assignedTo: [] });
+                    }}
+                    className="w-3.5 h-3.5 rounded border-slate-600 bg-slate-900 text-blue-500 focus:ring-blue-500/50 cursor-pointer accent-blue-500"
+                  />
+                  <span className="truncate">Semua Operator</span>
+                </label>
+                {users.filter(u => u.role === 'operator' && u.city === getCityName(formData.cityId)).map(op => {
+                  const isChecked = Array.isArray(formData.assignedTo) && formData.assignedTo.includes(op.id);
+                  return (
+                    <label key={op.id} className="flex items-center space-x-2 text-[11px] text-slate-200 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={isChecked}
+                        onChange={(e) => {
+                          const currentArr = Array.isArray(formData.assignedTo) ? formData.assignedTo : [];
+                          if (e.target.checked) {
+                            setFormData({ ...formData, assignedTo: [...currentArr, op.id] });
+                          } else {
+                            setFormData({ ...formData, assignedTo: currentArr.filter(id => id !== op.id) });
+                          }
+                        }}
+                        className="w-3.5 h-3.5 rounded border-slate-600 bg-slate-900 text-blue-500 focus:ring-blue-500/50 cursor-pointer accent-blue-500"
+                      />
+                      <span className="truncate">{op.name}</span>
+                    </label>
+                  );
+                })}
+              </div>
             </div>
           </div>
 
