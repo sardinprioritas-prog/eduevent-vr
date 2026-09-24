@@ -25,9 +25,25 @@ import {
   Info,
   ChevronLeft,
   ChevronRight,
-  Instagram,
   Play
 } from 'lucide-react';
+
+const InstagramIcon = ({ className }) => (
+  <svg 
+    xmlns="http://www.w3.org/2000/svg" 
+    viewBox="0 0 24 24" 
+    fill="none" 
+    stroke="currentColor" 
+    strokeWidth="2" 
+    strokeLinecap="round" 
+    strokeLinejoin="round" 
+    className={className}
+  >
+    <rect width="20" height="20" x="2" y="2" rx="5" ry="5"/>
+    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
+    <line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/>
+  </svg>
+);
 
 // ── Konstanta Kecamatan ─────────────────────────────────────────
 const KECAMATAN_OPTIONS = [
@@ -693,7 +709,7 @@ export const SchoolPortal = () => {
               <div className="absolute inset-0 bg-white/20 animate-pulse pointer-events-none" />
               <div className="relative bg-slate-950 rounded-[14px] p-5 flex flex-col items-center justify-center text-center space-y-4">
                 <div className="w-12 h-12 bg-gradient-to-tr from-pink-500 to-purple-500 rounded-full flex items-center justify-center shadow-lg shadow-pink-500/30">
-                  <Instagram className="w-6 h-6 text-white" />
+                  <InstagramIcon className="w-6 h-6 text-white" />
                 </div>
                 <div>
                   <h3 className="text-sm font-extrabold text-white tracking-tight">@triesakti_edutainment</h3>
@@ -1382,7 +1398,7 @@ export const SchoolPortal = () => {
           <div className="flex items-center justify-between p-4 bg-gradient-to-r from-pink-600 to-purple-600 shadow-xl z-10">
             <div className="flex items-center space-x-3">
               <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm border border-white/30">
-                <Instagram className="w-6 h-6 text-white" />
+                <InstagramIcon className="w-6 h-6 text-white" />
               </div>
               <div>
                 <h3 className="text-sm font-bold text-white tracking-wide">Triesakti Edutainment Show</h3>
