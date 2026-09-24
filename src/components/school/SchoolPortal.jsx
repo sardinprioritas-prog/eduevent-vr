@@ -90,41 +90,38 @@ const computeActivityDates = (startDay, dayCount) => {
 
 // ── Komponen Kalender Oktober ────────────────────────────────────
 const OctoberCalendar = ({
-  studentCount,
   bookedDates, // array of day numbers booked by OTHER schools
   myDates,     // array of day numbers already selected/saved for THIS school
   onSelectDates,
   disabled,
 }) => {
   const days = useMemo(() => buildOctoberDays(), []);
-  const dayCount = getDayCount(studentCount);
-  const [hoveredGroup, setHoveredGroup] = useState(null); // preview dates saat hover
+  const [hoveredDay, setHoveredDay] = useState(null); // tanggal yang sedang di-hover
 
   // Semua tanggal yang sudah terpesan (termasuk milik sekolah lain)
   const bookedSet = useMemo(() => new Set(bookedDates), [bookedDates]);
   const mySet = useMemo(() => new Set(myDates), [myDates]);
 
+  // Toggle tanggal: klik = tambah, klik lagi = hapus
   const handleDayClick = (day) => {
     if (disabled || !day || isWeekend(day)) return;
     if (bookedSet.has(day)) return; // sudah dipakai sekolah lain
 
-    const proposed = computeActivityDates(day, dayCount);
-    // Cek apakah ada konflik dalam range yang diusulkan
-    const conflict = proposed.some(d => bookedSet.has(d));
-    if (conflict) {
-      alert(`Salah satu tanggal dalam rentang yang dipilih (${proposed.join(', ')}) sudah dipesan sekolah lain. Silakan pilih tanggal lain.`);
-      return;
+    if (mySet.has(day)) {
+      // Sudah terpilih → hapus
+      onSelectDates(myDates.filter(d => d !== day));
+    } else {
+      // Belum terpilih → tambah, urutkan
+      onSelectDates([...myDates, day].sort((a, b) => a - b));
     }
-    onSelectDates(proposed);
   };
 
   const handleDayHover = (day) => {
-    if (disabled || !day || isWeekend(day) || bookedSet.has(day)) {
-      setHoveredGroup(null);
+    if (disabled || !day || isWeekend(day) || bookedSet.has(day) || mySet.has(day)) {
+      setHoveredDay(null);
       return;
     }
-    const proposed = computeActivityDates(day, dayCount);
-    setHoveredGroup(proposed);
+    setHoveredDay(day);
   };
 
   const getDayStatus = (day) => {
@@ -132,37 +129,20 @@ const OctoberCalendar = ({
     if (isWeekend(day)) return 'weekend';
     if (mySet.has(day)) return 'mine';
     if (bookedSet.has(day)) return 'booked';
-    if (hoveredGroup && hoveredGroup.includes(day)) return 'preview';
+    if (hoveredDay === day) return 'preview';
     return 'available';
   };
 
   const dayNames = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
-
-  const getDayLabel = (count) => {
-    const label = ['', '1 hari', '2 hari berturut', '3 hari berturut'];
-    return label[count] || `${count} hari`;
-  };
 
   return (
     <div className="space-y-4">
       {/* Header Info */}
       <div className="flex items-start space-x-3 p-4 rounded-xl bg-indigo-950/40 border border-indigo-500/20">
         <Info className="w-4 h-4 text-indigo-400 shrink-0 mt-0.5" />
-        <div className="text-xs text-indigo-300/90 leading-relaxed space-y-1">
-          <p className="font-semibold text-indigo-200">
-            Jumlah Siswa: <span className="text-white">{studentCount}</span> siswa
-            &nbsp;→&nbsp;Alokasi: <span className="text-amber-300 font-bold">{getDayLabel(dayCount)}</span>
-          </p>
-          {dayCount === 1 && (
-            <p>Klik tanggal yang tersedia untuk memilih 1 hari kegiatan.</p>
-          )}
-          {dayCount === 2 && (
-            <p>Klik tanggal awal. Sistem otomatis menentukan <strong>2 hari kerja berurutan</strong> (Sabtu/Minggu dilewati).</p>
-          )}
-          {dayCount === 3 && (
-            <p>Klik tanggal awal. Sistem otomatis menentukan <strong>3 hari kerja berurutan</strong> (Sabtu/Minggu dilewati).</p>
-          )}
-        </div>
+        <p className="text-xs text-indigo-300/90 leading-relaxed">
+          Klik tanggal yang tersedia untuk <strong className="text-indigo-200">memilih</strong> atau <strong className="text-indigo-200">membatalkan</strong> pilihan. Sabtu &amp; Minggu tidak dapat dipilih.
+        </p>
       </div>
 
       {/* Legend */}
@@ -171,7 +151,7 @@ const OctoberCalendar = ({
           { color: 'bg-indigo-600/80 border-indigo-500', label: 'Terpilih (Sekolah Ini)' },
           { color: 'bg-slate-700/60 border-slate-600 opacity-50', label: 'Sabtu / Minggu' },
           { color: 'bg-rose-900/60 border-rose-700/60', label: 'Sudah Dipesan' },
-          { color: 'bg-amber-500/20 border-amber-500/50', label: 'Preview Pilihan' },
+          { color: 'bg-amber-500/20 border-amber-500/50', label: 'Hover' },
           { color: 'bg-slate-800/80 border-slate-700/60 hover:border-indigo-500', label: 'Tersedia' },
         ].map(({ color, label }) => (
           <div key={label} className="flex items-center space-x-1.5">
@@ -237,16 +217,16 @@ const OctoberCalendar = ({
                 className={`${base} ${sizeClass} ${colorClass} ${cursor}`}
                 onClick={() => day && handleDayClick(day)}
                 onMouseEnter={() => handleDayHover(day)}
-                onMouseLeave={() => setHoveredGroup(null)}
+                onMouseLeave={() => setHoveredDay(null)}
                 title={
                   status === 'booked'
                     ? `Tanggal ${day} sudah dipesan sekolah lain`
                     : status === 'mine'
-                    ? `Tanggal ${day} terpilih untuk sekolah ini`
+                    ? `Klik untuk batalkan pilihan tanggal ${day}`
                     : status === 'weekend'
                     ? 'Sabtu / Minggu (tidak tersedia)'
                     : day
-                    ? `Pilih ${day} Oktober 2025`
+                    ? `Pilih ${day} Oktober 2026`
                     : ''
                 }
               >
@@ -876,8 +856,8 @@ export const SchoolPortal = () => {
             </div>
           )}
 
-          {/* Section 3: Kalender Oktober (hanya tampil setelah sync DAN sekolah dipilih) */}
-          {showClassSection && selectedSchoolData && (
+          {/* Section 3: Kalender Oktober (tampil setelah sync ready) */}
+          {showClassSection && (
             <div className="space-y-4 animate-fadeIn">
               <div className="flex items-center space-x-3 pb-3 border-b border-slate-800/60">
                 <div className="p-2 bg-violet-500/10 text-violet-400 rounded-lg">
@@ -888,27 +868,17 @@ export const SchoolPortal = () => {
                     Pilih Tanggal Kegiatan <span className="text-sm font-normal text-slate-400 italic">(Opsional)</span>
                   </h2>
                   <p className="text-xs text-slate-500">
-                    Tanggal yang sudah dipesan sekolah lain tidak dapat dipilih kembali.
+                    Klik tanggal untuk memilih. Klik lagi untuk membatalkan. Tanggal dipesan sekolah lain tidak bisa dipilih.
                   </p>
                 </div>
               </div>
 
               <OctoberCalendar
-                studentCount={selectedSchoolData.jumlahSiswa}
                 bookedDates={allBookedDates}
                 myDates={selectedDates}
                 onSelectDates={setSelectedDates}
                 disabled={false}
               />
-            </div>
-          )}
-
-          {/* Placeholder kalender saat sekolah belum dipilih tapi sync sudah ready */}
-          {showClassSection && !selectedSchoolData && (
-            <div className="flex flex-col items-center justify-center py-10 rounded-2xl bg-slate-900/40 border border-dashed border-slate-700/60 space-y-3">
-              <Calendar className="w-8 h-8 text-violet-400 opacity-60" />
-              <p className="text-sm font-semibold text-slate-400">Kalender akan muncul setelah sekolah dipilih</p>
-              <p className="text-xs text-slate-500">Sistem akan menghitung alokasi hari berdasarkan jumlah siswa dari data Excel.</p>
             </div>
           )}
 
