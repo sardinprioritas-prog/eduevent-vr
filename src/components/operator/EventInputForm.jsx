@@ -245,7 +245,11 @@ export const EventInputForm = ({ editingEvent, onCancelEdit }) => {
                 Nama Sekolah <span className="text-rose-400 ml-1">*</span>
               </span>
               {(() => {
-                const totalCity = schools.filter(s => s.cityId === formData.cityId && s.active !== false).length;
+                const totalCity = schools.filter(s => {
+                  if (s.cityId !== formData.cityId || s.active === false) return false;
+                  if (currentUser?.role === 'operator' && s.assignedTo && s.assignedTo !== currentUser.id) return false;
+                  return true;
+                }).length;
                 const remaining = totalCity - usedSchoolNames.size;
                 return totalCity > 0 ? (
                   <span className={`text-[10px] px-2 py-0.5 rounded border font-semibold ${
@@ -273,7 +277,11 @@ export const EventInputForm = ({ editingEvent, onCancelEdit }) => {
             >
               <option value="" disabled>-- Pilih Target Sekolah --</option>
               {schools
-                .filter(s => s.cityId === formData.cityId && s.active !== false && !usedSchoolNames.has(s.name))
+                .filter(s => {
+                  if (s.cityId !== formData.cityId || s.active === false || usedSchoolNames.has(s.name)) return false;
+                  if (currentUser?.role === 'operator' && s.assignedTo && s.assignedTo !== currentUser.id) return false;
+                  return true;
+                })
                 .map(school => (
                   <option key={school.id} value={school.name}>{school.name}</option>
                 ))

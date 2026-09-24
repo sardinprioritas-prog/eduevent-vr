@@ -3,7 +3,7 @@ import { useAuth } from '../../context/useAuth';
 import { PlusCircle, Pencil, Trash2, Building2, MapPin, Users, Calendar, AlertCircle, Link2, ChevronDown } from 'lucide-react';
 
 export const SchoolManagement = () => {
-  const { schools, cities, schoolRegistrations, handleSaveSchool, handleDeleteSchool, currentUser } = useAuth();
+  const { schools, cities, schoolRegistrations, handleSaveSchool, handleDeleteSchool, currentUser, users } = useAuth();
   
   const [showForm, setShowForm] = useState(false);
   const [editingSchool, setEditingSchool] = useState(null);
@@ -25,6 +25,7 @@ export const SchoolManagement = () => {
     studentCount: 0,
     demoDate: '',
     eventDate: '',
+    assignedTo: '',
     active: true,
   });
 
@@ -106,6 +107,7 @@ export const SchoolManagement = () => {
       studentCount: school.studentCount,
       demoDate: school.demoDate || '',
       eventDate: school.eventDate || '',
+      assignedTo: school.assignedTo || '',
       active: school.active !== false,
     });
     setShowForm(true);
@@ -120,6 +122,7 @@ export const SchoolManagement = () => {
       ...formData,
       demoDate: formData.demoDate || null,
       eventDate: formData.eventDate || null,
+      assignedTo: formData.assignedTo || null,
       studentCount: parseInt(formData.studentCount) || 0,
     });
     resetForm();
@@ -169,7 +172,7 @@ export const SchoolManagement = () => {
             {editingSchool ? 'Edit Data Sekolah' : 'Tambah Target Sekolah Baru'}
           </h3>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
             <div className="lg:col-span-1">
               <label className="block text-xs font-medium text-slate-400 mb-1">Wilayah / Kota</label>
               <select
@@ -265,6 +268,19 @@ export const SchoolManagement = () => {
                 onChange={(e) => setFormData({ ...formData, eventDate: e.target.value })}
                 className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-blue-500"
               />
+            </div>
+            <div className="lg:col-span-1">
+              <label className="block text-xs font-medium text-slate-400 mb-1">Ditugaskan Ke</label>
+              <select
+                value={formData.assignedTo}
+                onChange={(e) => setFormData({ ...formData, assignedTo: e.target.value })}
+                className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-blue-500"
+              >
+                <option value="">Semua Operator</option>
+                {users.filter(u => u.role === 'operator' && u.city === getCityName(formData.cityId)).map(op => (
+                  <option key={op.id} value={op.id}>{op.name} (Tim Operator)</option>
+                ))}
+              </select>
             </div>
           </div>
 
