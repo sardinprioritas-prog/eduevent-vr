@@ -305,6 +305,15 @@ export const SchoolPortal = () => {
   const [activeTab, setActiveTab] = useState('input'); // 'input' | 'riwayat'
   const [selectedReg, setSelectedReg] = useState(null); // For detail modal
 
+  // Sort registrations ascending by earliest selected date
+  const sortedRegistrations = useMemo(() => {
+    return [...schoolRegistrations].sort((a, b) => {
+      const aDate = a.selectedDates && a.selectedDates.length > 0 ? Math.min(...a.selectedDates) : Infinity;
+      const bDate = b.selectedDates && b.selectedDates.length > 0 ? Math.min(...b.selectedDates) : Infinity;
+      return aDate - bDate;
+    });
+  }, [schoolRegistrations]);
+
   // ── Sync State ─────────────────────────────────────────────────
   const [syncStatus, setSyncStatus] = useState('idle'); // 'idle'|'checking'|'matched'|'not_found'
   const [editingRegId, setEditingRegId] = useState(null);
@@ -981,7 +990,7 @@ export const SchoolPortal = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800/60 text-slate-200">
-                  {schoolRegistrations.map((reg) => (
+                  {sortedRegistrations.map((reg) => (
                     <tr key={reg.id} className="hover:bg-slate-800/30 transition-colors">
                       <td className="py-3.5 px-4">
                         <div className="font-bold text-slate-100">{reg.schoolName}</div>
@@ -1016,7 +1025,7 @@ export const SchoolPortal = () => {
                             {reg.selectedDates.map(d => (
                               <span key={d} className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-md bg-violet-900/40 border border-violet-600/30 text-violet-300 text-[10px] font-bold">
                                 <Calendar className="w-2.5 h-2.5" />
-                                <span>{d} Okt 2025</span>
+                                <span>{d} Okt 2026</span>
                               </span>
                             ))}
                           </div>
