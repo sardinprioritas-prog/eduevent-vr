@@ -62,8 +62,12 @@ export const LandingPage = () => {
     <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-4">
       <div className="max-w-4xl w-full">
         <div className="text-center mb-12 animate-fadeIn">
-          <div className="w-20 h-20 bg-indigo-500/20 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-xl shadow-indigo-500/10 border border-indigo-500/30">
-            <Building2 className="w-10 h-10 text-indigo-400" />
+          <div className="w-24 h-24 mx-auto mb-6 flex items-center justify-center">
+            <img 
+              src="/logo-eduevent.png" 
+              alt="EduEvent Logo" 
+              className="w-full h-full object-contain drop-shadow-[0_0_15px_rgba(99,102,241,0.3)] hover:scale-105 transition-transform duration-300"
+            />
           </div>
           <h1 className="text-4xl font-bold text-white mb-4 tracking-tight">
             EduEvent VR Monitoring System

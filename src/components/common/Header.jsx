@@ -69,10 +69,12 @@ export const Header = () => {
               onClick={() => navigate('/')}
               className="flex items-center space-x-3 cursor-pointer group"
             >
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-purple-600 to-pink-500 p-0.5 shadow-lg shadow-indigo-500/20 group-hover:scale-105 transition-transform">
-                <div className="w-full h-full bg-slate-900 rounded-[10px] flex items-center justify-center">
-                  <Glasses className="w-5 h-5 text-indigo-400 animate-pulse" />
-                </div>
+              <div className="w-12 h-12 flex items-center justify-center group-hover:scale-105 transition-transform">
+                <img 
+                  src="/logo-eduevent.png" 
+                  alt="EduEvent Logo" 
+                  className="w-full h-full object-contain drop-shadow-[0_0_8px_rgba(99,102,241,0.5)]" 
+                />
               </div>
               <div>
                 <div className="flex items-center space-x-2">
