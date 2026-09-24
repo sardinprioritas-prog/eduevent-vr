@@ -12,19 +12,32 @@ async function removeBackground() {
   try {
     const image = await Jimp.read(inputPath);
     
-    // Replace black background with transparent
+    // Sample the background color from top-left pixel (0, 0)
+    const bgIndex = image.getPixelIndex(0, 0);
+    const bgRed = image.bitmap.data[bgIndex];
+    const bgGreen = image.bitmap.data[bgIndex + 1];
+    const bgBlue = image.bitmap.data[bgIndex + 2];
+    
+    const tolerance = 25; // Tolerance for color difference
+
+    // Replace background with transparent
     image.scan(0, 0, image.bitmap.width, image.bitmap.height, function (x, y, idx) {
       const red = this.bitmap.data[idx];
       const green = this.bitmap.data[idx + 1];
       const blue = this.bitmap.data[idx + 2];
       
-      // If the pixel is very dark (close to black)
-      if (red < 30 && green < 30 && blue < 30) {
+      // Calculate color distance
+      const distRed = Math.abs(red - bgRed);
+      const distGreen = Math.abs(green - bgGreen);
+      const distBlue = Math.abs(blue - bgBlue);
+      
+      // If the pixel is similar to the background color
+      if (distRed <= tolerance && distGreen <= tolerance && distBlue <= tolerance) {
         this.bitmap.data[idx + 3] = 0; // Alpha channel to 0 (transparent)
       }
     });
 
-    await image.write(outputPath);
+    image.write(outputPath);
     console.log('Image processed successfully:', outputPath);
   } catch (error) {
     console.error('Error processing image:', error);

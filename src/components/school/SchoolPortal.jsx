@@ -25,6 +25,8 @@ import {
   Info,
   ChevronLeft,
   ChevronRight,
+  Instagram,
+  Play
 } from 'lucide-react';
 
 // ── Konstanta Kecamatan ─────────────────────────────────────────
@@ -310,6 +312,7 @@ export const SchoolPortal = () => {
   const [selectedDates, setSelectedDates] = useState([]); // tanggal kegiatan terpilih
   const [activeTab, setActiveTab] = useState('input'); // 'input' | 'riwayat'
   const [selectedReg, setSelectedReg] = useState(null); // For detail modal
+  const [showIgModal, setShowIgModal] = useState(false); // For Instagram Ad modal
 
   // Sort registrations ascending by earliest selected date
   const sortedRegistrations = useMemo(() => {
@@ -637,50 +640,76 @@ export const SchoolPortal = () => {
         <div className="absolute top-0 right-0 -mt-6 -mr-6 w-72 h-72 rounded-full bg-indigo-500/10 blur-3xl pointer-events-none" />
         <div className="absolute bottom-0 left-0 -mb-6 -ml-6 w-72 h-72 rounded-full bg-purple-500/10 blur-3xl pointer-events-none" />
 
-        <div className="relative z-10 max-w-3xl">
-          <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-xs font-semibold uppercase tracking-wider mb-6">
-            <GraduationCap className="w-4 h-4 text-indigo-400" />
-            <span>Pendaftaran VR Mandiri</span>
-          </div>
-          <h1 className="text-3xl md:text-5xl font-extrabold text-white tracking-tight mb-4 bg-gradient-to-r from-white via-slate-100 to-indigo-200 bg-clip-text text-transparent">
-            Portal Pendaftaran Sekolah
-          </h1>
-          {regionName && (
-            <div className="inline-block mb-4 px-4 py-1.5 rounded-lg bg-indigo-500/20 border border-indigo-500/30 text-indigo-300 font-bold">
-              Wilayah Terpilih: {regionName}
+        <div className="relative z-10 grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
+          
+          <div className="md:col-span-8 max-w-3xl">
+            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-xs font-semibold uppercase tracking-wider mb-6">
+              <GraduationCap className="w-4 h-4 text-indigo-400" />
+              <span>Pendaftaran VR Mandiri</span>
             </div>
-          )}
-          <p className="text-slate-300 text-sm md:text-base leading-relaxed mb-6">
-            Silakan masukkan data pendaftaran siswa untuk kegiatan Virtual Reality (VR). Anda dapat menyimpan data terlebih dahulu dan memilih tanggal kegiatan (opsional) menyusul.
-          </p>
+            <h1 className="text-3xl md:text-5xl font-extrabold text-white tracking-tight mb-4 bg-gradient-to-r from-white via-slate-100 to-indigo-200 bg-clip-text text-transparent">
+              Portal Pendaftaran Sekolah
+            </h1>
+            {regionName && (
+              <div className="inline-block mb-4 px-4 py-1.5 rounded-lg bg-indigo-500/20 border border-indigo-500/30 text-indigo-300 font-bold">
+                Wilayah Terpilih: {regionName}
+              </div>
+            )}
+            <p className="text-slate-300 text-sm md:text-base leading-relaxed mb-6">
+              Silakan masukkan data pendaftaran siswa untuk kegiatan Virtual Reality (VR). Anda dapat menyimpan data terlebih dahulu dan memilih tanggal kegiatan (opsional) menyusul.
+            </p>
 
-          <div className="flex items-center space-x-2">
-            <button
-              onClick={() => setActiveTab('input')}
-              className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all ${
-                activeTab === 'input'
-                  ? 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/30'
-                  : 'bg-slate-800/80 text-slate-300 hover:bg-slate-800'
-              }`}
-            >
-              Form Input Data
-            </button>
-            <button
-              onClick={() => setActiveTab('riwayat')}
-              className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all relative ${
-                activeTab === 'riwayat'
-                  ? 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/30'
-                  : 'bg-slate-800/80 text-slate-300 hover:bg-slate-800'
-              }`}
-            >
-              Riwayat Pendaftaran
-              {schoolRegistrations.length > 0 && (
-                <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[10px] font-bold text-white">
-                  {schoolRegistrations.length}
-                </span>
-              )}
-            </button>
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => setActiveTab('input')}
+                className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all ${
+                  activeTab === 'input'
+                    ? 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/30'
+                    : 'bg-slate-800/80 text-slate-300 hover:bg-slate-800'
+                }`}
+              >
+                Form Input Data
+              </button>
+              <button
+                onClick={() => setActiveTab('riwayat')}
+                className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all relative ${
+                  activeTab === 'riwayat'
+                    ? 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/30'
+                    : 'bg-slate-800/80 text-slate-300 hover:bg-slate-800'
+                }`}
+              >
+                Riwayat Pendaftaran
+                {schoolRegistrations.length > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[10px] font-bold text-white">
+                    {schoolRegistrations.length}
+                  </span>
+                )}
+              </button>
+            </div>
           </div>
+
+          <div className="md:col-span-4 flex justify-center md:justify-end">
+            <div className="relative group overflow-hidden rounded-2xl bg-gradient-to-b from-pink-500 via-purple-500 to-indigo-500 p-[2px] shadow-xl shadow-pink-500/20 max-w-sm w-full">
+              <div className="absolute inset-0 bg-white/20 animate-pulse pointer-events-none" />
+              <div className="relative bg-slate-950 rounded-[14px] p-5 flex flex-col items-center justify-center text-center space-y-4">
+                <div className="w-12 h-12 bg-gradient-to-tr from-pink-500 to-purple-500 rounded-full flex items-center justify-center shadow-lg shadow-pink-500/30">
+                  <Instagram className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-extrabold text-white tracking-tight">@triesakti_edutainment</h3>
+                  <p className="text-[10px] text-slate-400 mt-1">Ikuti keseruan VR Edukasi terbaru!</p>
+                </div>
+                <button
+                  onClick={() => setShowIgModal(true)}
+                  className="w-full py-2.5 px-4 bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-400 hover:to-purple-500 text-white font-bold text-xs rounded-xl shadow-lg shadow-pink-500/30 transition-all flex items-center justify-center space-x-2"
+                >
+                  <Play className="w-3.5 h-3.5" />
+                  <span>edutainment show</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
         </div>
       </div>
 
@@ -1342,6 +1371,42 @@ export const SchoolPortal = () => {
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Instagram Iframe Modal */}
+      {showIgModal && (
+        <div className="fixed inset-0 z-[70] flex flex-col bg-slate-950/95 backdrop-blur-md animate-fadeIn">
+          {/* Header Bar */}
+          <div className="flex items-center justify-between p-4 bg-gradient-to-r from-pink-600 to-purple-600 shadow-xl z-10">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm border border-white/30">
+                <Instagram className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-white tracking-wide">Triesakti Edutainment Show</h3>
+                <p className="text-[10px] text-pink-100">Instagram Resmi</p>
+              </div>
+            </div>
+            <button
+              onClick={() => setShowIgModal(false)}
+              className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white font-bold text-xs rounded-xl backdrop-blur-sm border border-white/20 transition-all flex items-center space-x-2"
+            >
+              <X className="w-4 h-4" />
+              <span className="hidden sm:inline">Kembali ke Portal Sekolah</span>
+            </button>
+          </div>
+          
+          {/* Iframe Container */}
+          <div className="flex-1 w-full bg-slate-950 relative overflow-hidden">
+            {/* The best way to embed an Instagram profile without CORS block is using a standard iframe to instagram.com/username, though some browsers might block it if not logged in, it's the standard request here. */}
+            <iframe
+              src="https://www.instagram.com/triesakti_edutainment/"
+              title="Instagram Triesakti Edutainment"
+              className="absolute inset-0 w-full h-full border-0"
+              sandbox="allow-scripts allow-same-origin allow-popups"
+            />
           </div>
         </div>
       )}
