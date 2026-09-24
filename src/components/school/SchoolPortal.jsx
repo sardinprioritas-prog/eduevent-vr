@@ -1414,15 +1414,29 @@ export const SchoolPortal = () => {
             </button>
           </div>
           
-          {/* Iframe Container */}
-          <div className="flex-1 w-full bg-slate-950 relative overflow-hidden">
-            {/* The best way to embed an Instagram profile without CORS block is using a standard iframe to instagram.com/username, though some browsers might block it if not logged in, it's the standard request here. */}
-            <iframe
-              src="https://www.instagram.com/triesakti_edutainment/"
-              title="Instagram Triesakti Edutainment"
-              className="absolute inset-0 w-full h-full border-0"
-              sandbox="allow-scripts allow-same-origin allow-popups"
-            />
+          {/* Iframe Alternative Container */}
+          <div className="flex-1 w-full bg-slate-950 flex flex-col items-center justify-center p-6 text-center">
+            <div className="max-w-sm p-8 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl">
+              <div className="w-20 h-20 bg-gradient-to-tr from-pink-500 to-purple-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg shadow-pink-500/20">
+                <InstagramIcon className="w-10 h-10 text-white" />
+              </div>
+              <h3 className="text-xl font-extrabold text-white tracking-tight mb-3">Menuju ke Instagram</h3>
+              <p className="text-slate-400 text-sm mb-8 leading-relaxed">
+                Untuk menjaga keamanan, Instagram tidak mengizinkan halamannya dibuka langsung di dalam aplikasi ini. 
+                <br/><br/>
+                Silakan klik tombol di bawah untuk membuka profil resmi <strong className="text-pink-400">@triesakti_edutainment</strong>.
+              </p>
+              <a 
+                href="https://www.instagram.com/triesakti_edutainment/"
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setShowIgModal(false)}
+                className="w-full flex items-center justify-center space-x-2 bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-400 hover:to-purple-500 text-white font-bold py-3 px-6 rounded-xl shadow-lg shadow-pink-500/30 transition-all hover:scale-105"
+              >
+                <InstagramIcon className="w-5 h-5" />
+                <span>Buka Instagram</span>
+              </a>
+            </div>
           </div>
         </div>
       )}
