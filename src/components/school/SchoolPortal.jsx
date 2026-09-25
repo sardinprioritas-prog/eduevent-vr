@@ -305,6 +305,7 @@ export const SchoolPortal = () => {
     schoolRegistrations,
     cities,
     users,
+    currentUser,
     handleSaveSchoolRegistration,
     handleDeleteSchoolRegistration,
   } = useAuth();
@@ -1197,13 +1198,15 @@ export const SchoolPortal = () => {
                           >
                             <Eye className="w-4 h-4" />
                           </button>
-                          <button
-                            onClick={() => setShareReg(reg)}
-                            className="p-1.5 rounded-lg bg-slate-800 hover:bg-blue-900/40 text-slate-300 hover:text-blue-400 transition-colors"
-                            title="Bagikan Jadwal"
-                          >
-                            <Share2 className="w-4 h-4" />
-                          </button>
+                          {currentUser?.role === 'pioneer' && (
+                            <button
+                              onClick={() => setShareReg(reg)}
+                              className="p-1.5 rounded-lg bg-slate-800 hover:bg-blue-900/40 text-slate-300 hover:text-blue-400 transition-colors"
+                              title="Bagikan Jadwal (Pioneer Only)"
+                            >
+                              <Share2 className="w-4 h-4" />
+                            </button>
+                          )}
                           <button
                             onClick={() => {
                               if (confirm(`Apakah Anda yakin ingin menghapus pendaftaran ${reg.schoolName}?`)) {
@@ -1476,14 +1479,14 @@ export const SchoolPortal = () => {
               <div className="space-y-3">
                 <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider">Pratinjau Pesan</p>
                 <div className="p-4 bg-slate-800/50 rounded-xl border border-slate-700/50 text-sm text-slate-300 whitespace-pre-wrap font-mono text-xs">
-                  {`Halo Bapak/Ibu ${shareReg.pjName || 'Guru PJ'},\n\nBerikut adalah informasi jadwal pelaksanaan kegiatan Edukasi VR untuk sekolah ${shareReg.schoolName}:\n\nTanggal: ${shareReg.selectedDates && shareReg.selectedDates.length > 0 ? shareReg.selectedDates.map(d => d + ' Oktober 2026').join(', ') : 'Belum ditentukan'}\nTotal Siswa: ${shareReg.totalStudents} Siswa\n\nMohon persiapannya. Terima kasih!`}
+                  {`Halo Bapak/Ibu ${shareReg.pjName || 'Guru PJ'},\n\nSalam dari kami tim Pioneer Edukasi VR.\n\nBersama pesan ini kami sampaikan informasi jadwal pelaksanaan kegiatan Edukasi VR untuk ${shareReg.schoolName}:\n\n📅 Tanggal: ${shareReg.selectedDates && shareReg.selectedDates.length > 0 ? shareReg.selectedDates.map(d => d + ' Oktober 2026').join(', ') : 'Belum ditentukan'}\n👥 Total Siswa: ${shareReg.totalStudents} Siswa\n\nMohon persiapannya ya Bapak/Ibu. Jika ada pertanyaan lebih lanjut, silakan balas pesan ini.\n\nTerima kasih,\nTim Pioneer Edukasi VR`}
                 </div>
               </div>
               
               <div className="grid grid-cols-2 gap-3 pt-2">
                 <button
                   onClick={() => {
-                    const text = `Halo Bapak/Ibu ${shareReg.pjName || 'Guru PJ'},\n\nBerikut adalah informasi jadwal pelaksanaan kegiatan Edukasi VR untuk sekolah ${shareReg.schoolName}:\n\nTanggal: ${shareReg.selectedDates && shareReg.selectedDates.length > 0 ? shareReg.selectedDates.map(d => d + ' Oktober 2026').join(', ') : 'Belum ditentukan'}\nTotal Siswa: ${shareReg.totalStudents} Siswa\n\nMohon persiapannya. Terima kasih!`;
+                    const text = `Halo Bapak/Ibu ${shareReg.pjName || 'Guru PJ'},\n\nSalam dari kami tim Pioneer Edukasi VR.\n\nBersama pesan ini kami sampaikan informasi jadwal pelaksanaan kegiatan Edukasi VR untuk ${shareReg.schoolName}:\n\n📅 Tanggal: ${shareReg.selectedDates && shareReg.selectedDates.length > 0 ? shareReg.selectedDates.map(d => d + ' Oktober 2026').join(', ') : 'Belum ditentukan'}\n👥 Total Siswa: ${shareReg.totalStudents} Siswa\n\nMohon persiapannya ya Bapak/Ibu. Jika ada pertanyaan lebih lanjut, silakan balas pesan ini.\n\nTerima kasih,\nTim Pioneer Edukasi VR`;
                     navigator.clipboard.writeText(text);
                     alert('Pesan disalin ke clipboard!');
                   }}
@@ -1493,7 +1496,7 @@ export const SchoolPortal = () => {
                   <span>Salin Pesan</span>
                 </button>
                 <a
-                  href={`https://wa.me/${shareReg.noHp ? shareReg.noHp.replace(/\D/g, '') : ''}?text=${encodeURIComponent(`Halo Bapak/Ibu ${shareReg.pjName || 'Guru PJ'},\n\nBerikut adalah informasi jadwal pelaksanaan kegiatan Edukasi VR untuk sekolah ${shareReg.schoolName}:\n\nTanggal: ${shareReg.selectedDates && shareReg.selectedDates.length > 0 ? shareReg.selectedDates.map(d => d + ' Oktober 2026').join(', ') : 'Belum ditentukan'}\nTotal Siswa: ${shareReg.totalStudents} Siswa\n\nMohon persiapannya. Terima kasih!`)}`}
+                  href={`https://wa.me/${shareReg.noHp ? shareReg.noHp.replace(/\D/g, '') : ''}?text=${encodeURIComponent(`Halo Bapak/Ibu ${shareReg.pjName || 'Guru PJ'},\n\nSalam dari kami tim Pioneer Edukasi VR.\n\nBersama pesan ini kami sampaikan informasi jadwal pelaksanaan kegiatan Edukasi VR untuk ${shareReg.schoolName}:\n\n📅 Tanggal: ${shareReg.selectedDates && shareReg.selectedDates.length > 0 ? shareReg.selectedDates.map(d => d + ' Oktober 2026').join(', ') : 'Belum ditentukan'}\n👥 Total Siswa: ${shareReg.totalStudents} Siswa\n\nMohon persiapannya ya Bapak/Ibu. Jika ada pertanyaan lebih lanjut, silakan balas pesan ini.\n\nTerima kasih,\nTim Pioneer Edukasi VR`)}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-full flex items-center justify-center space-x-2 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-lg shadow-emerald-600/30 transition-all"
