@@ -112,6 +112,7 @@ const OctoberCalendar = ({
   myDates,     // array of day numbers already selected/saved for THIS school
   onSelectDates,
   disabled,
+  bookedSchoolsMap = {}, // map of day -> array of school names
 }) => {
   const days = useMemo(() => buildOctoberDays(), []);
   const [hoveredDay, setHoveredDay] = useState(null); // tanggal yang sedang di-hover
@@ -207,8 +208,8 @@ const OctoberCalendar = ({
             const status = getDayStatus(day);
             const isClickable = day && status !== 'weekend' && status !== 'booked' && !disabled;
 
-            const base = 'flex items-center justify-center text-xs font-bold transition-all duration-150 select-none';
-            const sizeClass = 'aspect-square min-h-[36px] rounded-sm';
+            const base = 'flex flex-col items-center justify-start text-xs font-bold transition-all duration-150 select-none overflow-hidden relative group';
+            const sizeClass = 'min-h-[50px] w-full rounded-sm pt-1 pb-0.5 px-0.5';
             let colorClass = '';
             let cursor = 'cursor-default';
 
@@ -219,7 +220,7 @@ const OctoberCalendar = ({
             } else if (status === 'mine') {
               colorClass = 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30 ring-2 ring-indigo-400/40';
             } else if (status === 'booked') {
-              colorClass = 'bg-rose-950/60 text-rose-700 line-through';
+              colorClass = 'bg-rose-950/60 text-rose-700';
             } else if (status === 'preview') {
               colorClass = 'bg-amber-500/20 text-amber-200 border border-amber-500/50';
               cursor = 'cursor-pointer';
@@ -229,6 +230,9 @@ const OctoberCalendar = ({
               cursor = isClickable ? 'cursor-pointer' : 'cursor-default';
             }
 
+            const schoolsHere = day && bookedSchoolsMap[day] ? bookedSchoolsMap[day] : [];
+            const schoolsText = schoolsHere.length > 0 ? `Sudah dipesan oleh:\n- ${schoolsHere.join('\n- ')}` : '';
+
             return (
               <div
                 key={idx}
@@ -237,8 +241,8 @@ const OctoberCalendar = ({
                 onMouseEnter={() => handleDayHover(day)}
                 onMouseLeave={() => setHoveredDay(null)}
                 title={
-                  status === 'booked'
-                    ? `Tanggal ${day} sudah dipesan sekolah lain`
+                  schoolsText
+                    ? (status === 'mine' ? `Klik batalkan pilihan.\n\n${schoolsText}` : schoolsText)
                     : status === 'mine'
                     ? `Klik untuk batalkan pilihan tanggal ${day}`
                     : status === 'weekend'
@@ -248,7 +252,16 @@ const OctoberCalendar = ({
                     : ''
                 }
               >
-                {day || ''}
+                <span className={status === 'booked' ? 'line-through' : ''}>{day || ''}</span>
+                {day && schoolsHere.length > 0 && (
+                  <div className="mt-auto w-full flex flex-col space-y-[1px]">
+                    {schoolsHere.map((sName, i) => (
+                      <span key={i} className="block w-full text-[7px] leading-[9px] truncate font-normal text-center opacity-80" title={sName}>
+                        {sName}
+                      </span>
+                    ))}
+                  </div>
+                )}
                 {status === 'mine' && (
                   <span className="sr-only">terpilih</span>
                 )}
@@ -347,21 +360,26 @@ export const SchoolPortal = () => {
   const isSMP = (formData.schoolName || '').toUpperCase().includes('SMP');
   const grades = isSMP ? [7, 8, 9] : [1, 2, 3, 4, 5, 6];
 
-  // ── Semua tanggal yang SUDAH dipesan oleh sekolah LAIN ─────────
-  const allBookedDates = useMemo(() => {
-    const dateCounts = {};
+  // ── Map tanggal ke nama sekolah yang memesannya ─────────
+  const bookedSchoolsMap = useMemo(() => {
+    const map = {};
     schoolRegistrations.forEach(reg => {
       // Jangan hitung tanggal milik sekolah yang sedang diedit
       if (editingRegId && reg.id === editingRegId) return;
       (reg.selectedDates || []).forEach(d => {
-        dateCounts[d] = (dateCounts[d] || 0) + 1;
+        if (!map[d]) map[d] = [];
+        map[d].push(reg.schoolName);
       });
     });
-    // Kembalikan hanya tanggal yang sudah dipesan >= 2 kali
-    return Object.keys(dateCounts)
-      .filter(d => dateCounts[d] >= 2)
-      .map(d => parseInt(d));
+    return map;
   }, [schoolRegistrations, editingRegId]);
+
+  // ── Semua tanggal yang SUDAH dipesan oleh sekolah LAIN (Penuh >= 2) ─────────
+  const allBookedDates = useMemo(() => {
+    return Object.keys(bookedSchoolsMap)
+      .filter(d => bookedSchoolsMap[d].length >= 2)
+      .map(d => parseInt(d));
+  }, [bookedSchoolsMap]);
 
   // ── Jumlah siswa sekolah yang dipilih (dari Excel) ─────────────
   const excelStudentCount = selectedSchoolData?.jumlahSiswa || 0;
@@ -1013,6 +1031,7 @@ export const SchoolPortal = () => {
                 myDates={selectedDates}
                 onSelectDates={setSelectedDates}
                 disabled={false}
+                bookedSchoolsMap={bookedSchoolsMap}
               />
             </div>
           )}
