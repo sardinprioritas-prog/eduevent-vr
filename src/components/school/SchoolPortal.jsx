@@ -304,7 +304,7 @@ export const SchoolPortal = () => {
     kecamatan: '',
     pjName: '',
     noHp: '',
-    rombelCount: 1,
+    rombelCount: '',
     passcode: '',
   });
 
@@ -415,7 +415,7 @@ export const SchoolPortal = () => {
         setEditingRegId(matched.id);
         setFormData(prev => ({
           ...prev,
-          rombelCount: matched.rombelCount,
+          rombelCount: matched.rombelCount || '',
           pjName: matched.pjName && matched.pjName !== '-' ? matched.pjName : prev.pjName,
           noHp: matched.noHp || prev.noHp,
         }));
@@ -450,7 +450,7 @@ export const SchoolPortal = () => {
       kecamatan: reg.kecamatan || '',
       pjName: reg.pjName && reg.pjName !== '-' ? reg.pjName : '',
       noHp: reg.noHp || '',
-      rombelCount: reg.rombelCount || 1,
+      rombelCount: reg.rombelCount || '',
       passcode: reg.passcode || '',
     });
     setClassDetails(reg.classDetails || {});
@@ -514,7 +514,7 @@ export const SchoolPortal = () => {
       noHp: formData.noHp.trim(),
       cityName: currentCityName,
       cityId: matchedCity?.id || null,
-      rombelCount: parseInt(formData.rombelCount),
+      rombelCount: parseInt(formData.rombelCount) || 1,
       classDetails: classDetails,
       totalStudents: totalStudents,
       selectedDates: selectedDates,
@@ -529,7 +529,7 @@ export const SchoolPortal = () => {
       kecamatan: '',
       pjName: '',
       noHp: '',
-      rombelCount: 1,
+      rombelCount: '',
       passcode: '',
     });
     setClassDetails({});
@@ -552,7 +552,7 @@ export const SchoolPortal = () => {
       kecamatan: '',
       pjName: '',
       noHp: '',
-      rombelCount: 1,
+      rombelCount: '',
       passcode: '',
     }));
   };
@@ -560,7 +560,8 @@ export const SchoolPortal = () => {
   // Helper to generate dynamic grade columns
   const getSubdivisions = (rombelCount) => {
     const arr = [];
-    for (let i = 0; i < rombelCount; i++) {
+    const count = parseInt(rombelCount) || 1;
+    for (let i = 0; i < count; i++) {
       arr.push(String.fromCharCode(65 + i));
     }
     return arr;
@@ -926,10 +927,15 @@ export const SchoolPortal = () => {
                     placeholder="Masukkan jumlah rombel"
                     value={formData.rombelCount}
                     onChange={(e) => {
-                      const val = Math.min(10, Math.max(1, parseInt(e.target.value) || 1));
+                      const raw = e.target.value;
+                      if (raw === '') {
+                        setFormData({ ...formData, rombelCount: '' });
+                        return;
+                      }
+                      const val = Math.min(10, Math.max(1, parseInt(raw) || 1));
                       setFormData({ ...formData, rombelCount: val });
                     }}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   />
                 </div>
                 <p className="text-[10px] text-slate-400">
