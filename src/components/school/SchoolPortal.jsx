@@ -1494,14 +1494,14 @@ export const SchoolPortal = () => {
               <div className="space-y-3">
                 <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider">Pratinjau Pesan</p>
                 <div className="p-4 bg-slate-800/50 rounded-xl border border-slate-700/50 text-sm text-slate-300 whitespace-pre-wrap font-mono text-xs">
-                  {`Halo Bapak/Ibu ${shareReg.pjName || 'Guru PJ'},\n\nSalam dari kami tim Pioneer Edukasi VR.\n\nBersama pesan ini kami sampaikan informasi jadwal pelaksanaan kegiatan Edukasi VR untuk ${shareReg.schoolName}:\n\n📅 Tanggal: ${shareReg.selectedDates && shareReg.selectedDates.length > 0 ? shareReg.selectedDates.map(d => d + ' Oktober 2026').join(', ') : 'Belum ditentukan'}\n👥 Total Siswa: ${shareReg.totalStudents} Siswa\n\nMohon persiapannya ya Bapak/Ibu. Jika ada pertanyaan lebih lanjut, silakan balas pesan ini.\n\nTerima kasih,\nTim Pioneer Edukasi VR`}
+                  {`Halo Bapak/Ibu ${shareReg.pjName || 'Guru PJ'},\n\nSalam dari kami tim Triesakti Edutainment.\n\nBersama pesan ini kami sampaikan informasi jadwal pelaksanaan kegiatan Outing Class VR untuk ${shareReg.schoolName}:\n\n📅 Tanggal: ${shareReg.selectedDates && shareReg.selectedDates.length > 0 ? shareReg.selectedDates.map(d => d + ' Oktober 2026').join(', ') : 'Belum ditentukan'}\n👥 Total Siswa Sementara: ${shareReg.totalStudents} Siswa\n\nMohon dipersiapkan untuk ruangan yang akan digunakan agar tim setibanya di sekolah langsung prepare setup perangkat. Jika ada pertanyaan lebih lanjut, silakan balas pesan ini.\n\nTerima kasih,\nTim Triesakti Edutainment`}
                 </div>
               </div>
               
               <div className="grid grid-cols-2 gap-3 pt-2">
                 <button
                   onClick={() => {
-                    const text = `Halo Bapak/Ibu ${shareReg.pjName || 'Guru PJ'},\n\nSalam dari kami tim Pioneer Edukasi VR.\n\nBersama pesan ini kami sampaikan informasi jadwal pelaksanaan kegiatan Edukasi VR untuk ${shareReg.schoolName}:\n\n📅 Tanggal: ${shareReg.selectedDates && shareReg.selectedDates.length > 0 ? shareReg.selectedDates.map(d => d + ' Oktober 2026').join(', ') : 'Belum ditentukan'}\n👥 Total Siswa: ${shareReg.totalStudents} Siswa\n\nMohon persiapannya ya Bapak/Ibu. Jika ada pertanyaan lebih lanjut, silakan balas pesan ini.\n\nTerima kasih,\nTim Pioneer Edukasi VR`;
+                    const text = `Halo Bapak/Ibu ${shareReg.pjName || 'Guru PJ'},\n\nSalam dari kami tim Triesakti Edutainment.\n\nBersama pesan ini kami sampaikan informasi jadwal pelaksanaan kegiatan Outing Class VR untuk ${shareReg.schoolName}:\n\n📅 Tanggal: ${shareReg.selectedDates && shareReg.selectedDates.length > 0 ? shareReg.selectedDates.map(d => d + ' Oktober 2026').join(', ') : 'Belum ditentukan'}\n👥 Total Siswa Sementara: ${shareReg.totalStudents} Siswa\n\nMohon dipersiapkan untuk ruangan yang akan digunakan agar tim setibanya di sekolah langsung prepare setup perangkat. Jika ada pertanyaan lebih lanjut, silakan balas pesan ini.\n\nTerima kasih,\nTim Triesakti Edutainment`;
                     navigator.clipboard.writeText(text);
                     alert('Pesan disalin ke clipboard!');
                   }}
@@ -1511,7 +1511,7 @@ export const SchoolPortal = () => {
                   <span>Salin Pesan</span>
                 </button>
                 <a
-                  href={`https://wa.me/${shareReg.noHp ? shareReg.noHp.replace(/\D/g, '') : ''}?text=${encodeURIComponent(`Halo Bapak/Ibu ${shareReg.pjName || 'Guru PJ'},\n\nSalam dari kami tim Pioneer Edukasi VR.\n\nBersama pesan ini kami sampaikan informasi jadwal pelaksanaan kegiatan Edukasi VR untuk ${shareReg.schoolName}:\n\n📅 Tanggal: ${shareReg.selectedDates && shareReg.selectedDates.length > 0 ? shareReg.selectedDates.map(d => d + ' Oktober 2026').join(', ') : 'Belum ditentukan'}\n👥 Total Siswa: ${shareReg.totalStudents} Siswa\n\nMohon persiapannya ya Bapak/Ibu. Jika ada pertanyaan lebih lanjut, silakan balas pesan ini.\n\nTerima kasih,\nTim Pioneer Edukasi VR`)}`}
+                  href={`https://wa.me/${shareReg.noHp ? shareReg.noHp.replace(/\D/g, '') : ''}?text=${encodeURIComponent(`Halo Bapak/Ibu ${shareReg.pjName || 'Guru PJ'},\n\nSalam dari kami tim Triesakti Edutainment.\n\nBersama pesan ini kami sampaikan informasi jadwal pelaksanaan kegiatan Outing Class VR untuk ${shareReg.schoolName}:\n\n📅 Tanggal: ${shareReg.selectedDates && shareReg.selectedDates.length > 0 ? shareReg.selectedDates.map(d => d + ' Oktober 2026').join(', ') : 'Belum ditentukan'}\n👥 Total Siswa Sementara: ${shareReg.totalStudents} Siswa\n\nMohon dipersiapkan untuk ruangan yang akan digunakan agar tim setibanya di sekolah langsung prepare setup perangkat. Jika ada pertanyaan lebih lanjut, silakan balas pesan ini.\n\nTerima kasih,\nTim Triesakti Edutainment`)}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-full flex items-center justify-center space-x-2 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-lg shadow-emerald-600/30 transition-all"
