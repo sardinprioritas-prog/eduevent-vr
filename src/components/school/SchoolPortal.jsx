@@ -349,13 +349,18 @@ export const SchoolPortal = () => {
 
   // ── Semua tanggal yang SUDAH dipesan oleh sekolah LAIN ─────────
   const allBookedDates = useMemo(() => {
-    const booked = new Set();
+    const dateCounts = {};
     schoolRegistrations.forEach(reg => {
-      // Jangan masukkan tanggal milik sekolah yang sedang diedit
+      // Jangan hitung tanggal milik sekolah yang sedang diedit
       if (editingRegId && reg.id === editingRegId) return;
-      (reg.selectedDates || []).forEach(d => booked.add(d));
+      (reg.selectedDates || []).forEach(d => {
+        dateCounts[d] = (dateCounts[d] || 0) + 1;
+      });
     });
-    return Array.from(booked);
+    // Kembalikan hanya tanggal yang sudah dipesan >= 2 kali
+    return Object.keys(dateCounts)
+      .filter(d => dateCounts[d] >= 2)
+      .map(d => parseInt(d));
   }, [schoolRegistrations, editingRegId]);
 
   // ── Jumlah siswa sekolah yang dipilih (dari Excel) ─────────────
