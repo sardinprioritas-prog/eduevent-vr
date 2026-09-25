@@ -496,10 +496,27 @@ export const SchoolPortal = () => {
     setPasscodeError('');
   };
 
+  const handleRequestShare = (reg) => {
+    setPendingRegAction({ type: 'share', reg });
+    setShowPasscodeModal(true);
+    setInputPasscode('');
+    setPasscodeError('');
+  };
+
   const handleVerifyPasscode = () => {
     const adminPasscode = 'ADMINVR2026';
     const reg = pendingRegAction.reg;
     
+    if (pendingRegAction.type === 'share') {
+      if (inputPasscode === adminPasscode) {
+        setShowPasscodeModal(false);
+        setShareReg(reg);
+      } else {
+        setPasscodeError('PIN Akses salah! Hanya Pioneer/Admin yang dapat membagikan jadwal (Gunakan Master PIN).');
+      }
+      return;
+    }
+
     if (inputPasscode === reg.passcode || inputPasscode === adminPasscode) {
       setShowPasscodeModal(false);
       if (pendingRegAction.type === 'edit') {
@@ -1198,15 +1215,13 @@ export const SchoolPortal = () => {
                           >
                             <Eye className="w-4 h-4" />
                           </button>
-                          {currentUser?.role === 'pioneer' && (
-                            <button
-                              onClick={() => setShareReg(reg)}
-                              className="p-1.5 rounded-lg bg-slate-800 hover:bg-blue-900/40 text-slate-300 hover:text-blue-400 transition-colors"
-                              title="Bagikan Jadwal (Pioneer Only)"
-                            >
-                              <Share2 className="w-4 h-4" />
-                            </button>
-                          )}
+                          <button
+                            onClick={() => handleRequestShare(reg)}
+                            className="p-1.5 rounded-lg bg-slate-800 hover:bg-blue-900/40 text-slate-300 hover:text-blue-400 transition-colors"
+                            title="Bagikan Jadwal (Membutuhkan Master PIN)"
+                          >
+                            <Share2 className="w-4 h-4" />
+                          </button>
                           <button
                             onClick={() => {
                               if (confirm(`Apakah Anda yakin ingin menghapus pendaftaran ${reg.schoolName}?`)) {
