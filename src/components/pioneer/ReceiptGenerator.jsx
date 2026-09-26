@@ -47,7 +47,12 @@ export const ReceiptGenerator = () => {
     if (!element) return;
     
     try {
-      const canvas = await html2canvas(element, { scale: 2 });
+      const canvas = await html2canvas(element, { 
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: null
+      });
       const imgData = canvas.toDataURL('image/png');
       const link = document.createElement('a');
       link.href = imgData;
@@ -168,7 +173,12 @@ export const ReceiptGenerator = () => {
           
           <button 
             onClick={handleDownloadPng}
-            className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-medium transition-colors"
+            disabled={!isVerified}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+              !isVerified 
+                ? 'bg-slate-800 text-slate-600 cursor-not-allowed border border-slate-700' 
+                : 'bg-slate-700 hover:bg-slate-600 text-white'
+            }`}
           >
             <Printer className="w-4 h-4" />
             Cetak PNG
