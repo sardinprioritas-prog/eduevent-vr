@@ -255,17 +255,14 @@ export const ReceiptGenerator = () => {
               </div>
             </div>
 
-            {/* Spacer to push footer to bottom if needed, or just let it flow */}
-            <div className="flex-1"></div>
-
             {/* Footer section */}
-            <div className="flex justify-between items-end pb-0">
+            <div className="flex justify-between items-start mt-4 pb-0">
               {/* Signature Area */}
               <div>
                 <p className="mb-0.5 text-[11px]">Management</p>
                 <p className="font-bold text-[11px] mb-0.5">Triesakti Edutainment,</p>
-                <div className="relative mt-0.5">
-                  <img src="/signature-stamp.png" alt="Signature and Stamp" className="w-24 h-14 object-contain" />
+                <div className="relative mt-1">
+                  <img src="/signature-stamp.png" alt="Signature and Stamp" className="w-44 object-contain" />
                 </div>
               </div>
 
