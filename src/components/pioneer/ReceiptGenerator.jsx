@@ -172,7 +172,7 @@ export const ReceiptGenerator = () => {
             <div className="absolute inset-0 bg-[#4271c7]" style={{ clipPath: 'polygon(45% 0%, 100% 0%, 100% 100%, 20% 100%)', opacity: 0.8 }}></div>
           </div>
 
-          <div className="px-12 pt-8 pb-6 relative z-10 flex flex-col h-full">
+          <div className="px-12 pt-8 pb-10 relative z-10 flex flex-col h-full">
             
             {/* Header Content */}
             <div className="flex items-center mb-4">
@@ -259,13 +259,13 @@ export const ReceiptGenerator = () => {
             <div className="flex-1"></div>
 
             {/* Footer section */}
-            <div className="flex justify-between items-end pb-2">
+            <div className="flex justify-between items-end pb-4">
               {/* Signature Area */}
               <div>
                 <p className="mb-1 text-xs">Management</p>
                 <p className="font-bold text-xs mb-1">Triesakti Edutainment,</p>
                 <div className="relative mt-1">
-                  <img src="/signature-stamp.png" alt="Signature and Stamp" className="w-40 object-contain" />
+                  <img src="/signature-stamp.png" alt="Signature and Stamp" className="w-32 object-contain" />
                 </div>
               </div>
 
