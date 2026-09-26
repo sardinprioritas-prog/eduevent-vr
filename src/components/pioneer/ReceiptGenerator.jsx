@@ -77,7 +77,7 @@ export const ReceiptGenerator = () => {
     }
   };
 
-  const qrData = `Nama Sekolah: ${formData.namaSekolah}, Nama PIC: ${formData.namaPic}`;
+  const qrData = `Nama Sekolah: ${formData.namaSekolah}\nNama PIC: ${formData.namaPic}\nJumlah Siswa: ${formData.jumlahSiswa}\nNominal Pembayaran: Rp ${totalPembayaran > 0 ? totalPembayaran.toLocaleString('id-ID') : '0'}`;
 
   return (
     <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden print-container">
