@@ -18,6 +18,13 @@ const terbilang = (angka) => {
   return '';
 };
 
+const formatDate = (dateString) => {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+  return date.toLocaleDateString('id-ID', options).toUpperCase();
+};
+
 export const ReceiptGenerator = () => {
   const [formData, setFormData] = useState({
     tanggal: '',
@@ -103,7 +110,7 @@ export const ReceiptGenerator = () => {
           <div>
             <label className="block text-sm font-medium text-slate-400 mb-1">Tanggal Kegiatan</label>
             <input 
-              type="text" 
+              type="date" 
               name="tanggal"
               value={formData.tanggal}
               onChange={handleInputChange}
@@ -219,7 +226,7 @@ export const ReceiptGenerator = () => {
             <div className="space-y-1 mb-2 text-[13px] font-medium text-slate-800">
               <div className="grid grid-cols-[200px_auto]">
                 <div>Hari / Tanggal</div>
-                <div>: {formData.tanggal ? formData.tanggal : <span className="text-transparent border-b border-slate-400 inline-block w-64">___</span>}</div>
+                <div>: {formData.tanggal ? formatDate(formData.tanggal) : <span className="text-transparent border-b border-slate-400 inline-block w-64">___</span>}</div>
               </div>
               <div className="grid grid-cols-[200px_auto]">
                 <div>Sekolah</div>
@@ -292,7 +299,7 @@ export const ReceiptGenerator = () => {
               <div>
                 <p className="mb-0.5 text-[11px]">Management</p>
                 <p className="font-bold text-[11px] mb-0.5">Triesakti Edutainment,</p>
-                <div className="relative -mt-2">
+                <div className="relative mt-0.5">
                   <img src="/signature-stamp.png" alt="Signature and Stamp" className="w-44 object-contain" />
                 </div>
               </div>
