@@ -50,7 +50,6 @@ export const ReceiptGenerator = () => {
       const canvas = await html2canvas(element, { 
         scale: 2,
         useCORS: true,
-        allowTaint: true,
         backgroundColor: null
       });
       const imgData = canvas.toDataURL('image/png');
@@ -177,7 +176,7 @@ export const ReceiptGenerator = () => {
             className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
               !isVerified 
                 ? 'bg-slate-800 text-slate-600 cursor-not-allowed border border-slate-700' 
-                : 'bg-slate-700 hover:bg-slate-600 text-white'
+                : 'bg-blue-600 hover:bg-blue-700 text-white shadow-md'
             }`}
           >
             <Printer className="w-4 h-4" />
