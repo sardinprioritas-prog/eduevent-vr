@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Printer, CheckCircle, Building2, Phone } from 'lucide-react';
+import html2canvas from 'html2canvas';
 
 const terbilang = (angka) => {
   if (angka === 0) return '';
@@ -41,8 +42,20 @@ export const ReceiptGenerator = () => {
     setIsVerified(true);
   };
 
-  const handlePrint = () => {
-    window.print();
+  const handleDownloadPng = async () => {
+    const element = document.getElementById('receipt-print-area');
+    if (!element) return;
+    
+    try {
+      const canvas = await html2canvas(element, { scale: 2 });
+      const imgData = canvas.toDataURL('image/png');
+      const link = document.createElement('a');
+      link.href = imgData;
+      link.download = `Nota_Laporan_${formData.tanggal ? formData.tanggal.replace(/\s+/g, '_') : 'Kegiatan'}.png`;
+      link.click();
+    } catch (error) {
+      console.error("Gagal membuat PNG:", error);
+    }
   };
 
   const qrData = `Nama Sekolah: ${formData.namaSekolah}, Nama PIC: ${formData.namaPic}`;
@@ -154,17 +167,17 @@ export const ReceiptGenerator = () => {
           </button>
           
           <button 
-            onClick={handlePrint}
+            onClick={handleDownloadPng}
             className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-medium transition-colors"
           >
             <Printer className="w-4 h-4" />
-            Cetak PDF / Print
+            Cetak PNG
           </button>
         </div>
       </div>
 
       <div className="bg-slate-300 p-4 sm:p-8 overflow-auto no-print flex justify-center">
-        <div className="w-[210mm] h-[148.5mm] bg-white text-black shadow-2xl relative print-area overflow-hidden flex-shrink-0" style={{ transform: 'scale(0.95)', transformOrigin: 'top center' }}>
+        <div id="receipt-print-area" className="w-[210mm] h-[148.5mm] bg-white text-black shadow-2xl relative print-area overflow-hidden flex-shrink-0" style={{ transform: 'scale(0.95)', transformOrigin: 'top center' }}>
           {/* Header Decorations */}
           <div className="absolute top-0 left-0 right-0 h-3 bg-[#51a8d8]"></div>
           <div className="absolute top-0 right-0" style={{ width: '300px', height: '60px' }}>
@@ -261,7 +274,7 @@ export const ReceiptGenerator = () => {
               <div>
                 <p className="mb-0.5 text-[11px]">Management</p>
                 <p className="font-bold text-[11px] mb-0.5">Triesakti Edutainment,</p>
-                <div className="relative mt-1">
+                <div className="relative -mt-2">
                   <img src="/signature-stamp.png" alt="Signature and Stamp" className="w-44 object-contain" />
                 </div>
               </div>
