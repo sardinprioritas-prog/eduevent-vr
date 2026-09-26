@@ -172,22 +172,22 @@ export const ReceiptGenerator = () => {
             <div className="absolute inset-0 bg-[#4271c7]" style={{ clipPath: 'polygon(45% 0%, 100% 0%, 100% 100%, 20% 100%)', opacity: 0.8 }}></div>
           </div>
 
-          <div className="px-12 pt-8 pb-10 relative z-10 flex flex-col h-full">
+          <div className="px-12 pt-6 pb-12 relative z-10 flex flex-col h-full">
             
             {/* Header Content */}
-            <div className="flex items-center mb-4">
-              <img src="/logo-header.png" alt="Logo Triesakti" className="h-14 object-contain" />
+            <div className="flex items-center mb-2">
+              <img src="/logo-header.png" alt="Logo Triesakti" className="h-12 object-contain" />
             </div>
 
-            <div className="text-center mb-3">
-              <h2 className="text-lg font-medium text-slate-700 leading-tight">LAPORAN KEGIATAN</h2>
-              <h2 className="text-lg font-medium text-slate-700 leading-tight">OUTING CLASS VIRTUAL REALITY</h2>
+            <div className="text-center mb-2">
+              <h2 className="text-base font-bold text-slate-700 leading-tight">LAPORAN KEGIATAN</h2>
+              <h2 className="text-base font-bold text-slate-700 leading-tight">OUTING CLASS VIRTUAL REALITY</h2>
             </div>
             
-            <div className="w-full border-b border-slate-500 mb-3"></div>
+            <div className="w-full border-b border-slate-500 mb-2"></div>
 
             {/* Details section */}
-            <div className="space-y-1 mb-4 text-[14px] font-medium text-slate-800">
+            <div className="space-y-1 mb-2 text-[13px] font-medium text-slate-800">
               <div className="grid grid-cols-[200px_auto]">
                 <div>Hari / Tanggal</div>
                 <div>: {formData.tanggal ? formData.tanggal : <span className="text-transparent border-b border-slate-400 inline-block w-64">___</span>}</div>
@@ -207,7 +207,7 @@ export const ReceiptGenerator = () => {
             </div>
 
             {/* Table and School Box section */}
-            <div className="flex gap-4 mb-4 items-start">
+            <div className="flex gap-4 mb-2 items-start">
               {/* Table */}
               <div className="w-7/12 flex flex-col">
                 <div className="border border-slate-800 flex flex-col">
@@ -217,19 +217,19 @@ export const ReceiptGenerator = () => {
                     <div className="py-2 px-1 font-medium">Total Pembayaran</div>
                   </div>
                   <div className="grid grid-cols-3 text-center items-center">
-                    <div className="py-4 px-1 border-r border-slate-800 text-lg font-bold min-h-[60px] flex items-center justify-center">
+                    <div className="py-2 px-1 border-r border-slate-800 text-lg font-bold min-h-[50px] flex items-center justify-center">
                       {formData.jumlahSiswa}
                     </div>
-                    <div className="py-4 px-1 border-r border-slate-800 text-md min-h-[60px] flex items-center justify-center">
+                    <div className="py-2 px-1 border-r border-slate-800 text-sm min-h-[50px] flex items-center justify-center">
                       Rp20.000,-
                     </div>
-                    <div className="py-4 px-3 text-lg font-bold text-left min-h-[60px] flex items-center whitespace-nowrap">
+                    <div className="py-2 px-2 text-lg font-bold text-left min-h-[50px] flex items-center whitespace-nowrap">
                       Rp {totalPembayaran > 0 ? totalPembayaran.toLocaleString('id-ID') : ''}
                     </div>
                   </div>
                 </div>
                 {/* Terbilang Section */}
-                <div className="mt-2 bg-slate-100 p-2 rounded border border-slate-200 text-xs italic text-slate-700">
+                <div className="mt-1 bg-slate-100 p-1.5 rounded border border-slate-200 text-[11px] italic text-slate-700">
                   <span className="font-semibold not-italic">Terbilang: </span>
                   {totalPembayaran > 0 ? `(${terbilang(totalPembayaran).trim().replace(/\s+/g, ' ')} rupiah)` : ''}
                 </div>
@@ -237,11 +237,11 @@ export const ReceiptGenerator = () => {
 
               {/* School Verification Box */}
               <div className="w-5/12 border border-slate-800 p-2 flex flex-col">
-                <div className="text-center text-xs font-medium mb-1">atas nama pihak sekolah,</div>
-                <div className="flex-1 flex flex-col items-center justify-center min-h-[80px]">
+                <div className="text-center text-[11px] font-medium mb-1">atas nama pihak sekolah,</div>
+                <div className="flex-1 flex flex-col items-center justify-center min-h-[65px]">
                   {isVerified ? (
                     <div className="flex flex-col items-center">
-                      <img src={qrUrl} alt="QR Code" className="w-16 h-16" crossOrigin="anonymous" />
+                      <img src={qrUrl} alt="QR Code" className="w-12 h-12" crossOrigin="anonymous" />
                       <div className="text-emerald-700 font-bold text-[10px] tracking-widest mt-1">APPROVED</div>
                     </div>
                   ) : (
@@ -259,18 +259,18 @@ export const ReceiptGenerator = () => {
             <div className="flex-1"></div>
 
             {/* Footer section */}
-            <div className="flex justify-between items-end pb-4">
+            <div className="flex justify-between items-end pb-0">
               {/* Signature Area */}
               <div>
-                <p className="mb-1 text-xs">Management</p>
-                <p className="font-bold text-xs mb-1">Triesakti Edutainment,</p>
-                <div className="relative mt-1">
-                  <img src="/signature-stamp.png" alt="Signature and Stamp" className="w-32 object-contain" />
+                <p className="mb-0.5 text-[11px]">Management</p>
+                <p className="font-bold text-[11px] mb-0.5">Triesakti Edutainment,</p>
+                <div className="relative mt-0.5">
+                  <img src="/signature-stamp.png" alt="Signature and Stamp" className="w-24 h-14 object-contain" />
                 </div>
               </div>
 
               {/* Contact Info Area */}
-              <div className="space-y-2 text-[11px] font-medium text-slate-700 max-w-[250px]">
+              <div className="space-y-1.5 text-[10px] font-medium text-slate-700 max-w-[250px]">
                 <div className="flex items-start gap-2">
                   <div className="mt-0.5"><Building2 className="w-4 h-4 text-slate-800" /></div>
                   <div className="leading-tight">Jl. Arung Teko, Building Corner Griya Angkasa<br/>No. 1A – Sudiang, Makassar</div>
