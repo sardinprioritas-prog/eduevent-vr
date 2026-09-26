@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Printer, CheckCircle, Building2, Phone } from 'lucide-react';
+import { Printer, CheckCircle, Building2, Phone, RotateCcw } from 'lucide-react';
 import { toPng } from 'html-to-image';
 import QRCode from 'react-qr-code';
 
@@ -49,6 +49,19 @@ export const ReceiptGenerator = () => {
   const handleVerify = () => {
     setIsVerified(true);
   };
+
+  const handleClear = () => {
+    setFormData({
+      tanggal: '',
+      namaSekolah: '',
+      namaPic: '',
+      noHp: '',
+      jumlahSiswa: ''
+    });
+    setIsVerified(false);
+  };
+
+  const isFormComplete = formData.tanggal && formData.namaSekolah && formData.namaPic && formData.noHp && formData.jumlahSiswa;
 
   const handleDownloadPng = async () => {
     const element = document.getElementById('receipt-print-area');
@@ -170,14 +183,16 @@ export const ReceiptGenerator = () => {
           </div>
         </div>
 
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-3">
           <button 
             onClick={handleVerify}
-            disabled={isVerified}
+            disabled={isVerified || !isFormComplete}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
               isVerified 
                 ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/50 cursor-not-allowed'
-                : 'bg-indigo-600 hover:bg-indigo-700 text-white'
+                : !isFormComplete
+                  ? 'bg-slate-800 text-slate-600 cursor-not-allowed border border-slate-700'
+                  : 'bg-indigo-600 hover:bg-indigo-700 text-white'
             }`}
           >
             <CheckCircle className="w-4 h-4" />
@@ -195,6 +210,14 @@ export const ReceiptGenerator = () => {
           >
             <Printer className="w-4 h-4" />
             Cetak PNG
+          </button>
+
+          <button 
+            onClick={handleClear}
+            className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg font-medium transition-colors border border-slate-700"
+          >
+            <RotateCcw className="w-4 h-4" />
+            Clear Nota
           </button>
         </div>
       </div>
