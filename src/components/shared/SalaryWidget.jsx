@@ -1,9 +1,10 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useAuth } from '../../context/useAuth';
-import { Wallet, TrendingUp, Target, Award } from 'lucide-react';
+import { Wallet, TrendingUp, Target, Award, Eye, EyeOff } from 'lucide-react';
 
 export const SalaryWidget = ({ role = 'operator' }) => {
   const { events, currentUser, salarySettings, payouts } = useAuth();
+  const [isVisible, setIsVisible] = useState(true);
 
   const { fee, bonus, totalParticipating, uniqueEventDays, qualifyingDays } = useMemo(() => {
     // 1. Dapatkan setting fee personal untuk currentUser
@@ -96,7 +97,16 @@ export const SalaryWidget = ({ role = 'operator' }) => {
             <Wallet className="w-5 h-5" />
           </div>
           <div>
-            <h2 className="text-lg font-bold text-slate-100">Estimasi Fee Mingguan</h2>
+            <div className="flex items-center gap-2">
+              <h2 className="text-lg font-bold text-slate-100">Estimasi Fee Mingguan</h2>
+              <button 
+                onClick={() => setIsVisible(!isVisible)}
+                className="text-slate-400 hover:text-slate-200 transition-colors p-1 rounded-md hover:bg-slate-800"
+                title={isVisible ? "Sembunyikan Nilai" : "Tampilkan Nilai"}
+              >
+                {isVisible ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
             <p className="text-xs text-slate-400">Total akumulasi fee belum cair di wilayah {currentUser?.city || 'Anda'}</p>
           </div>
         </div>
@@ -119,7 +129,7 @@ export const SalaryWidget = ({ role = 'operator' }) => {
             Total Siswa
           </div>
           <div className="text-2xl font-bold text-slate-100">
-            {totalParticipating.toLocaleString('id-ID')}
+            {isVisible ? totalParticipating.toLocaleString('id-ID') : '••••••'}
           </div>
         </div>
 
@@ -130,7 +140,7 @@ export const SalaryWidget = ({ role = 'operator' }) => {
             Base Fee (Rp {fee})
           </div>
           <div className="text-xl font-bold text-slate-200">
-            Rp {baseSalary.toLocaleString('id-ID')}
+            {isVisible ? `Rp ${baseSalary.toLocaleString('id-ID')}` : 'Rp ••••••'}
           </div>
         </div>
 
@@ -146,7 +156,7 @@ export const SalaryWidget = ({ role = 'operator' }) => {
             </span>
           </div>
           <div className={`text-xl font-bold mt-2 ${isBonusAchieved ? 'text-emerald-400' : 'text-slate-500'}`}>
-            + Rp {bonusSalary.toLocaleString('id-ID')}
+            {isVisible ? `+ Rp ${bonusSalary.toLocaleString('id-ID')}` : '+ Rp ••••••'}
           </div>
         </div>
 
@@ -156,7 +166,7 @@ export const SalaryWidget = ({ role = 'operator' }) => {
             Total Estimasi
           </div>
           <div className="text-2xl font-bold text-emerald-400">
-            Rp {totalSalary.toLocaleString('id-ID')}
+            {isVisible ? `Rp ${totalSalary.toLocaleString('id-ID')}` : 'Rp ••••••'}
           </div>
         </div>
 
