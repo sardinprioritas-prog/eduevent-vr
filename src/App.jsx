@@ -20,6 +20,7 @@ import { LandingPage } from './components/LandingPage';
 import { SchoolPortal } from './components/school/SchoolPortal';
 import { Login } from './components/auth/Login';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
+import { ReceiptGenerator } from './components/pioneer/ReceiptGenerator';
 import { MapPin, Loader2 } from 'lucide-react';
 
 const DashboardLayout = ({ role, children }) => {
@@ -166,6 +167,7 @@ const PioneerView = () => {
       <SalaryWidget role="pioneer" />
       <SchoolManagement />
       <InputHistoryTable readOnly={true} />
+      <ReceiptGenerator />
       <PayoutHistoryTable />
     </div>
   );
