@@ -55,8 +55,12 @@ export const Login = ({ role }) => {
 
       <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-8 shadow-2xl animate-fadeIn">
         <div className="flex flex-col items-center mb-8">
-          <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-4 bg-${rc.color}-500/20 border border-${rc.color}-500/30 shadow-[0_0_15px_rgba(0,0,0,0.5)] shadow-${rc.color}-500/20`}>
-            {rc.icon}
+          <div className="w-24 h-24 mb-4 flex items-center justify-center animate-fadeIn">
+            <img 
+              src="/logo-eduevent.png" 
+              alt="EduEvent Logo" 
+              className={`w-full h-full object-contain drop-shadow-[0_0_15px_rgba(var(--color-${rc.color}-500),0.3)]`}
+            />
           </div>
           <h2 className="text-2xl font-bold text-white">{rc.title}</h2>
           <p className="text-slate-400 text-sm mt-2 text-center">
