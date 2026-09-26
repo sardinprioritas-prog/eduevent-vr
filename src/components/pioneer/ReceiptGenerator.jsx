@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Printer, CheckCircle, Building2, Phone } from 'lucide-react';
-import html2canvas from 'html2canvas';
+import { toPng } from 'html-to-image';
+import QRCode from 'react-qr-code';
 
 const terbilang = (angka) => {
   if (angka === 0) return '';
@@ -47,12 +48,19 @@ export const ReceiptGenerator = () => {
     if (!element) return;
     
     try {
-      const canvas = await html2canvas(element, { 
-        scale: 2,
-        useCORS: true,
-        backgroundColor: null
+      // Temporarily remove CSS transform to avoid cropped or low-res images
+      const originalTransform = element.style.transform;
+      element.style.transform = 'none';
+
+      const imgData = await toPng(element, { 
+        quality: 1.0,
+        pixelRatio: 3,
+        backgroundColor: '#ffffff'
       });
-      const imgData = canvas.toDataURL('image/png');
+      
+      // Restore transform
+      element.style.transform = originalTransform;
+      
       const link = document.createElement('a');
       link.href = imgData;
       link.download = `Nota_Laporan_${formData.tanggal ? formData.tanggal.replace(/\s+/g, '_') : 'Kegiatan'}.png`;
@@ -63,7 +71,6 @@ export const ReceiptGenerator = () => {
   };
 
   const qrData = `Nama Sekolah: ${formData.namaSekolah}, Nama PIC: ${formData.namaPic}`;
-  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(qrData)}`;
 
   return (
     <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden print-container">
@@ -263,7 +270,9 @@ export const ReceiptGenerator = () => {
                 <div className="flex-1 flex flex-col items-center justify-center min-h-[65px]">
                   {isVerified ? (
                     <div className="flex flex-col items-center">
-                      <img src={qrUrl} alt="QR Code" className="w-12 h-12" crossOrigin="anonymous" />
+                      <div className="p-1 bg-white">
+                        <QRCode value={qrData} size={48} />
+                      </div>
                       <div className="text-emerald-700 font-bold text-[10px] tracking-widest mt-1">APPROVED</div>
                     </div>
                   ) : (
