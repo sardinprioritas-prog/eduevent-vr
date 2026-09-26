@@ -160,14 +160,8 @@ export const ReceiptGenerator = () => {
           <div className="px-16 pt-16 pb-12 relative z-10 flex flex-col min-h-[297mm]">
             
             {/* Header Content */}
-            <div className="flex items-center mb-8 gap-4">
-              <div className="w-16 h-16 rounded-full border-4 border-[#3157a3] flex items-center justify-center p-1">
-                 <img src="/logo-eduevent.png" alt="Logo" className="w-full h-full object-contain" />
-              </div>
-              <div>
-                <h1 className="text-3xl font-black text-slate-800 tracking-wider">TRI<span className="text-[#51a8d8]">e</span>SAKTI</h1>
-                <p className="text-md tracking-[0.2em] text-slate-500 uppercase">Edutainment</p>
-              </div>
+            <div className="flex items-center mb-8">
+              <img src="/logo-header.png" alt="Logo Triesakti" className="h-20 object-contain" />
             </div>
 
             <div className="text-center mb-6">
@@ -247,21 +241,9 @@ export const ReceiptGenerator = () => {
               {/* Signature Area */}
               <div>
                 <p className="mb-1 text-sm">Management</p>
-                <p className="font-bold text-sm mb-12">Triesakti Edutainment,</p>
-                <div className="relative inline-block mt-4">
-                  <div className="relative z-10 w-48 text-center border-b border-black">
-                    {/* Simulated signature text */}
-                    <span className="font-black text-2xl" style={{ fontFamily: 'cursive', letterSpacing: '-1px' }}>Sardin Damis</span>
-                  </div>
-                  <div className="font-bold mt-1 text-center">Sardin Damis</div>
-
-                  {/* Stamp Graphic Simulation */}
-                  <div className="absolute top-[-50px] left-[-30px] w-28 h-28 border-4 border-[#3157a3] rounded-full opacity-40 rotate-[-15deg] flex flex-col items-center justify-center bg-transparent pointer-events-none">
-                     <div className="text-[9px] font-black text-[#3157a3]">TRIESAKTI</div>
-                     <div className="w-full border-t border-[#3157a3] my-1"></div>
-                     <div className="text-[9px] font-bold text-[#3157a3]">EDUTAINMENT</div>
-                     <div className="text-[7px] text-[#3157a3] mt-1">VR TECH</div>
-                  </div>
+                <p className="font-bold text-sm mb-2">Triesakti Edutainment,</p>
+                <div className="relative mt-2">
+                  <img src="/signature-stamp.png" alt="Signature and Stamp" className="w-48 object-contain" />
                 </div>
               </div>
 
