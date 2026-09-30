@@ -57,6 +57,10 @@ import {
   sbSaveSchoolRegistration as sbSaveSchoolReg,
   sbDeleteSchoolRegistration as sbDeleteSchoolReg,
   subscribeToSchoolRegistrations,
+  sbGetDateLocks,
+  sbSaveDateLock,
+  sbDeleteDateLock,
+  subscribeToDateLocks,
 } from '../services/supabaseService';
 
 
@@ -78,6 +82,7 @@ export const AuthProvider = ({ children }) => {
   const [toast, setToast]               = useState(null);
   const [kadinCity, setKadinCity]       = useState('Bone');
   const [schoolRegistrations, setSchoolRegistrations] = useState([]);
+  const [dateLocks, setDateLocks] = useState([]);
 
   // Supabase sync state
   const [isOnline, setIsOnline]         = useState(false);
@@ -126,7 +131,7 @@ export const AuthProvider = ({ children }) => {
 
     if (isSupabaseConfigured) {
       try {
-        const [loadedCities, loadedUsers, loadedEvents, loadedSchools, loadedSalarySettings, loadedPayouts, loadedFinances, loadedSchoolRegs] = await Promise.all([
+        const [loadedCities, loadedUsers, loadedEvents, loadedSchools, loadedSalarySettings, loadedPayouts, loadedFinances, loadedSchoolRegs, loadedDateLocks] = await Promise.all([
           sbGetCities(),
           sbGetUsers(),
           sbGetEvents(),
@@ -135,6 +140,7 @@ export const AuthProvider = ({ children }) => {
           sbGetPayouts(),
           sbGetFinances(),
           sbGetSchoolRegistrations(),
+          sbGetDateLocks().catch(() => []),
         ]);
 
         setCities(loadedCities);
@@ -145,6 +151,7 @@ export const AuthProvider = ({ children }) => {
         setPayouts(loadedPayouts);
         setFinances(loadedFinances);
         setSchoolRegistrations(loadedSchoolRegs);
+        setDateLocks(loadedDateLocks);
         setIsOnline(true);
         setDbMode('supabase');
 
@@ -235,11 +242,17 @@ export const AuthProvider = ({ children }) => {
         setSchoolRegistrations(newRegs);
       });
 
+      // Realtime untuk date_locks agar portal sekolah langsung mengetahui tanggal yang dikunci
+      const unsubscribeDateLocks = subscribeToDateLocks((newLocks) => {
+        setDateLocks(newLocks);
+      });
+
       return () => {
         unsubscribeEvents();
         unsubscribePayouts();
         unsubscribeFinances();
         unsubscribeSchoolRegs();
+        unsubscribeDateLocks();
       };
     }
   }, [refreshData]);
@@ -421,6 +434,49 @@ export const AuthProvider = ({ children }) => {
     } catch (err) {
       console.error(err);
       showToast('Gagal menyimpan registrasi sekolah: ' + err.message, 'error');
+    }
+  };
+
+  // ============================================================
+  // DATE LOCK HANDLERS (Admin: Pengunci Tanggal Kegiatan)
+  // ============================================================
+  const handleSaveDateLock = async (lockData) => {
+    try {
+      if (isSupabaseConfigured && dbMode === 'supabase') {
+        const updated = await sbSaveDateLock(lockData);
+        setDateLocks(updated);
+      } else {
+        // Fallback local (tanpa persistence jika offline)
+        setDateLocks(prev => {
+          const exists = prev.find(l => l.id === lockData.id);
+          if (exists) return prev.map(l => l.id === lockData.id ? { ...l, ...lockData } : l);
+          return [...prev, { ...lockData, id: `dlk-${Date.now()}` }];
+        });
+      }
+      showToast(
+        lockData.id
+          ? 'Kunci tanggal berhasil diperbarui'
+          : `Tanggal ${lockData.day} Oktober berhasil dikunci`,
+        'success'
+      );
+    } catch (err) {
+      console.error('[handleSaveDateLock]', err);
+      showToast('Gagal menyimpan kunci tanggal: ' + err.message, 'error');
+    }
+  };
+
+  const handleDeleteDateLock = async (id) => {
+    try {
+      if (isSupabaseConfigured && dbMode === 'supabase') {
+        const updated = await sbDeleteDateLock(id);
+        setDateLocks(updated);
+      } else {
+        setDateLocks(prev => prev.filter(l => l.id !== id));
+      }
+      showToast('Kunci tanggal berhasil dibuka', 'warning');
+    } catch (err) {
+      console.error('[handleDeleteDateLock]', err);
+      showToast('Gagal membuka kunci tanggal: ' + err.message, 'error');
     }
   };
 
@@ -722,6 +778,9 @@ export const AuthProvider = ({ children }) => {
         schoolRegistrations,
         handleSaveSchoolRegistration,
         handleDeleteSchoolRegistration,
+        dateLocks,
+        handleSaveDateLock,
+        handleDeleteDateLock,
       }}
     >
       {children}

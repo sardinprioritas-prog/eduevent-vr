@@ -597,3 +597,102 @@ export const subscribeToSchoolRegistrations = (callback) => {
 
   return () => supabase.removeChannel(channel);
 };
+
+// ============================================================
+// DATE LOCKS API (Pengunci Tanggal oleh Admin)
+// ============================================================
+
+/**
+ * Transformasi row Supabase (snake_case) → format app (camelCase)
+ */
+const toAppDateLock = (row) => ({
+  id: row.id,
+  day: row.day,
+  month: row.month,
+  year: row.year,
+  schoolName: row.school_name || null,
+  regId: row.reg_id || null,
+  note: row.note || '',
+  lockedBy: row.locked_by || null,
+  createdAt: row.created_at,
+  updatedAt: row.updated_at,
+});
+
+/**
+ * Transformasi format app (camelCase) → Supabase row (snake_case)
+ */
+const toDbDateLock = (lock) => ({
+  id: lock.id,
+  day: lock.day,
+  month: lock.month ?? 10,
+  year: lock.year ?? 2026,
+  school_name: lock.schoolName || null,
+  reg_id: lock.regId || null,
+  note: lock.note || null,
+  locked_by: lock.lockedBy || null,
+  updated_at: new Date().toISOString(),
+});
+
+/**
+ * Ambil semua date locks dari Supabase
+ */
+export const sbGetDateLocks = async () => {
+  const { data, error } = await supabase
+    .from('date_locks')
+    .select('*')
+    .order('day', { ascending: true });
+
+  if (error) throw error;
+  return data.map(toAppDateLock);
+};
+
+/**
+ * Simpan (create/update) sebuah date lock.
+ * Jika lock.id ada → UPDATE, jika tidak → INSERT.
+ */
+export const sbSaveDateLock = async (lock) => {
+  const dbData = toDbDateLock(lock);
+  if (!lock.id) {
+    dbData.id = `dlk-${Date.now()}`;
+  }
+  const { error } = await supabase
+    .from('date_locks')
+    .upsert(dbData, { onConflict: 'id' });
+
+  if (error) throw error;
+  return sbGetDateLocks();
+};
+
+/**
+ * Hapus sebuah date lock berdasarkan id
+ */
+export const sbDeleteDateLock = async (id) => {
+  const { error } = await supabase.from('date_locks').delete().eq('id', id);
+  if (error) throw error;
+  return sbGetDateLocks();
+};
+
+/**
+ * Berlangganan realtime changes pada tabel date_locks.
+ * Setiap admin mengunci/membuka tanggal, semua portal sekolah
+ * yang sedang terbuka akan langsung diperbarui.
+ */
+export const subscribeToDateLocks = (callback) => {
+  const channel = supabase
+    .channel('date-locks-realtime')
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'date_locks' },
+      async () => {
+        try {
+          const locks = await sbGetDateLocks();
+          callback(locks);
+        } catch (err) {
+          console.warn('[Supabase Realtime] Gagal refresh date_locks:', err);
+        }
+      }
+    )
+    .subscribe();
+
+  return () => supabase.removeChannel(channel);
+};

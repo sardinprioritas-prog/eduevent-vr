@@ -115,6 +115,8 @@ const OctoberCalendar = ({
   onSelectDates,
   disabled,
   bookedSchoolsMap = {}, // map of day -> array of school names
+  adminLockedDates = [], // tanggal yang dikunci oleh admin
+  adminLockMap = {},     // map: day -> lock object (untuk tooltip info sekolah eksklusif)
 }) => {
   const days = useMemo(() => buildOctoberDays(), []);
   const [hoveredDay, setHoveredDay] = useState(null); // tanggal yang sedang di-hover
@@ -122,6 +124,7 @@ const OctoberCalendar = ({
   // Semua tanggal yang sudah terpesan (termasuk milik sekolah lain)
   const bookedSet = useMemo(() => new Set(bookedDates), [bookedDates]);
   const mySet = useMemo(() => new Set(myDates), [myDates]);
+  const adminLockedSet = useMemo(() => new Set(adminLockedDates), [adminLockedDates]);
 
   // Toggle tanggal: klik = tambah, klik lagi = hapus
   const handleDayClick = (day) => {
@@ -149,6 +152,7 @@ const OctoberCalendar = ({
     if (!day) return 'empty';
     if (isWeekend(day)) return 'weekend';
     if (mySet.has(day)) return 'mine';
+    if (adminLockedSet.has(day)) return 'admin-locked'; // kunci admin menang atas booked biasa
     if (bookedSet.has(day)) return 'booked';
     if (hoveredDay === day) return 'preview';
     return 'available';
@@ -172,6 +176,7 @@ const OctoberCalendar = ({
           { color: 'bg-indigo-600/80 border-indigo-500', label: 'Terpilih (Sekolah Ini)' },
           { color: 'bg-slate-700/60 border-slate-600 opacity-50', label: 'Sabtu / Minggu' },
           { color: 'bg-rose-900/60 border-rose-700/60', label: 'Sudah Dipesan' },
+          { color: 'bg-rose-950 border-rose-600 ring-1 ring-rose-500/40', label: '🔒 Dikunci Admin' },
           { color: 'bg-amber-500/20 border-amber-500/50', label: 'Hover' },
           { color: 'bg-slate-800/80 border-slate-700/60 hover:border-indigo-500', label: 'Tersedia' },
         ].map(({ color, label }) => (
@@ -221,6 +226,12 @@ const OctoberCalendar = ({
               colorClass = 'bg-slate-900/40 text-slate-700';
             } else if (status === 'mine') {
               colorClass = 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30 ring-2 ring-indigo-400/40';
+            } else if (status === 'admin-locked') {
+              // Dikunci oleh admin — tampilkan lebih keras dari 'booked' biasa
+              const lockInfo = adminLockMap[day];
+              colorClass = lockInfo?.schoolName
+                ? 'bg-violet-950/70 text-violet-400 ring-1 ring-violet-700/50' // eksklusif sekolah lain
+                : 'bg-rose-950 text-rose-500 ring-1 ring-rose-700/50 border border-rose-900'; // dikunci total
             } else if (status === 'booked') {
               colorClass = 'bg-rose-950/60 text-rose-700';
             } else if (status === 'preview') {
@@ -254,8 +265,15 @@ const OctoberCalendar = ({
                     : ''
                 }
               >
-                <span className={status === 'booked' ? 'line-through' : ''}>{day || ''}</span>
-                {day && schoolsHere.length > 0 && (
+                {/* Tanggal */}
+                <span className={status === 'booked' || status === 'admin-locked' ? 'line-through opacity-60' : ''}>{day || ''}</span>
+
+                {/* Kunci admin */}
+                {status === 'admin-locked' && (
+                  <span className="text-[8px] leading-none mt-0.5">🔒</span>
+                )}
+
+                {day && schoolsHere.length > 0 && status !== 'admin-locked' && (
                   <div className="mt-auto w-full flex flex-col space-y-[1px]">
                     {schoolsHere.map((sName, i) => (
                       <span key={i} className="block w-full text-[7px] leading-[9px] truncate font-normal text-center opacity-80" title={sName}>
@@ -308,6 +326,7 @@ export const SchoolPortal = () => {
     currentUser,
     handleSaveSchoolRegistration,
     handleDeleteSchoolRegistration,
+    dateLocks,
   } = useAuth();
   const location = useLocation();
   const regionName = location.state?.regionName;
@@ -364,6 +383,21 @@ export const SchoolPortal = () => {
   const isSMP = (formData.schoolName || '').toUpperCase().includes('SMP');
   const grades = isSMP ? [7, 8, 9] : [1, 2, 3, 4, 5, 6];
 
+  // ── Admin Date Locks ───────────────────────────────────────────
+  // Tanggal yang dikunci admin dan BUKAN eksklusif untuk sekolah ini
+  const adminLockedDates = useMemo(() => {
+    if (!dateLocks || dateLocks.length === 0) return [];
+    const schoolNameNorm = (formData.schoolName || '').trim().toLowerCase();
+    return dateLocks
+      .filter((lock) => {
+        if (lock.month !== 10 || lock.year !== 2026) return false;
+        // Jika lock eksklusif untuk sekolah ini → jangan blok
+        if (lock.schoolName && lock.schoolName.trim().toLowerCase() === schoolNameNorm) return false;
+        return true;
+      })
+      .map((lock) => lock.day);
+  }, [dateLocks, formData.schoolName]);
+
   // ── Map tanggal ke nama sekolah yang memesannya ─────────
   const bookedSchoolsMap = useMemo(() => {
     const map = {};
@@ -378,12 +412,15 @@ export const SchoolPortal = () => {
     return map;
   }, [schoolRegistrations, editingRegId]);
 
-  // ── Semua tanggal yang SUDAH dipesan oleh sekolah LAIN (Penuh >= 2) ─────────
+  // ── Semua tanggal yang SUDAH dipesan (Penuh >= 2) ATAU dikunci admin ─────────
   const allBookedDates = useMemo(() => {
-    return Object.keys(bookedSchoolsMap)
+    const fromBookings = Object.keys(bookedSchoolsMap)
       .filter(d => bookedSchoolsMap[d].length >= 2)
       .map(d => parseInt(d));
-  }, [bookedSchoolsMap]);
+    // Gabungkan dengan tanggal yang dikunci admin
+    const combined = new Set([...fromBookings, ...adminLockedDates]);
+    return [...combined];
+  }, [bookedSchoolsMap, adminLockedDates]);
 
   // ── Jumlah siswa sekolah yang dipilih (dari Excel) ─────────────
   const excelStudentCount = selectedSchoolData?.jumlahSiswa || 0;
@@ -1053,6 +1090,8 @@ export const SchoolPortal = () => {
                 onSelectDates={setSelectedDates}
                 disabled={false}
                 bookedSchoolsMap={bookedSchoolsMap}
+                adminLockedDates={adminLockedDates}
+                adminLockMap={Object.fromEntries((dateLocks || []).filter(l => l.month === 10 && l.year === 2026).map(l => [l.day, l]))}
               />
             </div>
           )}
