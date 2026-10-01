@@ -598,6 +598,7 @@ export const SchoolPortal = () => {
       rombelCount: parseInt(formData.rombelCount) || 1,
       classDetails: classDetails,
       totalStudents: totalStudents,
+      dapodikStudents: excelStudentCount || 0,
       selectedDates: selectedDates,
       passcode: formData.passcode,
     };

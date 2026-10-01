@@ -527,6 +527,7 @@ const toAppSchoolReg = (row) => ({
   rombelCount: row.rombel_count,
   classDetails: row.class_details || {},
   totalStudents: row.total_students,
+  dapodikStudents: row.dapodik_students || 0,
   selectedDates: row.selected_dates || [],
   passcode: row.passcode,
   createdAt: row.created_at,
@@ -548,6 +549,7 @@ const toDbSchoolReg = (reg) => ({
   rombel_count: reg.rombelCount,
   class_details: reg.classDetails || {},
   total_students: reg.totalStudents,
+  dapodik_students: reg.dapodikStudents || 0,
   selected_dates: reg.selectedDates || [],
   passcode: reg.passcode || null,
 });
