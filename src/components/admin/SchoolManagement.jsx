@@ -84,6 +84,12 @@ export const SchoolManagement = () => {
     }
     
     return matchesSearch;
+  }).sort((a, b) => {
+    // Data tanpa eventDate diletakkan di paling bawah
+    if (!a.eventDate && !b.eventDate) return 0;
+    if (!a.eventDate) return 1;
+    if (!b.eventDate) return -1;
+    return new Date(a.eventDate) - new Date(b.eventDate);
   });
 
   const resetForm = () => {
