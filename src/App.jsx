@@ -7,6 +7,7 @@ import { Toast } from './components/common/Toast';
 import { SyncIndicator } from './components/common/SyncIndicator';
 import { EventInputForm } from './components/operator/EventInputForm';
 import { InputHistoryTable } from './components/operator/InputHistoryTable';
+import { OperatorSchedule } from './components/operator/OperatorSchedule';
 import { CityManagement } from './components/admin/CityManagement';
 import { UserManagement } from './components/admin/UserManagement';
 import { SchoolManagement } from './components/admin/SchoolManagement';
@@ -147,6 +148,7 @@ const OperatorView = () => {
   return (
     <div className="space-y-8">
       <SalaryWidget role="operator" />
+      <OperatorSchedule />
       <EventInputForm
         editingEvent={editingEvent}
         onCancelEdit={() => setEditingEvent(null)}
