@@ -106,6 +106,7 @@ export const SchoolManagement = () => {
       demoDate: '',
       eventDate: '',
       eventDate2: '',
+      assignedTo: [],
       active: true,
     });
     setEditingSchool(null);
