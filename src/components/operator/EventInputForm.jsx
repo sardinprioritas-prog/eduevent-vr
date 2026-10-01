@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/useAuth';
+import { useSchoolData } from '../../hooks/useSchoolData';
 import { PlusCircle, Save, X, Calendar, MapPin, School, Clock, Users, CheckCircle, AlertTriangle } from 'lucide-react';
 
 export const EventInputForm = ({ editingEvent, onCancelEdit }) => {
   const { cities, schools, events, currentUser, handleSaveEvent } = useAuth();
+  const { schoolData } = useSchoolData();
 
   const activeCities = cities.filter((c) => {
     if (c.active === false) return false;
@@ -272,11 +274,21 @@ export const EventInputForm = ({ editingEvent, onCancelEdit }) => {
               required
               value={formData.schoolName}
               onChange={(e) => {
-                const selectedSchool = schools.find(s => s.name === e.target.value);
+                const selectedSchoolName = e.target.value;
+                const selectedSchool = schools.find(s => s.name === selectedSchoolName);
+                
+                // Cari jumlahSiswa dari file Excel (schoolData.json)
+                const excelMatched = schoolData.find(
+                  s => s.schoolName?.toLowerCase().trim() === selectedSchoolName.toLowerCase().trim()
+                );
+                
+                // Jika ketemu di Excel, gunakan jumlahSiswa Excel. Jika tidak, fallback ke studentCount (target)
+                const finalDapodik = excelMatched?.jumlahSiswa || selectedSchool?.studentCount || formData.dapodikStudents;
+
                 setFormData({ 
                   ...formData, 
-                  schoolName: e.target.value,
-                  dapodikStudents: selectedSchool ? selectedSchool.studentCount : formData.dapodikStudents
+                  schoolName: selectedSchoolName,
+                  dapodikStudents: finalDapodik
                 });
               }}
               className="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl px-4 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all appearance-none cursor-pointer"
