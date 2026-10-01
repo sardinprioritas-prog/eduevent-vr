@@ -140,7 +140,7 @@ export const OperatorSchedule = () => {
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
                 {upcoming.map((s) => (
-                  <ScheduleCard key={s.id} school={s} cities={cities} schoolData={schoolData} />
+                  <ScheduleCard key={s.id} school={s} cities={cities} schoolData={schoolData} schoolRegistrations={schoolRegistrations} />
                 ))}
               </div>
             </section>
@@ -154,7 +154,7 @@ export const OperatorSchedule = () => {
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
                 {done.map((s) => (
-                  <ScheduleCard key={s.id} school={s} cities={cities} schoolData={schoolData} dimmed />
+                  <ScheduleCard key={s.id} school={s} cities={cities} schoolData={schoolData} schoolRegistrations={schoolRegistrations} dimmed />
                 ))}
               </div>
             </section>
@@ -165,7 +165,7 @@ export const OperatorSchedule = () => {
   );
 };
 
-const ScheduleCard = ({ school, cities, schoolData = [], dimmed = false }) => {
+const ScheduleCard = ({ school, cities, schoolData = [], schoolRegistrations = [], dimmed = false }) => {
   const cityName = cities.find((c) => c.id === school.cityId)?.name || '-';
   const status = getStatus(school.eventDate, school.eventDate2);
   const isMultiDay = !!school.eventDate2;
@@ -177,6 +177,12 @@ const ScheduleCard = ({ school, cities, schoolData = [], dimmed = false }) => {
     (r) => r.schoolName?.toLowerCase().trim() === school.name?.toLowerCase().trim()
   );
   const dapodikCount = matchedSchool?.jumlahSiswa || 0;
+
+  // Ambil total siswa peserta dari pendaftaran portal sekolah
+  const reg = schoolRegistrations.find(
+    (r) => r.schoolName?.toLowerCase().trim() === school.name?.toLowerCase().trim()
+  );
+  const participatingCount = reg?.totalStudents || school.studentCount || 0;
 
   return (
     <div
@@ -209,7 +215,7 @@ const ScheduleCard = ({ school, cities, schoolData = [], dimmed = false }) => {
         <div className="flex items-center gap-2 text-[11px] text-slate-400">
           <Users className="w-3 h-3 flex-shrink-0" />
           <span>
-            <span className="font-semibold text-slate-200">{school.studentCount}</span>
+            <span className="font-semibold text-slate-200">{participatingCount}</span>
             {' '}Siswa
             {dapodikCount > 0 && (
               <span className="text-slate-500">
