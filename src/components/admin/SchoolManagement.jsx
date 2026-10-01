@@ -432,9 +432,20 @@ export const SchoolManagement = () => {
                   </td>
                   <td className="py-3 px-4 text-slate-400">
                     {s.eventDate ? (
-                      <div className="flex items-center">
-                        <Calendar className="w-3 h-3 mr-1.5 text-purple-400/70" />
-                        {s.eventDate}
+                      <div className="flex flex-col gap-1">
+                        <div className="flex items-center">
+                          <Calendar className="w-3 h-3 mr-1.5 text-purple-400/70 flex-shrink-0" />
+                          {s.eventDate}
+                          {s.eventDate2 && (
+                            <span className="ml-1.5 px-1 py-0 rounded text-[9px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30">2 Hari</span>
+                          )}
+                        </div>
+                        {s.eventDate2 && (
+                          <div className="flex items-center">
+                            <Calendar className="w-3 h-3 mr-1.5 text-purple-300/50 flex-shrink-0" />
+                            {s.eventDate2}
+                          </div>
+                        )}
                       </div>
                     ) : '-'}
                   </td>
