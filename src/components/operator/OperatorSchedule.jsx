@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import { useAuth } from '../../context/useAuth';
+import { useSchoolData } from '../../hooks/useSchoolData';
 import {
   CalendarDays, MapPin, Users, Clock, CheckCircle2,
   AlertCircle, CalendarClock, Building2, ClipboardList,
@@ -60,6 +61,7 @@ const cardBorderStyles = {
 
 export const OperatorSchedule = () => {
   const { schools, cities, currentUser, schoolRegistrations } = useAuth();
+  const { schoolData, loading: excelLoading } = useSchoolData();
 
   const mySchedule = useMemo(() => {
     const userId = currentUser?.id;
@@ -138,7 +140,7 @@ export const OperatorSchedule = () => {
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
                 {upcoming.map((s) => (
-                  <ScheduleCard key={s.id} school={s} cities={cities} schoolRegistrations={schoolRegistrations} />
+                  <ScheduleCard key={s.id} school={s} cities={cities} schoolData={schoolData} />
                 ))}
               </div>
             </section>
@@ -152,7 +154,7 @@ export const OperatorSchedule = () => {
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
                 {done.map((s) => (
-                  <ScheduleCard key={s.id} school={s} cities={cities} schoolRegistrations={schoolRegistrations} dimmed />
+                  <ScheduleCard key={s.id} school={s} cities={cities} schoolData={schoolData} dimmed />
                 ))}
               </div>
             </section>
@@ -163,18 +165,18 @@ export const OperatorSchedule = () => {
   );
 };
 
-const ScheduleCard = ({ school, cities, schoolRegistrations = [], dimmed = false }) => {
+const ScheduleCard = ({ school, cities, schoolData = [], dimmed = false }) => {
   const cityName = cities.find((c) => c.id === school.cityId)?.name || '-';
   const status = getStatus(school.eventDate, school.eventDate2);
   const isMultiDay = !!school.eventDate2;
   const borderCls = cardBorderStyles[status.color] || cardBorderStyles.slate;
   const isToday = status.color === 'amber';
 
-  // Ambil dapodikStudents dari schoolRegistrations berdasarkan nama sekolah
-  const reg = schoolRegistrations.find(
+  // Ambil jumlahSiswa dari schoolData (Excel JSON) berdasarkan nama sekolah
+  const matchedSchool = schoolData.find(
     (r) => r.schoolName?.toLowerCase().trim() === school.name?.toLowerCase().trim()
   );
-  const dapodikCount = reg?.dapodikStudents || 0;
+  const dapodikCount = matchedSchool?.jumlahSiswa || 0;
 
   return (
     <div
