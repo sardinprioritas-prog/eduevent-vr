@@ -14,7 +14,9 @@ export const PayoutHistoryTable = () => {
     if (!code) return;
 
     // Cek apakah passcode cocok dengan admin mana pun
-    const validCodes = users.filter(u => u.role === 'admin' || u.role === 'pimpinan').map(u => u.passcode);
+    const validCodes = users
+      .filter(u => u.role === 'admin' || u.role === 'pimpinan')
+      .map(u => (u.passcode || '').toString().trim().toLowerCase());
     validCodes.push('ad123', 'pim123');
 
     if (validCodes.includes(code.trim().toLowerCase())) {
