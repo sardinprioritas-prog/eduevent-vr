@@ -133,6 +133,17 @@ export const SchoolManagement = () => {
     return city ? city.name : 'Unknown';
   };
 
+  const getOperatorLabel = (assignedTo) => {
+    if (!assignedTo || (Array.isArray(assignedTo) && assignedTo.length === 0)) {
+      return { label: 'All Team', isAll: true };
+    }
+    const ids = Array.isArray(assignedTo) ? assignedTo : [assignedTo];
+    const names = ids
+      .map(id => users.find(u => u.id === id)?.name)
+      .filter(Boolean);
+    return { label: names.length > 0 ? names.join('/') : 'All Team', isAll: names.length === 0 };
+  };
+
   return (
     <div className="glass-card rounded-2xl p-6 border border-slate-800 shadow-2xl">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 mb-6 border-b border-slate-800">
@@ -336,13 +347,14 @@ export const SchoolManagement = () => {
               <th className="py-3 px-4 text-center">Jumlah Siswa</th>
               <th className="py-3 px-4">Tgl Demo</th>
               <th className="py-3 px-4">Tgl Event</th>
+              <th className="py-3 px-4">Operator</th>
               <th className="py-3 px-4 text-right">Aksi</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-800/60 text-slate-200">
             {filteredSchools.length === 0 ? (
               <tr>
-                <td colSpan="6" className="py-8 text-center text-slate-400">
+                <td colSpan="7" className="py-8 text-center text-slate-400">
                   <AlertCircle className="w-8 h-8 mx-auto mb-2 text-slate-500 opacity-50" />
                   <p>Belum ada data sekolah.</p>
                 </td>
@@ -383,6 +395,20 @@ export const SchoolManagement = () => {
                         {s.eventDate}
                       </div>
                     ) : '-'}
+                  </td>
+                  <td className="py-3 px-4">
+                    {(() => {
+                      const { label, isAll } = getOperatorLabel(s.assignedTo);
+                      return isAll ? (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                          All Team
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-500/10 text-amber-300 border border-amber-500/20 max-w-[140px] truncate" title={label}>
+                          {label}
+                        </span>
+                      );
+                    })()}
                   </td>
                   <td className="py-3 px-4 text-right">
                     <button
