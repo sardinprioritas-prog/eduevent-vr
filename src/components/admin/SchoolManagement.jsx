@@ -25,6 +25,7 @@ export const SchoolManagement = () => {
     studentCount: 0,
     demoDate: '',
     eventDate: '',
+    eventDate2: '',
     assignedTo: [],
     active: true,
   });
@@ -50,27 +51,32 @@ export const SchoolManagement = () => {
   // Handler saat sekolah dipilih dari dropdown Portal
   const handleSchoolSelect = (schoolName) => {
     if (!schoolName) {
-      setFormData(prev => ({ ...prev, name: '' }));
+      setFormData(prev => ({ ...prev, name: '', eventDate: '', eventDate2: '' }));
       return;
     }
     const reg = portalSchoolOptions.find(r => r.schoolName === schoolName);
     if (reg) {
       // Auto-fill jumlah siswa dari totalStudents Portal Sekolah
       const autoStudentCount = reg.totalStudents || 0;
-      // Auto-fill eventDate dari selectedDates Portal Sekolah (tanggal Oktober pertama → format YYYY-MM-DD)
+      // Auto-fill eventDate(s) dari selectedDates Portal Sekolah → sort ascending
       let autoEventDate = '';
+      let autoEventDate2 = '';
       if (reg.selectedDates && reg.selectedDates.length > 0) {
-        const firstDay = Math.min(...reg.selectedDates);
-        autoEventDate = `2026-10-${String(firstDay).padStart(2, '0')}`;
+        const sorted = [...reg.selectedDates].sort((a, b) => a - b);
+        autoEventDate = `2026-10-${String(sorted[0]).padStart(2, '0')}`;
+        if (sorted.length >= 2) {
+          autoEventDate2 = `2026-10-${String(sorted[1]).padStart(2, '0')}`;
+        }
       }
       setFormData(prev => ({
         ...prev,
         name: reg.schoolName,
         studentCount: autoStudentCount,
         eventDate: autoEventDate,
+        eventDate2: autoEventDate2,
       }));
     } else {
-      setFormData(prev => ({ ...prev, name: schoolName }));
+      setFormData(prev => ({ ...prev, name: schoolName, eventDate: '', eventDate2: '' }));
     }
   };
 
@@ -99,6 +105,7 @@ export const SchoolManagement = () => {
       studentCount: 0,
       demoDate: '',
       eventDate: '',
+      eventDate2: '',
       active: true,
     });
     setEditingSchool(null);
@@ -113,6 +120,7 @@ export const SchoolManagement = () => {
       studentCount: school.studentCount,
       demoDate: school.demoDate || '',
       eventDate: school.eventDate || '',
+      eventDate2: school.eventDate2 || '',
       assignedTo: Array.isArray(school.assignedTo) ? school.assignedTo : (school.assignedTo ? [school.assignedTo] : []),
       active: school.active !== false,
     });
@@ -128,6 +136,7 @@ export const SchoolManagement = () => {
       ...formData,
       demoDate: formData.demoDate || null,
       eventDate: formData.eventDate || null,
+      eventDate2: formData.eventDate2 || null,
       assignedTo: Array.isArray(formData.assignedTo) && formData.assignedTo.length > 0 ? formData.assignedTo : null,
       studentCount: parseInt(formData.studentCount) || 0,
     });
@@ -270,21 +279,47 @@ export const SchoolManagement = () => {
               />
             </div>
             <div className="lg:col-span-1">
-              <label className="block text-xs font-medium text-slate-400 mb-1 flex items-center gap-1.5">
-                Tanggal Event (Opsional)
-                {formData.name && portalSchoolOptions.find(r => r.schoolName === formData.name) && (
-                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-purple-500/15 text-purple-400 border border-purple-500/25">
-                    <Link2 className="w-2.5 h-2.5" />
-                    Auto
-                  </span>
-                )}
-              </label>
-              <input
-                type="date"
-                value={formData.eventDate}
-                onChange={(e) => setFormData({ ...formData, eventDate: e.target.value })}
-                className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-blue-500"
-              />
+              {(() => {
+                const reg = portalSchoolOptions.find(r => r.schoolName === formData.name);
+                const isAuto = !!reg;
+                const hasSecondDate = isAuto && reg.selectedDates && reg.selectedDates.length >= 2;
+                return (
+                  <>
+                    <label className="block text-xs font-medium text-slate-400 mb-1 flex items-center gap-1.5">
+                      Tanggal Event {hasSecondDate ? '1' : ''} (Opsional)
+                      {isAuto && (
+                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-purple-500/15 text-purple-400 border border-purple-500/25">
+                          <Link2 className="w-2.5 h-2.5" />
+                          Auto
+                        </span>
+                      )}
+                    </label>
+                    <input
+                      type="date"
+                      value={formData.eventDate}
+                      onChange={(e) => setFormData({ ...formData, eventDate: e.target.value })}
+                      className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-blue-500"
+                    />
+                    {hasSecondDate && (
+                      <>
+                        <label className="block text-xs font-medium text-slate-400 mt-2 mb-1 flex items-center gap-1.5">
+                          Tanggal Event 2
+                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-purple-500/15 text-purple-400 border border-purple-500/25">
+                            <Link2 className="w-2.5 h-2.5" />
+                            Auto
+                          </span>
+                        </label>
+                        <input
+                          type="date"
+                          value={formData.eventDate2}
+                          onChange={(e) => setFormData({ ...formData, eventDate2: e.target.value })}
+                          className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-blue-500"
+                        />
+                      </>
+                    )}
+                  </>
+                );
+              })()}
             </div>
             <div className="lg:col-span-1">
               <label className="block text-xs font-medium text-slate-400 mb-1">Ditugaskan Ke</label>

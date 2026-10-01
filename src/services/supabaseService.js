@@ -45,6 +45,7 @@ const toAppSchool = (row) => ({
   studentCount: row.student_count,
   demoDate: row.demo_date,
   eventDate: row.event_date,
+  eventDate2: row.event_date_2 || null,
   assignedTo: row.assigned_to || [],
   active: row.active,
   createdAt: row.created_at,
@@ -96,6 +97,7 @@ const toDbSchool = (sch) => ({
   student_count: sch.studentCount,
   demo_date: sch.demoDate || null,
   event_date: sch.eventDate || null,
+  event_date_2: sch.eventDate2 || null,
   assigned_to: sch.assignedTo || [],
   active: sch.active,
 });
