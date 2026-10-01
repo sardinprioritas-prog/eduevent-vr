@@ -338,11 +338,22 @@ export const sbSaveSchool = async (school) => {
   if (!school.id) {
     dbData.id = `sch-${Date.now()}`;
   }
-  const { error } = await supabase
+
+  let { error } = await supabase
     .from('schools')
     .upsert(dbData, { onConflict: 'id' });
 
-  if (error) throw error;
+  // Fallback: jika kolom event_date_2 belum ada di DB, coba tanpa field tersebut
+  if (error && error.message && error.message.includes('event_date_2')) {
+    const { event_date_2, ...dbDataWithout } = dbData;
+    const { error: error2 } = await supabase
+      .from('schools')
+      .upsert(dbDataWithout, { onConflict: 'id' });
+    if (error2) throw error2;
+  } else if (error) {
+    throw error;
+  }
+
   return sbGetSchools();
 };
 
