@@ -1,4 +1,4 @@
-﻿import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useAuth } from '../../context/useAuth';
 import {
   Lock,
@@ -13,7 +13,7 @@ import {
   X,
 } from 'lucide-react';
 
-// â”€â”€ Konstanta â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Konstanta ────────────────────────────────────────────────────
 const CALENDAR_CONFIG = {
   october:  { year: 2026, month: 9,  totalDays: 31, label: 'Oktober 2026',  dbMonth: 10 },
   november: { year: 2026, month: 10, totalDays: 30, label: 'November 2026', dbMonth: 11 },
@@ -33,7 +33,7 @@ const isWeekendIn = (day, year, month) => {
   return dow === 0 || dow === 6;
 };
 
-// â”€â”€ Komponen Kalender Admin â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Komponen Kalender Admin ──────────────────────────────────────
 const AdminMonthCalendar = ({ calKey, lockMap, bookedSchoolsMap, onDayClick }) => {
   const cfg = CALENDAR_CONFIG[calKey];
   const days = useMemo(() => buildMonthDays(cfg.year, cfg.month, cfg.totalDays), [cfg.year, cfg.month, cfg.totalDays]);
@@ -58,7 +58,7 @@ const AdminMonthCalendar = ({ calKey, lockMap, bookedSchoolsMap, onDayClick }) =
       <div className={`flex items-center justify-center gap-2 p-4 ${headerBg} border-b border-slate-800`}>
         <Calendar className={`w-4 h-4 ${iconColor}`} />
         <span className={`text-sm font-bold ${headerText}`}>
-          {cfg.label} â€” Manajemen Kunci Tanggal
+          {cfg.label} - Manajemen Kunci Tanggal
         </span>
       </div>
 
@@ -135,7 +135,7 @@ const AdminMonthCalendar = ({ calKey, lockMap, bookedSchoolsMap, onDayClick }) =
   );
 };
 
-// â”€â”€ Komponen Utama â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Komponen Utama ───────────────────────────────────────────────
 export const DateLockManagement = () => {
   const {
     dateLocks,
@@ -307,8 +307,8 @@ export const DateLockManagement = () => {
         <Info className="w-4 h-4 text-blue-400 shrink-0 mt-0.5" />
         <div className="text-xs text-blue-300/90 leading-relaxed space-y-1">
           <p><strong className="text-blue-200">Klik tanggal</strong> di kalender untuk mengunci / mengedit / membuka kunci.</p>
-          <p>ðŸ”´ <strong>Dikunci Total</strong> â€” tidak ada sekolah yang bisa memilih tanggal ini.</p>
-          <p>ðŸŸ£ <strong>Eksklusif</strong> â€” hanya sekolah yang ditunjuk yang bisa memilih tanggal ini.</p>
+          <p>• <strong>Dikunci Total</strong> : tidak ada sekolah yang bisa memilih tanggal ini.</p>
+          <p>• <strong>Eksklusif</strong> : hanya sekolah yang ditunjuk yang bisa memilih tanggal ini.</p>
           <p>Gunakan <strong className="text-blue-200">tab bulan</strong> di atas untuk beralih antara Oktober dan November.</p>
         </div>
       </div>
