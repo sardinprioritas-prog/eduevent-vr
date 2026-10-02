@@ -78,22 +78,48 @@ export const OperatorSchedule = () => {
         const city = cities.find((c) => c.id === s.cityId);
         return city?.name === currentUser?.city;
       })
+      .map((s) => {
+        const reg = (schoolRegistrations || []).find(
+          (r) => r.schoolName?.toLowerCase().trim() === s.name?.toLowerCase().trim()
+        );
+        let eff1 = s.eventDate;
+        let eff2 = s.eventDate2;
+        
+        const hasOct = reg?.selectedDates && reg.selectedDates.length > 0;
+        const hasNov = reg?.selectedDatesNov && reg.selectedDatesNov.length > 0;
+        
+        if (hasOct || hasNov) {
+          const allDates = [];
+          if (hasOct) reg.selectedDates.forEach(d => allDates.push({ y: 2026, m: 10, d }));
+          if (hasNov) reg.selectedDatesNov.forEach(d => allDates.push({ y: 2026, m: 11, d }));
+          allDates.sort((a, b) => a.m !== b.m ? a.m - b.m : a.d - b.d);
+          
+          if (allDates.length > 0) {
+            eff1 = `${allDates[0].y}-${String(allDates[0].m).padStart(2, '0')}-${String(allDates[0].d).padStart(2, '0')}`;
+            eff2 = null;
+            if (allDates.length > 1) {
+              eff2 = `${allDates[1].y}-${String(allDates[1].m).padStart(2, '0')}-${String(allDates[1].d).padStart(2, '0')}`;
+            }
+          }
+        }
+        return { ...s, effectiveDate1: eff1, effectiveDate2: eff2 };
+      })
       .sort((a, b) => {
-        const da = parseDate(a.eventDate);
-        const db = parseDate(b.eventDate);
+        const da = parseDate(a.effectiveDate1);
+        const db = parseDate(b.effectiveDate1);
         if (!da && !db) return 0;
         if (!da) return 1;
         if (!db) return -1;
         return da - db;
       });
-  }, [schools, cities, currentUser]);
+  }, [schools, cities, currentUser, schoolRegistrations]);
 
   const upcoming = mySchedule.filter((s) => {
-    const d = parseDate(s.eventDate2 || s.eventDate);
+    const d = parseDate(s.effectiveDate2 || s.effectiveDate1);
     return !d || d >= TODAY;
   });
   const done = mySchedule.filter((s) => {
-    const d = parseDate(s.eventDate2 || s.eventDate);
+    const d = parseDate(s.effectiveDate2 || s.effectiveDate1);
     return d && d < TODAY;
   });
 
@@ -167,8 +193,8 @@ export const OperatorSchedule = () => {
 
 const ScheduleCard = ({ school, cities, schoolData = [], schoolRegistrations = [], dimmed = false }) => {
   const cityName = cities.find((c) => c.id === school.cityId)?.name || '-';
-  const status = getStatus(school.eventDate, school.eventDate2);
-  const isMultiDay = !!school.eventDate2;
+  const status = getStatus(school.effectiveDate1 || school.eventDate, school.effectiveDate2 || school.eventDate2);
+  const isMultiDay = !!(school.effectiveDate2 || school.eventDate2);
   const borderCls = cardBorderStyles[status.color] || cardBorderStyles.slate;
   const isToday = status.color === 'amber';
 
@@ -228,12 +254,12 @@ const ScheduleCard = ({ school, cities, schoolData = [], schoolRegistrations = [
         </div>
 
         {/* Tanggal Event */}
-        {school.eventDate ? (
+        {(school.effectiveDate1 || school.eventDate) ? (
           <div className="flex items-start gap-2">
             <Clock className="w-3 h-3 mt-0.5 text-purple-400/70 flex-shrink-0" />
             <div className="text-[11px] text-slate-300 leading-relaxed">
               <div className="flex items-center gap-1.5 flex-wrap">
-                <span>{formatDate(school.eventDate)}</span>
+                <span>{formatDate(school.effectiveDate1 || school.eventDate)}</span>
                 {isMultiDay && (
                   <span className="px-1 py-0 rounded text-[9px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30">
                     Hari 1
@@ -242,7 +268,7 @@ const ScheduleCard = ({ school, cities, schoolData = [], schoolRegistrations = [
               </div>
               {isMultiDay && (
                 <div className="flex items-center gap-1.5 flex-wrap mt-1">
-                  <span>{formatDate(school.eventDate2)}</span>
+                  <span>{formatDate(school.effectiveDate2 || school.eventDate2)}</span>
                   <span className="px-1 py-0 rounded text-[9px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30">
                     Hari 2
                   </span>
