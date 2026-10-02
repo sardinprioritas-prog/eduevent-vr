@@ -529,6 +529,7 @@ const toAppSchoolReg = (row) => ({
   totalStudents: row.total_students,
   dapodikStudents: row.dapodik_students || 0,
   selectedDates: row.selected_dates || [],
+  selectedDatesNov: row.selected_dates_nov || [],
   passcode: row.passcode,
   createdAt: row.created_at,
   updatedAt: row.updated_at,
@@ -551,6 +552,7 @@ const toDbSchoolReg = (reg) => ({
   total_students: reg.totalStudents,
   dapodik_students: reg.dapodikStudents || 0,
   selected_dates: reg.selectedDates || [],
+  selected_dates_nov: reg.selectedDatesNov || [],
   passcode: reg.passcode || null,
 });
 
