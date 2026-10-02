@@ -273,8 +273,8 @@ export const DateLockManagement = () => {
       text += `${index + 1}. ${reg.schoolName}\n`;
       text += `   👤 PJ: ${reg.pjName || 'Belum diisi'}\n`;
       text += `   📅 Tanggal: ${dates}\n`;
-      text += `   Dapodik: ${reg.dapodikStudents || 0}\n`;
-      text += `   JS Sementara: ${reg.totalStudents || 0}\n\n`;
+      text += `   🏫 Dapodik: ${reg.dapodikStudents || 0}\n`;
+      text += `   👥 JS Sementara: ${reg.totalStudents || 0}\n\n`;
     });
 
     navigator.clipboard.writeText(text);
