@@ -11,6 +11,7 @@ import {
   AlertTriangle,
   Pencil,
   X,
+  Copy,
 } from 'lucide-react';
 
 // ── Konstanta ────────────────────────────────────────────────────
@@ -238,6 +239,46 @@ export const DateLockManagement = () => {
     setEditingLock(null);
   };
 
+  const handleCopySchedule = () => {
+    const scheduledSchools = schoolRegistrations.filter(reg => {
+      if (activeMonth === 'october') {
+        return reg.selectedDates && reg.selectedDates.length > 0;
+      } else {
+        return reg.selectedDatesNov && reg.selectedDatesNov.length > 0;
+      }
+    });
+
+    if (scheduledSchools.length === 0) {
+      alert(`Belum ada sekolah yang terjadwal untuk ${cfg.label}`);
+      return;
+    }
+
+    // Sort berdasarkan tanggal terkecil yang dipilih
+    const sortedSchools = [...scheduledSchools].sort((a, b) => {
+      const datesA = activeMonth === 'october' ? a.selectedDates : a.selectedDatesNov;
+      const datesB = activeMonth === 'october' ? b.selectedDates : b.selectedDatesNov;
+      const minA = Math.min(...datesA);
+      const minB = Math.min(...datesB);
+      return minA - minB;
+    });
+
+    let text = `📅 JADWAL OUTING CLASS VR - ${cfg.label.toUpperCase()}\n`;
+    text += `--------------------------------------------------------\n\n`;
+
+    sortedSchools.forEach((reg, index) => {
+      const dates = activeMonth === 'october' 
+        ? reg.selectedDates.map(d => `${d} Oktober 2026`).join(', ')
+        : reg.selectedDatesNov.map(d => `${d} November 2026`).join(', ');
+
+      text += `${index + 1}. ${reg.schoolName}\n`;
+      text += `   👤 PJ: ${reg.pjName || 'Belum diisi'}\n`;
+      text += `   📅 Tanggal: ${dates}\n\n`;
+    });
+
+    navigator.clipboard.writeText(text);
+    alert('Daftar jadwal berhasil disalin ke clipboard!');
+  };
+
   const activeLocksFiltered = dateLocks.filter((l) => l.month === cfg.dbMonth && l.year === 2026);
   const totalLocked    = activeLocksFiltered.length;
   const totalExclusive = activeLocksFiltered.filter((l) => l.schoolName).length;
@@ -253,9 +294,16 @@ export const DateLockManagement = () => {
           </div>
           <div>
             <h2 className="text-base font-bold text-white">Akses Keamanan Tanggal</h2>
-            <p className="text-xs text-slate-400 mt-0.5">Kunci tanggal kegiatan â€” eksklusif untuk 1 sekolah atau blok penuh</p>
+            <p className="text-xs text-slate-400 mt-0.5">Kunci tanggal kegiatan - eksklusif untuk 1 sekolah atau blok penuh</p>
           </div>
         </div>
+        <button
+          onClick={handleCopySchedule}
+          className="flex items-center space-x-2 px-4 py-2 bg-emerald-600/20 hover:bg-emerald-600/40 border border-emerald-500/30 text-emerald-400 rounded-xl text-xs font-bold transition-all shadow-lg shadow-emerald-900/20"
+        >
+          <Copy className="w-4 h-4" />
+          <span>Salin Daftar Jadwal</span>
+        </button>
       </div>
 
       {/* Tab Switcher Bulan */}
