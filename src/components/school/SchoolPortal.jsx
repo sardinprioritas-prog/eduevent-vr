@@ -66,7 +66,7 @@ const generateShareMessage = (reg) => {
   const allDates = [...octDates, ...novDates];
   const dateStr = allDates.length > 0 ? allDates.join(', ') : 'Belum ditentukan';
   
-  return `Halo Bapak/Ibu ${reg.pjName || 'Guru PJ'},\n\nSalam dari kami tim Triesakti Edutainment.\n\nBersama pesan ini kami sampaikan informasi jadwal pelaksanaan kegiatan Outing Class VR untuk ${reg.schoolName}:\n\n📅 Tanggal: ${dateStr}\n👥 Total Siswa Sementara: ${reg.totalStudents} Siswa\n\nUntuk update data siswa sementara dimohon untuk diinput H-1, dan di hari pelaksanaan siswa masih bisa melakukan pendaftaran. Untuk kelancaran kegiatan nanti, mohon dipersiapkan ruangan yang akan digunakan agar tim setibanya di sekolah langsung prepare setup perangkat. Jika ada pertanyaan lebih lanjut, silakan balas pesan ini.\n\nTerima kasih,\nTim Triesakti Edutainment`;
+  return `Halo Bapak/Ibu ${reg.pjName || 'Guru PJ'},\n\nSalam dari kami tim Triesakti Edutainment.\n\nBersama pesan ini kami sampaikan informasi jadwal pelaksanaan kegiatan Outing Class VR untuk ${reg.schoolName}:\n\n🗓️ Tanggal: ${dateStr}\n👥 Total Siswa Sementara: ${reg.totalStudents} Siswa\n\nUntuk update data siswa sementara dimohon untuk diinput H-1, dan di hari pelaksanaan siswa masih bisa melakukan pendaftaran. Untuk kelancaran kegiatan nanti, mohon dipersiapkan ruangan yang akan digunakan agar tim setibanya di sekolah langsung prepare setup perangkat. Jika ada pertanyaan lebih lanjut, silakan balas pesan ini.\n\nTerima kasih,\nTim Triesakti Edutainment`;
 };
 
 /**
