@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/useAuth';
 import { useSchoolData } from '../../hooks/useSchoolData';
-import { PlusCircle, Save, X, Calendar, MapPin, School, Clock, Users, CheckCircle, AlertTriangle } from 'lucide-react';
+import { PlusCircle, Save, X, Calendar, MapPin, School, Clock, Users, CheckCircle, AlertTriangle, RefreshCw } from 'lucide-react';
 
 export const EventInputForm = ({ editingEvent, onCancelEdit }) => {
-  const { cities, schools, events, currentUser, handleSaveEvent } = useAuth();
+  const { cities, schools, events, currentUser, handleSaveEvent, schoolRegistrations } = useAuth();
   const { schoolData } = useSchoolData();
 
   const activeCities = cities.filter((c) => {
@@ -277,13 +277,18 @@ export const EventInputForm = ({ editingEvent, onCancelEdit }) => {
                 const selectedSchoolName = e.target.value;
                 const selectedSchool = schools.find(s => s.name === selectedSchoolName);
                 
-                // Cari jumlahSiswa dari file Excel (schoolData.json)
+                // PRIORITAS 1: Ambil dari school_registrations (Portal Sekolah) — data paling update
+                const portalReg = (schoolRegistrations || []).find(
+                  r => r.schoolName?.toLowerCase().trim() === selectedSchoolName.toLowerCase().trim()
+                );
+
+                // PRIORITAS 2: Data Excel (schoolData.json)
                 const excelMatched = schoolData.find(
                   s => s.schoolName?.toLowerCase().trim() === selectedSchoolName.toLowerCase().trim()
                 );
                 
-                // Jika ketemu di Excel, gunakan jumlahSiswa Excel. Jika tidak, fallback ke studentCount (target)
-                const finalDapodik = excelMatched?.jumlahSiswa || selectedSchool?.studentCount || formData.dapodikStudents;
+                // Gunakan sumber data dengan prioritas: Portal Sekolah → Excel → studentCount DB
+                const finalDapodik = portalReg?.totalStudents || excelMatched?.jumlahSiswa || selectedSchool?.studentCount || formData.dapodikStudents;
 
                 setFormData({ 
                   ...formData, 
@@ -452,8 +457,19 @@ export const EventInputForm = ({ editingEvent, onCancelEdit }) => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Jumlah Siswa (Dapodik) */}
             <div className="space-y-2">
-              <label className="block text-xs font-medium text-slate-400">
-                Jumlah Siswa (Dapodik) <span className="text-rose-400 ml-1">*</span>
+              <label className="block text-xs font-medium text-slate-400 flex items-center justify-between">
+                <span>Jumlah Siswa (Dapodik) <span className="text-rose-400 ml-1">*</span></span>
+                {(() => {
+                  const portalReg = (schoolRegistrations || []).find(
+                    r => r.schoolName?.toLowerCase().trim() === formData.schoolName?.toLowerCase().trim()
+                  );
+                  return portalReg ? (
+                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-indigo-500/15 text-indigo-400 border border-indigo-500/25">
+                      <RefreshCw className="w-2.5 h-2.5" />
+                      Dari Portal Sekolah
+                    </span>
+                  ) : null;
+                })()}
               </label>
               <input
                 type="number"

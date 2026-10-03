@@ -1,13 +1,14 @@
 import React, { useState, useMemo } from 'react';
 import { useAuth } from '../../context/useAuth';
-import { PlusCircle, Pencil, Trash2, Building2, MapPin, Users, Calendar, AlertCircle, Link2, ChevronDown } from 'lucide-react';
+import { PlusCircle, Pencil, Trash2, Building2, MapPin, Users, Calendar, AlertCircle, Link2, ChevronDown, RefreshCw, AlertTriangle } from 'lucide-react';
 
 export const SchoolManagement = () => {
-  const { schools, cities, schoolRegistrations, handleSaveSchool, handleDeleteSchool, currentUser, users } = useAuth();
+  const { schools, cities, schoolRegistrations, handleSaveSchool, handleDeleteSchool, currentUser, users, showToast } = useAuth();
   
   const [showForm, setShowForm] = useState(false);
   const [editingSchool, setEditingSchool] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isSyncing, setIsSyncing] = useState(false);
 
   // Filter cities: jika bukan admin/pimpinan, hanya tampilkan kota currentUser
   const activeCities = cities.filter(c => {
@@ -98,6 +99,46 @@ export const SchoolManagement = () => {
     return new Date(a.eventDate) - new Date(b.eventDate);
   });
 
+  // Deteksi sekolah yang tidak sinkron dengan Portal Sekolah
+  const getPortalStudentCount = (schoolName) => {
+    const reg = (schoolRegistrations || []).find(
+      r => r.schoolName?.toLowerCase().trim() === schoolName?.toLowerCase().trim()
+    );
+    return reg ? reg.totalStudents : null;
+  };
+
+  const isOutOfSync = (school) => {
+    const portalCount = getPortalStudentCount(school.name);
+    return portalCount !== null && portalCount !== school.studentCount;
+  };
+
+  // Hitung berapa sekolah yang tidak sinkron
+  const outOfSyncCount = filteredSchools.filter(isOutOfSync).length;
+
+  // Sinkronkan semua sekolah dari Portal Sekolah sekaligus
+  const handleSyncAllFromPortal = async () => {
+    setIsSyncing(true);
+    try {
+      let updatedCount = 0;
+      for (const school of filteredSchools) {
+        const portalCount = getPortalStudentCount(school.name);
+        if (portalCount !== null && portalCount !== school.studentCount) {
+          await handleSaveSchool({ ...school, studentCount: portalCount });
+          updatedCount++;
+        }
+      }
+      if (updatedCount > 0) {
+        showToast(`Berhasil sinkronkan ${updatedCount} sekolah dari Portal Sekolah!`, 'success');
+      } else {
+        showToast('Semua data jumlah siswa sudah sinkron dengan Portal Sekolah.', 'info');
+      }
+    } catch (err) {
+      showToast('Gagal sinkronisasi: ' + err.message, 'error');
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
   const resetForm = () => {
     setFormData({
       cityId: activeCities.length > 0 ? activeCities[0].id : '',
@@ -181,6 +222,18 @@ export const SchoolManagement = () => {
             onChange={(e) => setSearchQuery(e.target.value)}
             className="bg-slate-950 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-slate-100 focus:outline-none focus:border-blue-500 w-48"
           />
+          {/* Tombol Sinkronisasi dari Portal Sekolah */}
+          {outOfSyncCount > 0 && (
+            <button
+              onClick={handleSyncAllFromPortal}
+              disabled={isSyncing}
+              title={`${outOfSyncCount} sekolah belum sinkron dengan Portal Sekolah`}
+              className="flex items-center space-x-2 bg-amber-600 hover:bg-amber-500 disabled:opacity-60 text-white px-4 py-1.5 rounded-xl text-xs font-bold transition-all shadow-md shadow-amber-600/20"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin' : ''}`} />
+              <span>{isSyncing ? 'Menyinkronkan...' : `Sinkron ${outOfSyncCount} Sekolah`}</span>
+            </button>
+          )}
           {!showForm && (
             <button
               onClick={() => setShowForm(true)}
@@ -417,10 +470,31 @@ export const SchoolManagement = () => {
                     </div>
                   </td>
                   <td className="py-3 px-4 text-center">
-                    <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-500/10 text-emerald-400">
-                      <Users className="w-3 h-3 mr-1" />
-                      {s.studentCount}
-                    </span>
+                    {(() => {
+                      const portalCount = getPortalStudentCount(s.name);
+                      const outSync = portalCount !== null && portalCount !== s.studentCount;
+                      return (
+                        <div className="flex flex-col items-center gap-1">
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold ${
+                            outSync
+                              ? 'bg-amber-500/10 text-amber-400 border border-amber-500/30'
+                              : 'bg-emerald-500/10 text-emerald-400'
+                          }`}>
+                            <Users className="w-3 h-3 mr-1" />
+                            {s.studentCount}
+                          </span>
+                          {outSync && (
+                            <span
+                              title={`Portal Sekolah: ${portalCount} siswa`}
+                              className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-rose-500/15 text-rose-400 border border-rose-500/25 cursor-help"
+                            >
+                              <AlertTriangle className="w-2.5 h-2.5" />
+                              Portal: {portalCount}
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })()}
                   </td>
                   <td className="py-3 px-4 text-slate-400">
                     {s.demoDate ? (
