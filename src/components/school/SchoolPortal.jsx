@@ -379,6 +379,11 @@ export const SchoolPortal = () => {
   const [inputPasscode, setInputPasscode] = useState('');
   const [passcodeError, setPasscodeError] = useState('');
 
+  // ── Sync State ─────────────────────────────────────────────────
+  const [syncStatus, setSyncStatus] = useState('idle'); // 'idle'|'checking'|'matched'|'not_found'
+  const [editingRegId, setEditingRegId] = useState(null);
+  const syncDebounceRef = useRef(null);
+
   // Set nama sekolah yang sudah terdaftar di schoolRegistrations untuk wilayah ini.
   // KECUALI jika sedang dalam mode edit (editingRegId), registrasi tersebut dikecualikan agar tetap muncul di dropdown.
   const registeredSchoolNames = useMemo(() => {
@@ -431,11 +436,6 @@ export const SchoolPortal = () => {
       return aDate - bDate;
     });
   }, [schoolRegistrations]);
-
-  // ── Sync State ─────────────────────────────────────────────────
-  const [syncStatus, setSyncStatus] = useState('idle'); // 'idle'|'checking'|'matched'|'not_found'
-  const [editingRegId, setEditingRegId] = useState(null);
-  const syncDebounceRef = useRef(null);
 
   const isSMP = (formData.schoolName || '').toUpperCase().includes('SMP');
   const grades = isSMP ? [7, 8, 9] : [1, 2, 3, 4, 5, 6];
