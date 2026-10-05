@@ -31,23 +31,62 @@ export const SchoolManagement = () => {
     active: true,
   });
 
-  // Sekolah dari Portal Sekolah yang sudah mendaftar, difilter berdasarkan cityId terpilih
+  // Sekolah dari Portal Sekolah yang sudah mendaftar, difilter berdasarkan cityId terpilih.
+  // Sekolah yang sudah ditambahkan ke daftar target (schools) disembunyikan dari list,
+  // KECUALI jika data sekolah tersebut sedang diedit (editingSchool) atau telah dihapus dari database.
   const portalSchoolOptions = useMemo(() => {
     if (!formData.cityId) return [];
     const selectedCity = cities.find(c => c.id === formData.cityId);
     if (!selectedCity) return [];
-    // Filter schoolRegistrations berdasarkan nama kota yang cocok
+
+    // Nama sekolah yang SUDAH ditambahkan di tabel schools untuk kota ini.
+    // Jika sedang dalam mode edit (editingSchool), kecualikan sekolah yang sedang diedit agar tetap tampil di dropdown.
+    const addedSchoolNames = new Set(
+      schools
+        .filter(s => {
+          // Jangan kecualikan sekolah yang saat ini sedang diedit
+          if (editingSchool && s.id === editingSchool.id) return false;
+
+          // Cocokkan kota berdasarkan cityId atau nama kota
+          if (s.cityId && s.cityId === formData.cityId) return true;
+          const sCity = cities.find(c => c.id === s.cityId);
+          if (sCity && selectedCity) {
+            const scName = (sCity.name || '').toLowerCase().replace('kota ', '').trim();
+            const selName = (selectedCity.name || '').toLowerCase().replace('kota ', '').trim();
+            if (scName === selName || scName.includes(selName) || selName.includes(scName)) {
+              return true;
+            }
+          }
+          return false;
+        })
+        .map(s => (s.name || '').trim().toLowerCase())
+        .filter(Boolean)
+    );
+
+    // Filter schoolRegistrations berdasarkan nama kota yang cocok dan belum ditambahkan
     return schoolRegistrations.filter(reg => {
       // 1. Prioritaskan cityId jika tersedia
-      if (reg.cityId && reg.cityId === formData.cityId) return true;
+      let cityMatches = false;
+      if (reg.cityId && reg.cityId === formData.cityId) {
+        cityMatches = true;
+      } else {
+        // Fallback pencocokan nama (abaikan awalan 'kota ')
+        const regCity = (reg.cityName || '').toLowerCase().replace('kota ', '').trim();
+        const selCity = (selectedCity.name || '').toLowerCase().replace('kota ', '').trim();
+        cityMatches = regCity === selCity || regCity.includes(selCity) || selCity.includes(regCity);
+      }
 
-      // 2. Fallback pencocokan nama (abaikan awalan 'kota ')
-      const regCity = (reg.cityName || '').toLowerCase().replace('kota ', '').trim();
-      const selCity = (selectedCity.name || '').toLowerCase().replace('kota ', '').trim();
-      
-      return regCity === selCity || regCity.includes(selCity) || selCity.includes(regCity);
+      if (!cityMatches) return false;
+
+      // 2. Filter sekolah yang sudah ada di daftar target (kecuali yang sedang diedit)
+      const regName = (reg.schoolName || '').trim().toLowerCase();
+      if (addedSchoolNames.has(regName)) {
+        return false;
+      }
+
+      return true;
     });
-  }, [schoolRegistrations, formData.cityId, cities]);
+  }, [schoolRegistrations, formData.cityId, cities, schools, editingSchool]);
 
   // Handler saat sekolah dipilih dari dropdown Portal
   const handleSchoolSelect = (schoolName) => {
@@ -258,7 +297,14 @@ export const SchoolManagement = () => {
               <select
                 required
                 value={formData.cityId}
-                onChange={(e) => setFormData({ ...formData, cityId: e.target.value })}
+                onChange={(e) => setFormData(prev => ({
+                  ...prev,
+                  cityId: e.target.value,
+                  name: '',
+                  studentCount: 0,
+                  eventDate: '',
+                  eventDate2: '',
+                }))}
                 className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-blue-500"
               >
                 {activeCities.map(c => (
@@ -272,7 +318,7 @@ export const SchoolManagement = () => {
                 {portalSchoolOptions.length > 0 && (
                   <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-indigo-500/15 text-indigo-400 border border-indigo-500/25">
                     <Link2 className="w-2.5 h-2.5" />
-                    {portalSchoolOptions.length} dari Portal
+                    {portalSchoolOptions.length} Belum Ditambahkan
                   </span>
                 )}
               </label>
@@ -283,9 +329,15 @@ export const SchoolManagement = () => {
                   onChange={(e) => handleSchoolSelect(e.target.value)}
                   className="w-full appearance-none bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 pr-8 text-xs text-slate-100 focus:outline-none focus:border-blue-500"
                 >
-                  <option value="">-- Pilih Sekolah --</option>
+                  <option value="">-- Pilih Nama Sekolah --</option>
+                  {/* Tampilkan nama sekolah yang sedang diedit jika tidak ada di portalSchoolOptions */}
+                  {formData.name && !portalSchoolOptions.some(r => r.schoolName === formData.name) && (
+                    <option value={formData.name}>
+                      {formData.name} {editingSchool ? '(Sedang Diedit)' : ''}
+                    </option>
+                  )}
                   {portalSchoolOptions.length > 0 ? (
-                    <optgroup label="📋 Terdaftar di Portal Sekolah">
+                    <optgroup label="📋 Terdaftar di Portal Sekolah (Belum Ditambahkan)">
                       {portalSchoolOptions.map((reg) => (
                         <option key={reg.id || reg.schoolName} value={reg.schoolName}>
                           {reg.schoolName}
@@ -294,14 +346,16 @@ export const SchoolManagement = () => {
                     </optgroup>
                   ) : (
                     <option disabled value="__empty__">
-                      (Belum ada data dari Portal Sekolah untuk kota ini)
+                      {editingSchool
+                        ? '(Tidak ada pilihan sekolah lain)'
+                        : '(Semua sekolah terdaftar sudah ditambahkan atau belum ada data baru)'}
                     </option>
                   )}
                 </select>
                 <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500" />
               </div>
-              {portalSchoolOptions.length === 0 && (
-                <p className="mt-1 text-[10px] text-slate-500 italic">Sekolah muncul otomatis saat terdaftar di Portal Sekolah.</p>
+              {portalSchoolOptions.length === 0 && !editingSchool && (
+                <p className="mt-1 text-[10px] text-slate-500 italic">Semua data sekolah dari Portal telah ditambahkan ke target.</p>
               )}
             </div>
             <div className="lg:col-span-1">

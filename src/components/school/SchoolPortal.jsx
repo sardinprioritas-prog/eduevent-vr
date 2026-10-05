@@ -379,10 +379,35 @@ export const SchoolPortal = () => {
   const [inputPasscode, setInputPasscode] = useState('');
   const [passcodeError, setPasscodeError] = useState('');
 
-  // Sekolah yang tersedia berdasarkan kecamatan terpilih
-  const schoolsByKecamatan = formData.kecamatan
-    ? schoolData.filter(s => s.kecamatan === formData.kecamatan)
-    : [];
+  // Set nama sekolah yang sudah terdaftar di schoolRegistrations untuk wilayah ini.
+  // KECUALI jika sedang dalam mode edit (editingRegId), registrasi tersebut dikecualikan agar tetap muncul di dropdown.
+  const registeredSchoolNames = useMemo(() => {
+    const set = new Set();
+    const curCity = (regionName || 'Kota Palu').toLowerCase().replace('kota ', '').trim();
+    (schoolRegistrations || []).forEach(reg => {
+      if (editingRegId && reg.id === editingRegId) return;
+      const regCity = (reg.cityName || '').toLowerCase().replace('kota ', '').trim();
+      if (!regCity || regCity === curCity || regCity.includes(curCity) || curCity.includes(regCity)) {
+        if (reg.schoolName) {
+          set.add(reg.schoolName.trim().toLowerCase());
+        }
+      }
+    });
+    return set;
+  }, [schoolRegistrations, editingRegId, regionName]);
+
+  // Sekolah yang tersedia berdasarkan kecamatan terpilih, mengecualikan sekolah yang sudah mendaftar
+  const schoolsByKecamatan = useMemo(() => {
+    if (!formData.kecamatan) return [];
+    return schoolData.filter(s => {
+      if (s.kecamatan !== formData.kecamatan) return false;
+      const sName = (s.schoolName || '').trim().toLowerCase();
+      if (registeredSchoolNames.has(sName)) {
+        return false;
+      }
+      return true;
+    });
+  }, [formData.kecamatan, schoolData, registeredSchoolNames]);
 
   // Data sekolah yang sedang dipilih (termasuk jumlahSiswa dari Excel)
   const selectedSchoolData = formData.schoolName
@@ -960,6 +985,12 @@ export const SchoolPortal = () => {
                     <option value="">
                       {!formData.kecamatan ? 'Pilih Kecamatan Terlebih Dahulu' : '-- Pilih Nama Sekolah --'}
                     </option>
+                    {/* Tampilkan sekolah yang sedang diedit jika tidak ada di list pilihan sekolah yang belum mendaftar */}
+                    {formData.schoolName && !schoolsByKecamatan.some(s => s.schoolName === formData.schoolName) && (
+                      <option value={formData.schoolName}>
+                        {formData.schoolName} {editingRegId ? '(Sedang Diedit)' : ''}
+                      </option>
+                    )}
                     {schoolsByKecamatan.map((s, idx) => (
                       <option key={idx} value={s.schoolName}>
                         {s.schoolName} ({s.jumlahSiswa} siswa)
