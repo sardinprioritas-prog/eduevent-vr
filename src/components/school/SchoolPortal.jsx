@@ -1456,22 +1456,37 @@ export const SchoolPortal = () => {
                         <div className="flex items-center justify-end space-x-2">
                           <button
                             onClick={() => handleRequestEdit(reg)}
-                            className="p-1.5 rounded-lg bg-slate-800 hover:bg-emerald-900/40 text-slate-300 hover:text-emerald-400 transition-colors"
-                            title="Edit Data Pendaftaran"
+                            disabled={isCompleted}
+                            className={`p-1.5 rounded-lg transition-colors ${
+                              isCompleted
+                                ? 'bg-slate-800/50 text-slate-600 cursor-not-allowed'
+                                : 'bg-slate-800 hover:bg-emerald-900/40 text-slate-300 hover:text-emerald-400'
+                            }`}
+                            title={isCompleted ? 'Tidak bisa diedit (sudah terlaksana)' : 'Edit Data Pendaftaran'}
                           >
                             <Pencil className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => setSelectedReg(reg)}
-                            className="p-1.5 rounded-lg bg-slate-800 hover:bg-indigo-900/40 text-slate-300 hover:text-indigo-400 transition-colors"
-                            title="Lihat Detail Rombel"
+                            disabled={isCompleted}
+                            className={`p-1.5 rounded-lg transition-colors ${
+                              isCompleted
+                                ? 'bg-slate-800/50 text-slate-600 cursor-not-allowed'
+                                : 'bg-slate-800 hover:bg-indigo-900/40 text-slate-300 hover:text-indigo-400'
+                            }`}
+                            title={isCompleted ? 'Detail dinonaktifkan (sudah terlaksana)' : 'Lihat Detail Rombel'}
                           >
                             <Eye className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => handleRequestShare(reg)}
-                            className="p-1.5 rounded-lg bg-slate-800 hover:bg-blue-900/40 text-slate-300 hover:text-blue-400 transition-colors"
-                            title="Bagikan Jadwal (Membutuhkan Master PIN)"
+                            disabled={isCompleted}
+                            className={`p-1.5 rounded-lg transition-colors ${
+                              isCompleted
+                                ? 'bg-slate-800/50 text-slate-600 cursor-not-allowed'
+                                : 'bg-slate-800 hover:bg-blue-900/40 text-slate-300 hover:text-blue-400'
+                            }`}
+                            title={isCompleted ? 'Berbagi dinonaktifkan (sudah terlaksana)' : 'Bagikan Jadwal (Membutuhkan Master PIN)'}
                           >
                             <Share2 className="w-4 h-4" />
                           </button>
@@ -1489,8 +1504,13 @@ export const SchoolPortal = () => {
                                 }
                               }
                             }}
-                            className="p-1.5 rounded-lg bg-slate-800 hover:bg-rose-950/60 text-slate-300 hover:text-rose-400 transition-colors"
-                            title="Hapus Registrasi"
+                            disabled={isCompleted}
+                            className={`p-1.5 rounded-lg transition-colors border ${
+                              isCompleted
+                                ? 'bg-slate-800/50 text-slate-600 border-transparent cursor-not-allowed'
+                                : 'bg-slate-800 hover:bg-rose-950/60 text-slate-300 hover:text-rose-400 border-transparent hover:border-rose-800/40'
+                            }`}
+                            title={isCompleted ? 'Tidak bisa dihapus (sudah terlaksana)' : 'Hapus Registrasi'}
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
