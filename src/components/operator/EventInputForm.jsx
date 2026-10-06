@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/useAuth';
 import { useSchoolData } from '../../hooks/useSchoolData';
-import { PlusCircle, Save, X, Calendar, MapPin, School, Clock, Users, CheckCircle, AlertTriangle, RefreshCw } from 'lucide-react';
+import { PlusCircle, Save, X, Calendar, MapPin, School, Clock, Users, CheckCircle, AlertTriangle, RefreshCw, FileSpreadsheet } from 'lucide-react';
 
 export const EventInputForm = ({ editingEvent, onCancelEdit }) => {
   const { cities, schools, events, currentUser, handleSaveEvent, schoolRegistrations } = useAuth();
@@ -277,18 +277,29 @@ export const EventInputForm = ({ editingEvent, onCancelEdit }) => {
                 const selectedSchoolName = e.target.value;
                 const selectedSchool = schools.find(s => s.name === selectedSchoolName);
                 
-                // PRIORITAS 1: Ambil dari school_registrations (Portal Sekolah) — data paling update
+                // Helper normalisasi nama sekolah untuk pencocokan akurat
+                const cleanStr = (str) => (str || '').toLowerCase().replace(/[^a-z0-9]/g, ' ').replace(/\s+/g, ' ').trim();
+                const targetClean = cleanStr(selectedSchoolName);
+
+                // PRIORITAS 1: Data Excel Dapodik Keseluruhan (public/Book1.xlsx -> schoolData.json)
+                const excelMatched = (schoolData || []).find(
+                  s => s.schoolName?.toLowerCase().trim() === selectedSchoolName.toLowerCase().trim()
+                ) || (schoolData || []).find(
+                  s => cleanStr(s.schoolName) === targetClean
+                ) || (schoolData || []).find(
+                  s => {
+                    const sc = cleanStr(s.schoolName);
+                    return sc.length > 5 && targetClean.length > 5 && (sc.includes(targetClean) || targetClean.includes(sc));
+                  }
+                );
+
+                // Cadangan: jika sekolah tidak ada di file Book1, gunakan data registrasi sekolah / studentCount database
                 const portalReg = (schoolRegistrations || []).find(
                   r => r.schoolName?.toLowerCase().trim() === selectedSchoolName.toLowerCase().trim()
                 );
-
-                // PRIORITAS 2: Data Excel (schoolData.json)
-                const excelMatched = schoolData.find(
-                  s => s.schoolName?.toLowerCase().trim() === selectedSchoolName.toLowerCase().trim()
-                );
                 
-                // Gunakan sumber data dengan prioritas: Portal Sekolah → Excel → studentCount DB
-                const finalDapodik = portalReg?.totalStudents || excelMatched?.jumlahSiswa || selectedSchool?.studentCount || formData.dapodikStudents;
+                // Gunakan sumber data dengan prioritas: Book1 (Excel) → Dapodik Portal → studentCount DB
+                const finalDapodik = excelMatched?.jumlahSiswa || portalReg?.dapodikStudents || portalReg?.totalStudents || selectedSchool?.studentCount || formData.dapodikStudents;
 
                 setFormData({ 
                   ...formData, 
@@ -460,6 +471,28 @@ export const EventInputForm = ({ editingEvent, onCancelEdit }) => {
               <label className="block text-xs font-medium text-slate-400 flex items-center justify-between">
                 <span>Jumlah Siswa (Dapodik) <span className="text-rose-400 ml-1">*</span></span>
                 {(() => {
+                  const cleanStr = (str) => (str || '').toLowerCase().replace(/[^a-z0-9]/g, ' ').replace(/\s+/g, ' ').trim();
+                  const targetClean = cleanStr(formData.schoolName);
+                  const excelMatched = (schoolData || []).find(
+                    s => s.schoolName?.toLowerCase().trim() === formData.schoolName?.toLowerCase().trim()
+                  ) || (schoolData || []).find(
+                    s => cleanStr(s.schoolName) === targetClean
+                  ) || (schoolData || []).find(
+                    s => {
+                      const sc = cleanStr(s.schoolName);
+                      return sc.length > 5 && targetClean.length > 5 && (sc.includes(targetClean) || targetClean.includes(sc));
+                    }
+                  );
+
+                  if (excelMatched) {
+                    return (
+                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/25">
+                        <FileSpreadsheet className="w-2.5 h-2.5" />
+                        Dari Book1 (Excel)
+                      </span>
+                    );
+                  }
+
                   const portalReg = (schoolRegistrations || []).find(
                     r => r.schoolName?.toLowerCase().trim() === formData.schoolName?.toLowerCase().trim()
                   );
