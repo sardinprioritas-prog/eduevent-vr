@@ -5,14 +5,37 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
 export const InputHistoryTable = ({ onEditEvent, readOnly = false }) => {
-  const { events, handleDeleteEvent, currentUser, showToast } = useAuth();
+  const { events, schools, handleDeleteEvent, currentUser, showToast } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
 
   // Tampilkan hanya event dari kota currentUser (operator/pioneer)
+  // Untuk operator, batasi agar hanya melihat event dari sekolah yang ditugaskan padanya
+  // atau event yang diinputnya sendiri.
   const filteredEvents = events.filter((e) => {
     const matchesSearch = e.schoolName.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           e.cityName.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesSearch && e.cityName === currentUser?.city;
+    const isSameCity = e.cityName === currentUser?.city;
+
+    let isAuthorized = true;
+    if (currentUser?.role === 'operator') {
+      const school = schools.find(s => s.name?.toLowerCase().trim() === e.schoolName.toLowerCase().trim());
+      if (school) {
+        const assigned = school.assignedTo;
+        if (!assigned || (Array.isArray(assigned) && assigned.length === 0)) {
+          // All Team
+          isAuthorized = true;
+        } else if (Array.isArray(assigned)) {
+          isAuthorized = assigned.includes(currentUser.id);
+        } else {
+          isAuthorized = assigned === currentUser.id;
+        }
+      } else {
+        // Jika sekolah tidak ditemukan, tampilkan jika operator yang menginputnya
+        isAuthorized = e.operatorName === currentUser?.name;
+      }
+    }
+
+    return matchesSearch && isSameCity && isAuthorized;
   });
 
   // Export to PDF
