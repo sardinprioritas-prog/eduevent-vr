@@ -120,13 +120,13 @@ export const SchoolManagement = () => {
     }
   };
 
-  const filteredSchools = schools.filter((s) => {
-    const matchesSearch = s.name.toLowerCase().includes(searchQuery.toLowerCase());
+  const filteredSchools = (schools || []).filter((s) => {
+    const matchesSearch = (s?.name || '').toLowerCase().includes(searchQuery.toLowerCase());
     
     // Filter by city for non-admin/pimpinan
     if (currentUser?.role !== 'admin' && currentUser?.role !== 'pimpinan') {
-      const schoolCity = cities.find(c => c.id === s.cityId);
-      return matchesSearch && schoolCity?.name === currentUser?.city;
+      const schoolCity = cities.find(c => c.id === s?.cityId);
+      return matchesSearch && (schoolCity?.name || '').trim().toLowerCase() === (currentUser?.city || '').trim().toLowerCase();
     }
     
     return matchesSearch;

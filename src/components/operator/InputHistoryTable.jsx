@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useAuth } from '../../context/useAuth';
 import { History, Search, Edit3, Trash2, Calendar, MapPin, Users, Award, CheckCircle, FileText } from 'lucide-react';
 import jsPDF from 'jspdf';
