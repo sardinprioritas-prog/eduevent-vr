@@ -35,13 +35,16 @@ export const SalaryWidget = ({ role = 'operator' }) => {
     const userCity = currentUser?.city;
     
     const cityEventsUnpaid = events.filter((evt) => {
-      if (evt.cityName !== userCity) return false;
+      const isSameCity = (evt.cityName || '').trim().toLowerCase() === (userCity || '').trim().toLowerCase();
+      if (!isSameCity) return false;
       if (paidEventIds.has(evt.id)) return false;
       if (userHasOldFormatPayout && evt.payoutId) return false;
 
       // Operator hanya dihitung fee-nya untuk sekolah yang ditugaskan atau yang diinputnya
       if (currentUser?.role === 'operator') {
-        const school = schools.find(s => s.name?.toLowerCase().trim() === evt.schoolName.toLowerCase().trim());
+        const school = (schools || []).find(
+          s => (s.name || '').trim().toLowerCase() === (evt.schoolName || '').trim().toLowerCase()
+        );
         if (school) {
           const assigned = school.assignedTo;
           if (assigned && (!Array.isArray(assigned) || assigned.length > 0)) {
@@ -50,7 +53,7 @@ export const SalaryWidget = ({ role = 'operator' }) => {
           }
         } else {
           // Jika sekolah tak ditemukan, cek apakah dia yang menginputnya
-          if (evt.operatorName !== currentUser?.name) return false;
+          if ((evt.operatorName || '').trim().toLowerCase() !== (currentUser?.name || '').trim().toLowerCase()) return false;
         }
       }
 
@@ -77,7 +80,7 @@ export const SalaryWidget = ({ role = 'operator' }) => {
       uniqueEventDays: totalEventDays,
       qualifyingDays: daysAbove250,
     };
-  }, [events, currentUser, salarySettings, payouts]);
+  }, [events, schools, currentUser, salarySettings, payouts]);
 
   // Perhitungan final
   const baseSalary = totalParticipating * fee;

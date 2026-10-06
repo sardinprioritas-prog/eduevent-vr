@@ -5,7 +5,7 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
 export const AdminSalaryDisbursement = () => {
-  const { users, events, salarySettings, payouts, handleDisburseFee, showToast } = useAuth();
+  const { users, events, schools, salarySettings, payouts, handleDisburseFee, showToast } = useAuth();
   const [processingId, setProcessingId] = useState(null);
   const [expandedUserId, setExpandedUserId] = useState(null);
 
@@ -42,6 +42,26 @@ export const AdminSalaryDisbursement = () => {
       if (!isSameCity) return false;
       if (paidEventIds.has(evt.id)) return false;
       if (userHasOldFormatPayout && evt.payoutId) return false;
+
+      // Operator hanya dihitung fee-nya untuk sekolah yang ditugaskan atau yang diinputnya
+      if (user.role === 'operator') {
+        const school = (schools || []).find(
+          s => (s.name || '').trim().toLowerCase() === (evt.schoolName || '').trim().toLowerCase()
+        );
+        if (school) {
+          const assigned = school.assignedTo;
+          if (assigned && (!Array.isArray(assigned) || assigned.length > 0)) {
+            const isAssigned = Array.isArray(assigned) ? assigned.includes(user.id) : assigned === user.id;
+            if (!isAssigned) return false;
+          }
+        } else {
+          // Jika sekolah tak ditemukan, cek apakah dia yang menginputnya
+          if ((evt.operatorName || '').trim().toLowerCase() !== (user.name || '').trim().toLowerCase()) {
+            return false;
+          }
+        }
+      }
+
       return true;
     });
 
@@ -108,7 +128,7 @@ export const AdminSalaryDisbursement = () => {
         ...user,
         feeData: calculateUnpaidFee(user)
       }));
-  }, [users, events, salarySettings, payouts]);
+  }, [users, events, schools, salarySettings, payouts]);
 
   const onDisburse = async (userData) => {
     if (userData.feeData.totalSalary === 0) return;

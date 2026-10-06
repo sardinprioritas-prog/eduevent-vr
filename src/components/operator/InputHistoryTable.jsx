@@ -5,20 +5,38 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
 export const InputHistoryTable = ({ onEditEvent, readOnly = false }) => {
-  const { events, schools, handleDeleteEvent, currentUser, showToast } = useAuth();
+  const { events, schools, handleDeleteEvent, currentUser, showToast, payouts } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Kumpulkan ID event yang sudah dicairkan untuk currentUser ini (format baru)
+  const paidEventIds = useMemo(() => new Set(
+    (payouts || [])
+      .filter(p => p.userId === currentUser?.id)
+      .flatMap(p => p.details?.eventIds || [])
+  ), [payouts, currentUser?.id]);
+
+  // Backward compatibility
+  const userHasOldFormatPayout = useMemo(() => (
+    (payouts || [])
+      .filter(p => p.userId === currentUser?.id)
+      .some(p => !p.details?.eventIds)
+  ), [payouts, currentUser?.id]);
+
+  const isEventPaid = (evt) => paidEventIds.has(evt.id) || (userHasOldFormatPayout && Boolean(evt.payoutId));
 
   // Tampilkan hanya event dari kota currentUser (operator/pioneer)
   // Untuk operator, batasi agar hanya melihat event dari sekolah yang ditugaskan padanya
   // atau event yang diinputnya sendiri.
   const filteredEvents = events.filter((e) => {
-    const matchesSearch = e.schoolName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          e.cityName.toLowerCase().includes(searchQuery.toLowerCase());
-    const isSameCity = e.cityName === currentUser?.city;
+    const matchesSearch = (e.schoolName || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          (e.cityName || '').toLowerCase().includes(searchQuery.toLowerCase());
+    const isSameCity = (e.cityName || '').trim().toLowerCase() === (currentUser?.city || '').trim().toLowerCase();
 
     let isAuthorized = true;
     if (currentUser?.role === 'operator') {
-      const school = schools.find(s => s.name?.toLowerCase().trim() === e.schoolName.toLowerCase().trim());
+      const school = (schools || []).find(
+        s => (s.name || '').trim().toLowerCase() === (e.schoolName || '').trim().toLowerCase()
+      );
       if (school) {
         const assigned = school.assignedTo;
         if (!assigned || (Array.isArray(assigned) && assigned.length === 0)) {
@@ -31,7 +49,7 @@ export const InputHistoryTable = ({ onEditEvent, readOnly = false }) => {
         }
       } else {
         // Jika sekolah tidak ditemukan, tampilkan jika operator yang menginputnya
-        isAuthorized = e.operatorName === currentUser?.name;
+        isAuthorized = (e.operatorName || '').trim().toLowerCase() === (currentUser?.name || '').trim().toLowerCase();
       }
     }
 
@@ -72,7 +90,7 @@ export const InputHistoryTable = ({ onEditEvent, readOnly = false }) => {
         e.dapodikStudents,
         e.participatingStudents,
         `${rate}%`,
-        e.payoutId ? 'Sudah Cair' : 'Belum Cair',
+        isEventPaid(e) ? 'Sudah Cair' : 'Belum Cair',
       ];
     });
 
@@ -211,7 +229,7 @@ export const InputHistoryTable = ({ onEditEvent, readOnly = false }) => {
                     </td>
 
                     <td className="py-4 px-4 text-center">
-                      {item.payoutId ? (
+                      {isEventPaid(item) ? (
                         <span className="inline-flex items-center px-2 py-1 rounded-md text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                           <CheckCircle className="w-3 h-3 mr-1" />
                           Sudah Cair
