@@ -27,7 +27,8 @@ import {
   ChevronRight,
   Play,
   Share2,
-  Copy
+  Copy,
+  CheckCircle2,
 } from 'lucide-react';
 
 const InstagramIcon = ({ className }) => (
@@ -353,6 +354,7 @@ export const SchoolPortal = () => {
   const {
     schoolRegistrations,
     cities,
+    events,
     users,
     currentUser,
     handleSaveSchoolRegistration,
@@ -436,6 +438,45 @@ export const SchoolPortal = () => {
       return aDate - bDate;
     });
   }, [schoolRegistrations]);
+
+  // Helper normalisasi nama sekolah untuk pencocokan yang akurat
+  const cleanSchoolName = (name) => (name || '').toLowerCase().replace(/[^a-z0-9]/g, ' ').replace(/\s+/g, ' ').trim();
+
+  // Peta data sekolah yang telah selesai diinput kegiatannya oleh operator (events)
+  const completedSchoolsMap = useMemo(() => {
+    const map = new Map();
+    const schoolEventMap = {};
+
+    (events || []).forEach(evt => {
+      const key = cleanSchoolName(evt.schoolName);
+      if (!key) return;
+      if (!schoolEventMap[key]) schoolEventMap[key] = [];
+      schoolEventMap[key].push(evt);
+    });
+
+    Object.entries(schoolEventMap).forEach(([cleanName, evts]) => {
+      const hasFullday = evts.some(e => e.session === 'Fullday');
+      const hasHari1   = evts.some(e => e.session === 'Hari-1');
+      const hasHari2   = evts.some(e => e.session === 'Hari-2');
+      const hasHari3   = evts.some(e => e.session === 'Hari-3');
+      const is3Hari    = evts.some(e => e.duration === '3 Hari');
+
+      const isCompleted = hasFullday
+        || (!is3Hari && hasHari1 && hasHari2)
+        || (is3Hari && hasHari1 && hasHari2 && hasHari3);
+
+      const totalParticipants = evts.reduce((sum, e) => sum + (Number(e.participatingStudents) || 0), 0);
+
+      map.set(cleanName, {
+        isCompleted,
+        eventCount: evts.length,
+        totalParticipants,
+        events: evts,
+      });
+    });
+
+    return map;
+  }, [events]);
 
   const isSMP = (formData.schoolName || '').toUpperCase().includes('SMP');
   const grades = isSMP ? [7, 8, 9] : [1, 2, 3, 4, 5, 6];
@@ -1345,13 +1386,31 @@ export const SchoolPortal = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800/60 text-slate-200">
-                  {sortedRegistrations.map((reg) => (
-                    <tr key={reg.id} className="hover:bg-slate-800/30 transition-colors">
-                      <td className="py-3.5 px-4">
-                        <div className="font-bold text-slate-100">{reg.schoolName}</div>
-                        <div className="text-[10px] text-slate-500 mt-0.5">{reg.cityName}</div>
-                      </td>
-                      <td className="py-3.5 px-4 text-slate-300 font-medium">{reg.kecamatan || '-'}</td>
+                  {sortedRegistrations.map((reg) => {
+                    const eventInfo = completedSchoolsMap.get(cleanSchoolName(reg.schoolName));
+                    const isCompleted = eventInfo?.isCompleted;
+                    const hasPartial = !isCompleted && (eventInfo?.eventCount || 0) > 0;
+
+                    return (
+                      <tr key={reg.id} className="hover:bg-slate-800/30 transition-colors">
+                        <td className="py-3.5 px-4">
+                          <div className="flex items-center space-x-2">
+                            <span className="font-bold text-slate-100">{reg.schoolName}</span>
+                            {isCompleted && (
+                              <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-[10px] font-bold">
+                                <CheckCircle2 className="w-3 h-3 text-emerald-400 shrink-0" />
+                                <span>Terlaksana</span>
+                              </span>
+                            )}
+                            {hasPartial && (
+                              <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-400 text-[10px] font-bold">
+                                <span>Proses ({eventInfo.eventCount} sesi)</span>
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-[10px] text-slate-500 mt-0.5">{reg.cityName}</div>
+                        </td>
+                        <td className="py-3.5 px-4 text-slate-300 font-medium">{reg.kecamatan || '-'}</td>
                       <td className="py-3.5 px-4">
                         <div className="text-slate-200 font-semibold">
                           {reg.pjName && reg.pjName !== '-' ? reg.pjName : <span className="text-slate-600 italic">—</span>}
@@ -1438,8 +1497,9 @@ export const SchoolPortal = () => {
                         </div>
                       </td>
                     </tr>
-                  ))}
-                </tbody>
+                  );
+                })}
+              </tbody>
               </table>
             </div>
           )}
@@ -1489,17 +1549,64 @@ export const SchoolPortal = () => {
                 </div>
               </div>
 
+              {/* Banner Status Pelaksanaan oleh Operator Lapangan */}
+              {(() => {
+                const eventInfo = completedSchoolsMap.get(cleanSchoolName(selectedReg.schoolName));
+                const isCompleted = eventInfo?.isCompleted;
+                const hasPartial = !isCompleted && (eventInfo?.eventCount || 0) > 0;
+
+                if (isCompleted) {
+                  return (
+                    <div className="p-4 rounded-xl bg-emerald-950/40 border border-emerald-500/30 flex items-start space-x-3">
+                      <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
+                      <div>
+                        <h4 className="text-sm font-bold text-emerald-300">Kegiatan Telah Selesai Dilaksanakan</h4>
+                        <p className="text-xs text-emerald-400/80 mt-0.5">
+                          Operator lapangan telah menyelesaikan dan menginput laporan kegiatan VR untuk sekolah ini.
+                          {eventInfo?.totalParticipants > 0 && (
+                            <span className="font-semibold text-emerald-200">
+                              {' '}(Total Partisipasi: {eventInfo.totalParticipants} siswa)
+                            </span>
+                          )}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                }
+
+                if (hasPartial) {
+                  return (
+                    <div className="p-4 rounded-xl bg-amber-950/40 border border-amber-500/30 flex items-start space-x-3">
+                      <AlertCircle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+                      <div>
+                        <h4 className="text-sm font-bold text-amber-300">Kegiatan Sedang Berlangsung ({eventInfo.eventCount} Sesi Terinput)</h4>
+                        <p className="text-xs text-amber-400/80 mt-0.5">
+                          Laporan kegiatan baru diinput sebagian oleh operator lapangan.
+                        </p>
+                      </div>
+                    </div>
+                  );
+                }
+
+                return null;
+              })()}
+
               {/* Tanggal Kegiatan */}
-              {selectedReg.selectedDates && selectedReg.selectedDates.length > 0 && (
+              {((selectedReg.selectedDates && selectedReg.selectedDates.length > 0) || (selectedReg.selectedDatesNov && selectedReg.selectedDatesNov.length > 0)) && (
                 <div className="p-4 rounded-xl bg-violet-950/30 border border-violet-500/25">
                   <h4 className="text-xs font-bold text-violet-300 uppercase tracking-wider mb-3 flex items-center space-x-2">
                     <Calendar className="w-4 h-4" />
                     <span>Tanggal Kegiatan VR</span>
                   </h4>
                   <div className="flex flex-wrap gap-2">
-                    {selectedReg.selectedDates.map(d => (
-                      <span key={d} className="px-3 py-1.5 rounded-lg bg-violet-900/50 border border-violet-600/40 text-violet-200 text-sm font-bold">
-                        {d} Oktober 2025
+                    {selectedReg.selectedDates && selectedReg.selectedDates.map(d => (
+                      <span key={`oct-${d}`} className="px-3 py-1.5 rounded-lg bg-violet-900/50 border border-violet-600/40 text-violet-200 text-sm font-bold">
+                        {d} Oktober 2026
+                      </span>
+                    ))}
+                    {selectedReg.selectedDatesNov && selectedReg.selectedDatesNov.map(d => (
+                      <span key={`nov-${d}`} className="px-3 py-1.5 rounded-lg bg-teal-900/50 border border-teal-600/40 text-teal-200 text-sm font-bold">
+                        {d} November 2026
                       </span>
                     ))}
                   </div>
