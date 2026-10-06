@@ -3,7 +3,7 @@ import { useAuth } from '../../context/useAuth';
 import { Wallet, TrendingUp, Target, Award, Eye, EyeOff } from 'lucide-react';
 
 export const SalaryWidget = ({ role = 'operator' }) => {
-  const { events, currentUser, salarySettings, payouts } = useAuth();
+  const { events, schools, currentUser, salarySettings, payouts } = useAuth();
   const [isVisible, setIsVisible] = useState(true);
 
   const { fee, bonus, totalParticipating, uniqueEventDays, qualifyingDays } = useMemo(() => {
@@ -38,6 +38,22 @@ export const SalaryWidget = ({ role = 'operator' }) => {
       if (evt.cityName !== userCity) return false;
       if (paidEventIds.has(evt.id)) return false;
       if (userHasOldFormatPayout && evt.payoutId) return false;
+
+      // Operator hanya dihitung fee-nya untuk sekolah yang ditugaskan atau yang diinputnya
+      if (currentUser?.role === 'operator') {
+        const school = schools.find(s => s.name?.toLowerCase().trim() === evt.schoolName.toLowerCase().trim());
+        if (school) {
+          const assigned = school.assignedTo;
+          if (assigned && (!Array.isArray(assigned) || assigned.length > 0)) {
+            const isAssigned = Array.isArray(assigned) ? assigned.includes(currentUser.id) : assigned === currentUser.id;
+            if (!isAssigned) return false;
+          }
+        } else {
+          // Jika sekolah tak ditemukan, cek apakah dia yang menginputnya
+          if (evt.operatorName !== currentUser?.name) return false;
+        }
+      }
+
       return true;
     });
 
