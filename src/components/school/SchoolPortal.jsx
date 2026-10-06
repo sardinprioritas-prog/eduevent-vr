@@ -1418,15 +1418,25 @@ export const SchoolPortal = () => {
                       </td>
                       <td className="py-3.5 px-4">
                         {reg.noHp ? (
-                          <a
-                            href={`https://wa.me/${reg.noHp.replace(/\D/g, '')}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center space-x-1.5 text-emerald-400 hover:text-emerald-300 font-semibold transition-colors"
-                          >
-                            <Phone className="w-3.5 h-3.5" />
-                            <span>{reg.noHp}</span>
-                          </a>
+                          isCompleted ? (
+                            <span
+                              className="flex items-center space-x-1.5 text-slate-500 font-semibold cursor-not-allowed"
+                              title="Kontak dinonaktifkan (sudah terlaksana)"
+                            >
+                              <Phone className="w-3.5 h-3.5" />
+                              <span>{reg.noHp}</span>
+                            </span>
+                          ) : (
+                            <a
+                              href={`https://wa.me/${reg.noHp.replace(/\D/g, '')}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center space-x-1.5 text-emerald-400 hover:text-emerald-300 font-semibold transition-colors"
+                            >
+                              <Phone className="w-3.5 h-3.5" />
+                              <span>{reg.noHp}</span>
+                            </a>
+                          )
                         ) : (
                           <span className="text-slate-600 italic">—</span>
                         )}
