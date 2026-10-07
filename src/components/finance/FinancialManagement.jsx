@@ -94,7 +94,9 @@ export const FinancialManagement = () => {
     'Operasional Tim',
     'Maintenance VR',
     'Transportasi',
-    'Fee Lembaga'
+    'Fee Lembaga',
+    'Admin Bank',
+    'Lainnya'
   ];
 
   // Helper format currency IDR
