@@ -90,12 +90,11 @@ export const FinancialManagement = () => {
   ];
 
   const EXPENSE_CATEGORIES = [
-    'Honor Operator & Pioneer',
-    'Operasional Event VR',
-    'Lisensi & Maintenance Hardware VR',
-    'Pemasaran & Transportasi',
-    'Pengadaan Perangkat Headset VR',
-    'Lainnya (Pengeluaran)'
+    'Fee Operator & Pioneer',
+    'Operasional Tim',
+    'Maintenance VR',
+    'Transportasi',
+    'Fee Lembaga'
   ];
 
   // Helper format currency IDR
