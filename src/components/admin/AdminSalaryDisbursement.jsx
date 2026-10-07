@@ -3,6 +3,7 @@ import { useAuth } from '../../context/useAuth';
 import { Wallet, Target, Award, CheckCircle, FileText, ChevronDown, ChevronRight, Users2 } from 'lucide-react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { sendFonnteWhatsApp } from '../../services/fonnteService';
 
 export const AdminSalaryDisbursement = () => {
   const { users, events, schools, salarySettings, payouts, handleDisburseFee, showToast } = useAuth();
@@ -152,6 +153,23 @@ export const AdminSalaryDisbursement = () => {
         details,
         userData.feeData.eventIdsToUpdate
       );
+      
+      // Kirim Notifikasi WhatsApp
+      if (userData.phoneNumber) {
+        const role = userData.role === 'pioneer' ? 'Pioner' : 'operator';
+        const formattedTotalFee = `Rp ${userData.feeData.totalSalary.toLocaleString('id-ID')}`;
+        const message = `Pencairan Fee untuk ${role} atas nama ${userData.name} dengan jumlah siswa ${userData.feeData.totalStudents} dengan total nominal ${formattedTotalFee} telah Berhasil. Terima Kasih`;
+        
+        const isSent = await sendFonnteWhatsApp(userData.phoneNumber, message);
+        if (isSent) {
+          showToast(`Notifikasi WA berhasil dikirim ke ${userData.phoneNumber}`, 'success');
+        } else {
+          showToast(`Gagal mengirim WA ke ${userData.phoneNumber}`, 'warning');
+        }
+      } else {
+         showToast('Pencairan berhasil, tapi nomor HP tidak ada (WA tidak dikirim)', 'info');
+      }
+
       alert('Pencairan berhasil!');
     } catch (err) {
       console.error(err);
