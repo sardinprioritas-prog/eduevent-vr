@@ -10,6 +10,7 @@ export const UserManagement = () => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
+    phoneNumber: '',
     role: 'operator',
     city: cities[0]?.name || 'Bone',
     passcode: '',
@@ -32,7 +33,7 @@ export const UserManagement = () => {
       handleSaveUser(formData);
     }
 
-    setFormData({ name: '', email: '', role: 'operator', city: cities[0]?.name || 'Bone', passcode: '', active: true });
+    setFormData({ name: '', email: '', phoneNumber: '', role: 'operator', city: cities[0]?.name || 'Bone', passcode: '', active: true });
     setShowAddForm(false);
   };
 
@@ -51,6 +52,7 @@ export const UserManagement = () => {
     setFormData({
       name: user.name,
       email: user.email,
+      phoneNumber: user.phoneNumber || '',
       role: user.role || 'operator',
       city: user.city || (cities[0]?.name || 'Bone'),
       passcode: user.passcode || '',
@@ -68,7 +70,7 @@ export const UserManagement = () => {
   const cancelForm = () => {
     setShowAddForm(false);
     setEditingUser(null);
-    setFormData({ name: '', email: '', role: 'operator', city: cities[0]?.name || 'Bone', passcode: '', active: true });
+    setFormData({ name: '', email: '', phoneNumber: '', role: 'operator', city: cities[0]?.name || 'Bone', passcode: '', active: true });
   };
 
   const handleResetPassword = (email) => {
@@ -249,6 +251,18 @@ export const UserManagement = () => {
                 <option value="false">Non-Aktif</option>
               </select>
             </div>
+            {(formData.role === 'operator' || formData.role === 'pioneer') && (
+              <div>
+                <label className="block text-xs font-medium text-slate-400 mb-1">Nomor HP</label>
+                <input
+                  type="tel"
+                  placeholder="0812xxxxxx"
+                  value={formData.phoneNumber}
+                  onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
+                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-purple-500"
+                />
+              </div>
+            )}
           </div>
 
           <div className="flex justify-end space-x-2 pt-2">
@@ -276,6 +290,7 @@ export const UserManagement = () => {
             <tr className="border-b border-slate-800 text-slate-400 font-semibold uppercase tracking-wider bg-slate-900/80">
               <th className="py-3 px-4">Nama Pengguna</th>
               <th className="py-3 px-4">Email</th>
+              <th className="py-3 px-4">Nomor HP</th>
               <th className="py-3 px-4">Peran (Role)</th>
               <th className="py-3 px-4">Wilayah Tugas</th>
               <th className="py-3 px-4">Passcode</th>
@@ -291,6 +306,7 @@ export const UserManagement = () => {
                   <Mail className="w-3.5 h-3.5 mr-1.5 text-slate-400" />
                   {u.email}
                 </td>
+                <td className="py-3 px-4 text-slate-400">{u.phoneNumber || '-'}</td>
                 <td className="py-3 px-4">{getRoleBadge(u.role)}</td>
                 <td className="py-3 px-4 text-slate-400">{u.city || 'Nasional'}</td>
                 <td className="py-3 px-4">
