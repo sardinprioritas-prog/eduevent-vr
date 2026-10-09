@@ -230,7 +230,7 @@ export const OperatorSchedule = () => {
 const ScheduleCard = ({ school, cities, schoolData = [], schoolRegistrations = [], dimmed = false }) => {
   const cityName = cities.find((c) => c.id === school.cityId)?.name || '-';
   const status = getStatus(school.effectiveDate1 || school.eventDate, school.effectiveDate2 || school.eventDate2);
-  const isMultiDay = !!(school.effectiveDate2 || school.eventDate2);
+  const isMultiDay = !!school.effectiveDate2;
   const borderCls = cardBorderStyles[status.color] || cardBorderStyles.slate;
   const isToday = status.color === 'amber';
 
@@ -290,21 +290,21 @@ const ScheduleCard = ({ school, cities, schoolData = [], schoolRegistrations = [
         </div>
 
         {/* Tanggal Event */}
-        {(school.effectiveDate1 || school.eventDate) ? (
+        {school.effectiveDate1 ? (
           <div className="flex items-start gap-2">
             <Clock className="w-3 h-3 mt-0.5 text-purple-400/70 flex-shrink-0" />
             <div className="text-[11px] text-slate-300 leading-relaxed">
               <div className="flex items-center gap-1.5 flex-wrap">
-                <span>{formatDate(school.effectiveDate1 || school.eventDate)}</span>
-                {isMultiDay && (
+                <span>{formatDate(school.effectiveDate1)}</span>
+                {(school.effectiveDate1 && school.effectiveDate2) && (
                   <span className="px-1 py-0 rounded text-[9px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30">
                     Hari 1
                   </span>
                 )}
               </div>
-              {isMultiDay && (
+              {school.effectiveDate2 && (
                 <div className="flex items-center gap-1.5 flex-wrap mt-1">
-                  <span>{formatDate(school.effectiveDate2 || school.eventDate2)}</span>
+                  <span>{formatDate(school.effectiveDate2)}</span>
                   <span className="px-1 py-0 rounded text-[9px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30">
                     Hari 2
                   </span>
