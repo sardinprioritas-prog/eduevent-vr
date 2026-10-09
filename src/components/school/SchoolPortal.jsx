@@ -88,7 +88,7 @@ const buildNovemberDays = () => buildMonthDays(NOVEMBER_YEAR, NOVEMBER_MONTH, 30
 
 const isWeekendInMonth = (day, year, month) => {
   const dow = new Date(year, month, day).getDay();
-  return dow === 0 || dow === 6;
+  return dow === 0;
 };
 
 const isWeekend = (day) => isWeekendInMonth(day, OCTOBER_YEAR, OCTOBER_MONTH);
@@ -97,8 +97,8 @@ const isWeekendNov = (day) => isWeekendInMonth(day, NOVEMBER_YEAR, NOVEMBER_MONT
 /**
  * Hitung berapa hari yang dialokasikan berdasarkan jumlah siswa.
  * <300   → 1 hari
- * 300-499 → 2 hari berturut (tidak termasuk Sabtu/Minggu)
- * ≥500   → 3 hari berturut (tidak termasuk Sabtu/Minggu)
+ * 300-499 → 2 hari berturut (tidak termasuk Minggu)
+ * ≥500   → 3 hari berturut (tidak termasuk Minggu)
  */
 const getDayCount = (studentCount) => {
   if (studentCount < 300) return 1;
@@ -107,7 +107,7 @@ const getDayCount = (studentCount) => {
 };
 
 /**
- * Dari tanggal awal, hitung array tanggal kegiatan (skip Sabtu/Minggu)
+ * Dari tanggal awal, hitung array tanggal kegiatan (skip Minggu)
  */
 const computeActivityDates = (startDay, dayCount) => {
   const result = [];
@@ -187,7 +187,7 @@ const MonthCalendar = ({
       <div className="flex items-start space-x-3 p-4 rounded-xl bg-indigo-950/40 border border-indigo-500/20">
         <Info className="w-4 h-4 text-indigo-400 shrink-0 mt-0.5" />
         <p className="text-xs text-indigo-300/90 leading-relaxed">
-          Klik tanggal yang tersedia untuk <strong className="text-indigo-200">memilih</strong> atau <strong className="text-indigo-200">membatalkan</strong> pilihan. Sabtu &amp; Minggu tidak dapat dipilih.
+          Klik tanggal yang tersedia untuk <strong className="text-indigo-200">memilih</strong> atau <strong className="text-indigo-200">membatalkan</strong> pilihan. Hari Minggu tidak dapat dipilih.
         </p>
       </div>
 
@@ -195,7 +195,7 @@ const MonthCalendar = ({
       <div className="flex flex-wrap gap-3 text-[10px] font-semibold">
         {[
           { color: 'bg-indigo-600/80 border-indigo-500', label: 'Terpilih (Sekolah Ini)' },
-          { color: 'bg-slate-700/60 border-slate-600 opacity-50', label: 'Sabtu / Minggu' },
+          { color: 'bg-slate-700/60 border-slate-600 opacity-50', label: 'Hari Minggu' },
           { color: 'bg-rose-900/60 border-rose-700/60', label: 'Sudah Dipesan' },
           { color: 'bg-rose-950 border-rose-600 ring-1 ring-rose-500/40', label: '🔒 Dikunci Admin' },
           { color: 'bg-amber-500/20 border-amber-500/50', label: 'Hover' },
@@ -286,7 +286,7 @@ const MonthCalendar = ({
                     : status === 'mine'
                     ? `Klik untuk batalkan pilihan tanggal ${day}`
                     : status === 'weekend'
-                    ? 'Sabtu / Minggu (tidak tersedia)'
+                    ? 'Hari Minggu (tidak tersedia)'
                     : day
                     ? `Pilih ${day} ${label}`
                     : ''

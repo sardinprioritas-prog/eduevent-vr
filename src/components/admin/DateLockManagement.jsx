@@ -31,7 +31,7 @@ const buildMonthDays = (year, month, totalDays) => {
 
 const isWeekendIn = (day, year, month) => {
   const dow = new Date(year, month, day).getDay();
-  return dow === 0 || dow === 6;
+  return dow === 0;
 };
 
 // ── Komponen Kalender Admin ──────────────────────────────────────
@@ -65,7 +65,7 @@ const AdminMonthCalendar = ({ calKey, lockMap, bookedSchoolsMap, onDayClick }) =
 
       <div className="flex flex-wrap gap-3 px-4 py-3 border-b border-slate-800 bg-slate-900/30">
         {[
-          { color: 'bg-slate-700/40 border-slate-600/40 opacity-50', label: 'Sabtu / Minggu' },
+          { color: 'bg-slate-700/40 border-slate-600/40 opacity-50', label: 'Hari Minggu' },
           { color: 'bg-rose-900/70 border-rose-600/60', label: 'Dikunci Total' },
           { color: 'bg-indigo-700/70 border-indigo-500/60', label: 'Eksklusif Sekolah' },
           { color: 'bg-amber-900/40 border-amber-600/40', label: 'Ada Pemesanan' },
