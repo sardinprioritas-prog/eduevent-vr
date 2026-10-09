@@ -28,6 +28,7 @@ export const SchoolManagement = () => {
     eventDate: '',
     eventDate2: '',
     assignedTo: [],
+    assignedTo2: [],
     active: true,
   });
 
@@ -187,6 +188,7 @@ export const SchoolManagement = () => {
       eventDate: '',
       eventDate2: '',
       assignedTo: [],
+      assignedTo2: [],
       active: true,
     });
     setEditingSchool(null);
@@ -203,6 +205,7 @@ export const SchoolManagement = () => {
       eventDate: school.eventDate || '',
       eventDate2: school.eventDate2 || '',
       assignedTo: Array.isArray(school.assignedTo) ? school.assignedTo : (school.assignedTo ? [school.assignedTo] : []),
+      assignedTo2: Array.isArray(school.assignedTo2) ? school.assignedTo2 : (school.assignedTo2 ? [school.assignedTo2] : []),
       active: school.active !== false,
     });
     setShowForm(true);
@@ -219,6 +222,7 @@ export const SchoolManagement = () => {
       eventDate: formData.eventDate || null,
       eventDate2: formData.eventDate2 || null,
       assignedTo: Array.isArray(formData.assignedTo) && formData.assignedTo.length > 0 ? formData.assignedTo : null,
+      assignedTo2: Array.isArray(formData.assignedTo2) && formData.assignedTo2.length > 0 ? formData.assignedTo2 : null,
       studentCount: parseInt(formData.studentCount) || 0,
     });
     resetForm();
@@ -430,7 +434,9 @@ export const SchoolManagement = () => {
               })()}
             </div>
             <div className="lg:col-span-1">
-              <label className="block text-xs font-medium text-slate-400 mb-1">Ditugaskan Ke</label>
+              <label className="block text-xs font-medium text-slate-400 mb-1">
+                Ditugaskan Ke {formData.eventDate2 ? '(Event 1)' : ''}
+              </label>
               <div className="flex flex-col gap-2 p-2.5 bg-slate-950 border border-slate-700 rounded-xl max-h-[82px] overflow-y-auto custom-scrollbar">
                 <label className="flex items-center space-x-2 text-[11px] text-slate-200 cursor-pointer">
                   <input
@@ -466,6 +472,48 @@ export const SchoolManagement = () => {
                 })}
               </div>
             </div>
+
+            {formData.eventDate2 && (
+              <div className="lg:col-span-1">
+                <label className="block text-xs font-medium text-slate-400 mb-1">
+                  Ditugaskan Ke (Event 2)
+                </label>
+                <div className="flex flex-col gap-2 p-2.5 bg-slate-950 border border-slate-700 rounded-xl max-h-[82px] overflow-y-auto custom-scrollbar">
+                  <label className="flex items-center space-x-2 text-[11px] text-slate-200 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={!formData.assignedTo2 || formData.assignedTo2.length === 0}
+                      onChange={(e) => {
+                        if (e.target.checked) setFormData({ ...formData, assignedTo2: [] });
+                      }}
+                      className="w-3.5 h-3.5 rounded border-slate-600 bg-slate-900 text-blue-500 focus:ring-blue-500/50 cursor-pointer accent-blue-500"
+                    />
+                    <span className="truncate">Semua Operator</span>
+                  </label>
+                  {users.filter(u => u.role === 'operator' && u.city === getCityName(formData.cityId)).map(op => {
+                    const isChecked = Array.isArray(formData.assignedTo2) && formData.assignedTo2.includes(op.id);
+                    return (
+                      <label key={op.id} className="flex items-center space-x-2 text-[11px] text-slate-200 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={(e) => {
+                            const currentArr = Array.isArray(formData.assignedTo2) ? formData.assignedTo2 : [];
+                            if (e.target.checked) {
+                              setFormData({ ...formData, assignedTo2: [...currentArr, op.id] });
+                            } else {
+                              setFormData({ ...formData, assignedTo2: currentArr.filter(id => id !== op.id) });
+                            }
+                          }}
+                          className="w-3.5 h-3.5 rounded border-slate-600 bg-slate-900 text-blue-500 focus:ring-blue-500/50 cursor-pointer accent-blue-500"
+                        />
+                        <span className="truncate">{op.name}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="flex justify-end space-x-2 mt-4 pt-4 border-t border-slate-700">
