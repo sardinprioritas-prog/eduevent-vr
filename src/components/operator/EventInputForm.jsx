@@ -393,9 +393,18 @@ export const EventInputForm = ({ editingEvent, onCancelEdit }) => {
                 <div className={`grid gap-3 ${formData.duration === '3 Hari' ? 'grid-cols-3' : 'grid-cols-2'}`}>
                   <label
                     className={`flex items-center justify-center p-2.5 rounded-xl border text-xs font-semibold cursor-pointer transition-all ${
-                      formData.session === 'Hari-1'
-                        ? 'bg-emerald-500/20 border-emerald-500 text-emerald-300'
-                        : 'bg-slate-900 border-slate-700 text-slate-400 hover:border-slate-600'
+                      (() => {
+                        const s = schools.find(sch => sch.name === formData.schoolName);
+                        let isAssigned1 = true;
+                        if (s && currentUser?.role === 'operator') {
+                          const a = s.assignedTo;
+                          isAssigned1 = !a || (Array.isArray(a) && a.length === 0) || (Array.isArray(a) && a.includes(currentUser.id)) || a === currentUser.id;
+                        }
+                        if (!isAssigned1) return 'opacity-50 cursor-not-allowed bg-slate-900 border-slate-800 text-slate-600';
+                        return formData.session === 'Hari-1'
+                          ? 'bg-emerald-500/20 border-emerald-500 text-emerald-300'
+                          : 'bg-slate-900 border-slate-700 text-slate-400 hover:border-slate-600';
+                      })()
                     }`}
                   >
                     <input
@@ -404,15 +413,32 @@ export const EventInputForm = ({ editingEvent, onCancelEdit }) => {
                       value="Hari-1"
                       checked={formData.session === 'Hari-1'}
                       onChange={(e) => setFormData({ ...formData, session: e.target.value })}
+                      disabled={(() => {
+                        const s = schools.find(sch => sch.name === formData.schoolName);
+                        if (s && currentUser?.role === 'operator') {
+                          const a = s.assignedTo;
+                          return !(!a || (Array.isArray(a) && a.length === 0) || (Array.isArray(a) && a.includes(currentUser.id)) || a === currentUser.id);
+                        }
+                        return false;
+                      })()}
                       className="sr-only"
                     />
                     Hari-1
                   </label>
                   <label
                     className={`flex items-center justify-center p-2.5 rounded-xl border text-xs font-semibold cursor-pointer transition-all ${
-                      formData.session === 'Hari-2'
-                        ? 'bg-emerald-500/20 border-emerald-500 text-emerald-300'
-                        : 'bg-slate-900 border-slate-700 text-slate-400 hover:border-slate-600'
+                      (() => {
+                        const s = schools.find(sch => sch.name === formData.schoolName);
+                        let isAssigned2 = true;
+                        if (s && currentUser?.role === 'operator') {
+                          const a = s.assignedTo2;
+                          isAssigned2 = s.eventDate2 && (!a || (Array.isArray(a) && a.length === 0) || (Array.isArray(a) && a.includes(currentUser.id)) || a === currentUser.id);
+                        }
+                        if (!isAssigned2) return 'opacity-50 cursor-not-allowed bg-slate-900 border-slate-800 text-slate-600';
+                        return formData.session === 'Hari-2'
+                          ? 'bg-emerald-500/20 border-emerald-500 text-emerald-300'
+                          : 'bg-slate-900 border-slate-700 text-slate-400 hover:border-slate-600';
+                      })()
                     }`}
                   >
                     <input
@@ -421,6 +447,14 @@ export const EventInputForm = ({ editingEvent, onCancelEdit }) => {
                       value="Hari-2"
                       checked={formData.session === 'Hari-2'}
                       onChange={(e) => setFormData({ ...formData, session: e.target.value })}
+                      disabled={(() => {
+                        const s = schools.find(sch => sch.name === formData.schoolName);
+                        if (s && currentUser?.role === 'operator') {
+                          const a = s.assignedTo2;
+                          return !(s.eventDate2 && (!a || (Array.isArray(a) && a.length === 0) || (Array.isArray(a) && a.includes(currentUser.id)) || a === currentUser.id));
+                        }
+                        return false;
+                      })()}
                       className="sr-only"
                     />
                     Hari-2

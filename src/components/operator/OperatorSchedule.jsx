@@ -115,9 +115,29 @@ export const OperatorSchedule = () => {
         return city?.name === currentUser?.city;
       })
       .filter((s) => {
-        // Sembunyikan sekolah yang sudah selesai diinput kegiatannya di riwayat kegiatan VR
+        // Sembunyikan sekolah jika event yang ditugaskan ke operator ini sudah selesai
         const sNameKey = (s.name || '').trim().toLowerCase();
-        return !completedSchoolNames.has(sNameKey);
+        
+        const evts = events.filter(e => (e.schoolName || '').trim().toLowerCase() === sNameKey);
+        const hasFullday = evts.some(e => e.session === 'Fullday');
+        const hasHari1   = evts.some(e => e.session === 'Hari-1');
+        const hasHari2   = evts.some(e => e.session === 'Hari-2');
+        
+        if (hasFullday) return false;
+
+        const assigned1 = s.assignedTo;
+        const assigned2 = s.assignedTo2;
+        const isAssigned1 = !assigned1 || (Array.isArray(assigned1) && assigned1.length === 0) || (Array.isArray(assigned1) && assigned1.includes(userId)) || assigned1 === userId;
+        const isAssigned2 = s.eventDate2 && (!assigned2 || (Array.isArray(assigned2) && assigned2.length === 0) || (Array.isArray(assigned2) && assigned2.includes(userId)) || assigned2 === userId);
+
+        if (isAssigned1 && isAssigned2) {
+           return !(hasHari1 && hasHari2);
+        } else if (isAssigned1) {
+           return !hasHari1;
+        } else if (isAssigned2) {
+           return !hasHari2;
+        }
+        return false;
       })
       .map((s) => {
         const reg = (schoolRegistrations || []).find(
@@ -143,6 +163,15 @@ export const OperatorSchedule = () => {
             }
           }
         }
+        
+        const assigned1 = s.assignedTo;
+        const assigned2 = s.assignedTo2;
+        const isAssigned1 = !assigned1 || (Array.isArray(assigned1) && assigned1.length === 0) || (Array.isArray(assigned1) && assigned1.includes(userId)) || assigned1 === userId;
+        const isAssigned2 = s.eventDate2 && (!assigned2 || (Array.isArray(assigned2) && assigned2.length === 0) || (Array.isArray(assigned2) && assigned2.includes(userId)) || assigned2 === userId);
+        
+        if (!isAssigned1) eff1 = null;
+        if (!isAssigned2) eff2 = null;
+
         return { ...s, effectiveDate1: eff1, effectiveDate2: eff2 };
       })
       .sort((a, b) => {
