@@ -250,11 +250,11 @@ export const EventInputForm = ({ editingEvent, onCancelEdit }) => {
                 const totalCity = schools.filter(s => {
                   if (s.cityId !== formData.cityId || s.active === false) return false;
                   if (currentUser?.role === 'operator') {
-                    if (Array.isArray(s.assignedTo)) {
-                      if (s.assignedTo.length > 0 && !s.assignedTo.includes(currentUser.id)) return false;
-                    } else if (s.assignedTo && s.assignedTo !== currentUser.id) {
-                      return false;
-                    }
+                    const assigned1 = s.assignedTo;
+                    const assigned2 = s.assignedTo2;
+                    const isAssigned1 = !assigned1 || (Array.isArray(assigned1) && assigned1.length === 0) || (Array.isArray(assigned1) && assigned1.includes(currentUser.id)) || assigned1 === currentUser.id;
+                    const isAssigned2 = s.eventDate2 && (!assigned2 || (Array.isArray(assigned2) && assigned2.length === 0) || (Array.isArray(assigned2) && assigned2.includes(currentUser.id)) || assigned2 === currentUser.id);
+                    if (!isAssigned1 && !isAssigned2) return false;
                   }
                   return true;
                 }).length;
@@ -314,11 +314,11 @@ export const EventInputForm = ({ editingEvent, onCancelEdit }) => {
                 .filter(s => {
                   if (s.cityId !== formData.cityId || s.active === false || usedSchoolNames.has(s.name)) return false;
                   if (currentUser?.role === 'operator') {
-                    if (Array.isArray(s.assignedTo)) {
-                      if (s.assignedTo.length > 0 && !s.assignedTo.includes(currentUser.id)) return false;
-                    } else if (s.assignedTo && s.assignedTo !== currentUser.id) {
-                      return false;
-                    }
+                    const assigned1 = s.assignedTo;
+                    const assigned2 = s.assignedTo2;
+                    const isAssigned1 = !assigned1 || (Array.isArray(assigned1) && assigned1.length === 0) || (Array.isArray(assigned1) && assigned1.includes(currentUser.id)) || assigned1 === currentUser.id;
+                    const isAssigned2 = s.eventDate2 && (!assigned2 || (Array.isArray(assigned2) && assigned2.length === 0) || (Array.isArray(assigned2) && assigned2.includes(currentUser.id)) || assigned2 === currentUser.id);
+                    if (!isAssigned1 && !isAssigned2) return false;
                   }
                   return true;
                 })

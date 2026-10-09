@@ -50,11 +50,11 @@ export const AdminSalaryDisbursement = () => {
           s => (s.name || '').trim().toLowerCase() === (evt.schoolName || '').trim().toLowerCase()
         );
         if (school) {
-          const assigned = school.assignedTo;
-          if (assigned && (!Array.isArray(assigned) || assigned.length > 0)) {
-            const isAssigned = Array.isArray(assigned) ? assigned.includes(user.id) : assigned === user.id;
-            if (!isAssigned) return false;
-          }
+          const assigned1 = school.assignedTo;
+          const assigned2 = school.assignedTo2;
+          const isAssigned1 = !assigned1 || (Array.isArray(assigned1) && assigned1.length === 0) || (Array.isArray(assigned1) && assigned1.includes(user.id)) || assigned1 === user.id;
+          const isAssigned2 = school.eventDate2 && (!assigned2 || (Array.isArray(assigned2) && assigned2.length === 0) || (Array.isArray(assigned2) && assigned2.includes(user.id)) || assigned2 === user.id);
+          if (!isAssigned1 && !isAssigned2) return false;
         } else {
           // Jika sekolah tak ditemukan, cek apakah dia yang menginputnya
           if ((evt.operatorName || '').trim().toLowerCase() !== (user.name || '').trim().toLowerCase()) {

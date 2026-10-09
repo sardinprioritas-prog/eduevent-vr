@@ -100,11 +100,14 @@ export const OperatorSchedule = () => {
     const userId = currentUser?.id;
     return schools
       .filter((s) => {
-        // Tampilkan jika: assignedTo kosong/null (All Team) ATAU mengandung userId
-        const assigned = s.assignedTo;
-        if (!assigned || (Array.isArray(assigned) && assigned.length === 0)) return true;
-        if (Array.isArray(assigned)) return assigned.includes(userId);
-        return assigned === userId;
+        // Tampilkan jika: assignedTo kosong/null (All Team) ATAU mengandung userId (baik event 1 atau event 2)
+        const assigned1 = s.assignedTo;
+        const assigned2 = s.assignedTo2;
+        
+        const isAssigned1 = !assigned1 || (Array.isArray(assigned1) && assigned1.length === 0) || (Array.isArray(assigned1) && assigned1.includes(userId)) || assigned1 === userId;
+        const isAssigned2 = s.eventDate2 && (!assigned2 || (Array.isArray(assigned2) && assigned2.length === 0) || (Array.isArray(assigned2) && assigned2.includes(userId)) || assigned2 === userId);
+        
+        return isAssigned1 || isAssigned2;
       })
       .filter((s) => {
         // Hanya sekolah di kota operator

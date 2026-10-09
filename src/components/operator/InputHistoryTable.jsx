@@ -38,15 +38,11 @@ export const InputHistoryTable = ({ onEditEvent, readOnly = false }) => {
         s => (s.name || '').trim().toLowerCase() === (e.schoolName || '').trim().toLowerCase()
       );
       if (school) {
-        const assigned = school.assignedTo;
-        if (!assigned || (Array.isArray(assigned) && assigned.length === 0)) {
-          // All Team
-          isAuthorized = true;
-        } else if (Array.isArray(assigned)) {
-          isAuthorized = assigned.includes(currentUser.id);
-        } else {
-          isAuthorized = assigned === currentUser.id;
-        }
+        const assigned1 = school.assignedTo;
+        const assigned2 = school.assignedTo2;
+        const isAssigned1 = !assigned1 || (Array.isArray(assigned1) && assigned1.length === 0) || (Array.isArray(assigned1) && assigned1.includes(currentUser.id)) || assigned1 === currentUser.id;
+        const isAssigned2 = school.eventDate2 && (!assigned2 || (Array.isArray(assigned2) && assigned2.length === 0) || (Array.isArray(assigned2) && assigned2.includes(currentUser.id)) || assigned2 === currentUser.id);
+        isAuthorized = isAssigned1 || isAssigned2;
       } else {
         // Jika sekolah tidak ditemukan, tampilkan jika operator yang menginputnya
         isAuthorized = (e.operatorName || '').trim().toLowerCase() === (currentUser?.name || '').trim().toLowerCase();

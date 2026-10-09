@@ -46,11 +46,11 @@ export const SalaryWidget = ({ role = 'operator' }) => {
           s => (s.name || '').trim().toLowerCase() === (evt.schoolName || '').trim().toLowerCase()
         );
         if (school) {
-          const assigned = school.assignedTo;
-          if (assigned && (!Array.isArray(assigned) || assigned.length > 0)) {
-            const isAssigned = Array.isArray(assigned) ? assigned.includes(currentUser.id) : assigned === currentUser.id;
-            if (!isAssigned) return false;
-          }
+          const assigned1 = school.assignedTo;
+          const assigned2 = school.assignedTo2;
+          const isAssigned1 = !assigned1 || (Array.isArray(assigned1) && assigned1.length === 0) || (Array.isArray(assigned1) && assigned1.includes(currentUser.id)) || assigned1 === currentUser.id;
+          const isAssigned2 = school.eventDate2 && (!assigned2 || (Array.isArray(assigned2) && assigned2.length === 0) || (Array.isArray(assigned2) && assigned2.includes(currentUser.id)) || assigned2 === currentUser.id);
+          if (!isAssigned1 && !isAssigned2) return false;
         } else {
           // Jika sekolah tak ditemukan, cek apakah dia yang menginputnya
           if ((evt.operatorName || '').trim().toLowerCase() !== (currentUser?.name || '').trim().toLowerCase()) return false;
