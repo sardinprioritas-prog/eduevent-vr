@@ -99,14 +99,23 @@ export const SchoolManagement = () => {
     if (reg) {
       // Auto-fill jumlah siswa dari totalStudents Portal Sekolah
       const autoStudentCount = reg.totalStudents || 0;
-      // Auto-fill eventDate(s) dari selectedDates Portal Sekolah → sort ascending
       let autoEventDate = '';
       let autoEventDate2 = '';
-      if (reg.selectedDates && reg.selectedDates.length > 0) {
-        const sorted = [...reg.selectedDates].sort((a, b) => a - b);
-        autoEventDate = `2026-10-${String(sorted[0]).padStart(2, '0')}`;
-        if (sorted.length >= 2) {
-          autoEventDate2 = `2026-10-${String(sorted[1]).padStart(2, '0')}`;
+      const hasOct = reg.selectedDates && reg.selectedDates.length > 0;
+      const hasNov = reg.selectedDatesNov && reg.selectedDatesNov.length > 0;
+      
+      if (hasOct || hasNov) {
+        const allDates = [];
+        if (hasOct) reg.selectedDates.forEach(d => allDates.push({ y: 2026, m: 10, d }));
+        if (hasNov) reg.selectedDatesNov.forEach(d => allDates.push({ y: 2026, m: 11, d }));
+        
+        allDates.sort((a, b) => a.m !== b.m ? a.m - b.m : a.d - b.d);
+        
+        if (allDates.length > 0) {
+          autoEventDate = `${allDates[0].y}-${String(allDates[0].m).padStart(2, '0')}-${String(allDates[0].d).padStart(2, '0')}`;
+          if (allDates.length > 1) {
+            autoEventDate2 = `${allDates[1].y}-${String(allDates[1].m).padStart(2, '0')}-${String(allDates[1].d).padStart(2, '0')}`;
+          }
         }
       }
       setFormData(prev => ({
@@ -342,11 +351,28 @@ export const SchoolManagement = () => {
                   )}
                   {portalSchoolOptions.length > 0 ? (
                     <optgroup label="📋 Terdaftar di Portal Sekolah (Belum Ditambahkan)">
-                      {portalSchoolOptions.map((reg) => (
-                        <option key={reg.id || reg.schoolName} value={reg.schoolName}>
-                          {reg.schoolName}
-                        </option>
-                      ))}
+                      {portalSchoolOptions.map((reg) => {
+                        let dateText = '';
+                        const hasOct = reg.selectedDates && reg.selectedDates.length > 0;
+                        const hasNov = reg.selectedDatesNov && reg.selectedDatesNov.length > 0;
+                        if (hasOct || hasNov) {
+                          const dates = [];
+                          if (hasOct) {
+                            const sorted = [...reg.selectedDates].sort((a, b) => a - b);
+                            dates.push(`${sorted.join(', ')} Okt`);
+                          }
+                          if (hasNov) {
+                            const sorted = [...reg.selectedDatesNov].sort((a, b) => a - b);
+                            dates.push(`${sorted.join(', ')} Nov`);
+                          }
+                          dateText = ` (Event: ${dates.join(' & ')})`;
+                        }
+                        return (
+                          <option key={reg.id || reg.schoolName} value={reg.schoolName}>
+                            {reg.schoolName}{dateText}
+                          </option>
+                        );
+                      })}
                     </optgroup>
                   ) : (
                     <option disabled value="__empty__">
