@@ -220,6 +220,11 @@ ALTER TABLE school_registrations ADD COLUMN IF NOT EXISTS selected_dates JSONB D
 ALTER TABLE school_registrations ADD COLUMN IF NOT EXISTS passcode TEXT;
 ALTER TABLE school_registrations ALTER COLUMN city_id DROP NOT NULL;
 
+-- Migrasi kolom schools: event_date_2, assigned_to_2, operator_assignments (Penugasan per Hari)
+ALTER TABLE schools ADD COLUMN IF NOT EXISTS event_date_2 DATE;
+ALTER TABLE schools ADD COLUMN IF NOT EXISTS assigned_to_2 TEXT[] DEFAULT '{}';
+ALTER TABLE schools ADD COLUMN IF NOT EXISTS operator_assignments JSONB DEFAULT '[]'::jsonb;
+
 ALTER TABLE school_registrations ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Allow all school_registrations" ON school_registrations;
 CREATE POLICY "Allow all school_registrations" ON school_registrations FOR ALL USING (true);

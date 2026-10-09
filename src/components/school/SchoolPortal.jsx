@@ -30,7 +30,7 @@ import {
   Copy,
   CheckCircle2,
 } from 'lucide-react';
-import { OperatorAssignmentForm } from './OperatorAssignmentForm';
+
 
 const InstagramIcon = ({ className }) => (
   <svg 
@@ -356,7 +356,6 @@ export const SchoolPortal = () => {
     schoolRegistrations,
     cities,
     events,
-    users,
     currentUser,
     handleSaveSchoolRegistration,
     handleDeleteSchoolRegistration,
@@ -428,11 +427,9 @@ export const SchoolPortal = () => {
   const [selectedDatesNov, setSelectedDatesNov] = useState([]); // tanggal kegiatan November
   const [activeTab, setActiveTab] = useState('input'); // 'input' | 'riwayat'
   const [selectedReg, setSelectedReg] = useState(null); // For detail modal
-  const [operatorAssignments, setOperatorAssignments] = useState([]);
+
   
-  const availableOperators = useMemo(() => {
-    return (users || []).filter(u => u.role === 'operator').map(u => ({ id: u.id, name: u.name }));
-  }, [users]);
+
 
   const [shareReg, setShareReg] = useState(null); // For share modal
   const [showIgModal, setShowIgModal] = useState(false); // For Instagram Ad modal
@@ -622,13 +619,11 @@ export const SchoolPortal = () => {
         setClassDetails(matched.classDetails || {});
         setSelectedDates(matched.selectedDates || []);
         setSelectedDatesNov(matched.selectedDatesNov || []);
-        setOperatorAssignments(matched.operatorAssignments || []);
       } else {
         setSyncStatus('not_found');
         setEditingRegId(null);
         setClassDetails({});
         setSelectedDates([]);
-        setOperatorAssignments([]);
       }
     }, 500);
 
@@ -659,7 +654,6 @@ export const SchoolPortal = () => {
     setClassDetails(reg.classDetails || {});
     setSelectedDates(reg.selectedDates || []);
     setSelectedDatesNov(reg.selectedDatesNov || []);
-    setOperatorAssignments(reg.operatorAssignments || []);
     setTotalStudents(reg.totalStudents || 0);
     setSyncStatus('matched');
     setEditingRegId(reg.id);
@@ -743,7 +737,6 @@ export const SchoolPortal = () => {
       selectedDates: selectedDates,
       selectedDatesNov: selectedDatesNov,
       passcode: formData.passcode,
-      operatorAssignments: operatorAssignments,
     };
 
     handleSaveSchoolRegistration(registrationData);
@@ -761,7 +754,6 @@ export const SchoolPortal = () => {
     setTotalStudents(0);
     setSelectedDates([]);
     setSelectedDatesNov([]);
-    setOperatorAssignments([]);
     setSyncStatus('idle');
     setEditingRegId(null);
     setActiveTab('riwayat');
@@ -774,7 +766,6 @@ export const SchoolPortal = () => {
     setClassDetails({});
     setSelectedDates([]);
     setSelectedDatesNov([]);
-    setOperatorAssignments([]);
     setFormData(prev => ({
       ...prev,
       schoolName: '',
@@ -1295,17 +1286,7 @@ export const SchoolPortal = () => {
             </div>
           )}
 
-          {/* Section 3.5: Penugasan Operator */}
-          {showClassSection && (selectedDates.length > 0 || selectedDatesNov.length > 0) && (
-            <OperatorAssignmentForm
-              selectedDates={[
-                ...selectedDates.map(d => `${d} Oktober`), 
-                ...selectedDatesNov.map(d => `${d} November`)
-              ]}
-              availableOperators={availableOperators}
-              onAssignmentsChange={setOperatorAssignments}
-            />
-          )}
+
 
           {/* Section 4: Summary Counter & Submit */}
           {showClassSection && (

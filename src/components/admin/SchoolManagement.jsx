@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useAuth } from '../../context/useAuth';
 import { PlusCircle, Pencil, Trash2, Building2, MapPin, Users, Calendar, AlertCircle, Link2, ChevronDown, RefreshCw, AlertTriangle } from 'lucide-react';
+import { OperatorAssignmentForm } from '../school/OperatorAssignmentForm';
 
 export const SchoolManagement = () => {
   const { schools, cities, schoolRegistrations, handleSaveSchool, handleDeleteSchool, currentUser, users, showToast } = useAuth();
@@ -9,6 +10,7 @@ export const SchoolManagement = () => {
   const [editingSchool, setEditingSchool] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSyncing, setIsSyncing] = useState(false);
+  const [operatorAssignments, setOperatorAssignments] = useState([]);
 
   // Filter cities: jika bukan admin/pimpinan, hanya tampilkan kota currentUser
   const activeCities = cities.filter(c => {
@@ -30,6 +32,7 @@ export const SchoolManagement = () => {
     assignedTo: [],
     assignedTo2: [],
     active: true,
+    operatorAssignments: [],
   });
 
   // Sekolah dari Portal Sekolah yang sudah mendaftar, difilter berdasarkan cityId terpilih.
@@ -199,7 +202,9 @@ export const SchoolManagement = () => {
       assignedTo: [],
       assignedTo2: [],
       active: true,
+      operatorAssignments: [],
     });
+    setOperatorAssignments([]);
     setEditingSchool(null);
     setShowForm(false);
   };
@@ -216,7 +221,9 @@ export const SchoolManagement = () => {
       assignedTo: Array.isArray(school.assignedTo) ? school.assignedTo : (school.assignedTo ? [school.assignedTo] : []),
       assignedTo2: Array.isArray(school.assignedTo2) ? school.assignedTo2 : (school.assignedTo2 ? [school.assignedTo2] : []),
       active: school.active !== false,
+      operatorAssignments: school.operatorAssignments || [],
     });
+    setOperatorAssignments(school.operatorAssignments || []);
     setShowForm(true);
   };
 
@@ -224,15 +231,34 @@ export const SchoolManagement = () => {
     e.preventDefault();
     if (!formData.name || !formData.cityId) return;
 
+    // Derive assignedTo & assignedTo2 dari operatorAssignments (Penugasan Tim Operator per Hari)
+    // Hari ke-1 → assignedTo, Hari ke-2 → assignedTo2
+    // isFullTeam = null (semua operator), Partial = array ID operator terpilih
+    let derivedAssignedTo = Array.isArray(formData.assignedTo) && formData.assignedTo.length > 0 ? formData.assignedTo : null;
+    let derivedAssignedTo2 = Array.isArray(formData.assignedTo2) && formData.assignedTo2.length > 0 ? formData.assignedTo2 : null;
+
+    if (operatorAssignments && operatorAssignments.length > 0) {
+      const day1 = operatorAssignments.find(a => a.day === 1);
+      const day2 = operatorAssignments.find(a => a.day === 2);
+
+      if (day1) {
+        derivedAssignedTo = day1.isFullTeam ? null : (day1.operators.length > 0 ? day1.operators : null);
+      }
+      if (day2) {
+        derivedAssignedTo2 = day2.isFullTeam ? null : (day2.operators.length > 0 ? day2.operators : null);
+      }
+    }
+
     handleSaveSchool({
       ...(editingSchool ? { id: editingSchool.id } : {}),
       ...formData,
       demoDate: formData.demoDate || null,
       eventDate: formData.eventDate || null,
       eventDate2: formData.eventDate2 || null,
-      assignedTo: Array.isArray(formData.assignedTo) && formData.assignedTo.length > 0 ? formData.assignedTo : null,
-      assignedTo2: Array.isArray(formData.assignedTo2) && formData.assignedTo2.length > 0 ? formData.assignedTo2 : null,
+      assignedTo: derivedAssignedTo,
+      assignedTo2: derivedAssignedTo2,
       studentCount: parseInt(formData.studentCount) || 0,
+      operatorAssignments: operatorAssignments,
     });
     resetForm();
   };
@@ -541,6 +567,37 @@ export const SchoolManagement = () => {
               </div>
             )}
           </div>
+
+          {/* Penugasan Tim Operator per Hari (dari Portal Sekolah) */}
+          {(() => {
+            const reg = portalSchoolOptions.find(r => r.schoolName === formData.name);
+            const availableOperators = users
+              .filter(u => u.role === 'operator' && u.city === getCityName(formData.cityId))
+              .map(u => ({ id: u.id, name: u.name }));
+            const datesForAssignment = [];
+            if (reg) {
+              if (reg.selectedDates && reg.selectedDates.length > 0) {
+                [...reg.selectedDates].sort((a,b)=>a-b).forEach(d => datesForAssignment.push(`${d} Oktober`));
+              }
+              if (reg.selectedDatesNov && reg.selectedDatesNov.length > 0) {
+                [...reg.selectedDatesNov].sort((a,b)=>a-b).forEach(d => datesForAssignment.push(`${d} November`));
+              }
+            } else if (editingSchool) {
+              // Saat mode edit, pakai tanggal event yang sudah ada
+              if (formData.eventDate) datesForAssignment.push(formData.eventDate);
+              if (formData.eventDate2) datesForAssignment.push(formData.eventDate2);
+            }
+            if (datesForAssignment.length === 0 || availableOperators.length === 0) return null;
+            return (
+              <div className="mt-5 pt-5 border-t border-slate-700/60">
+                <OperatorAssignmentForm
+                  selectedDates={datesForAssignment}
+                  availableOperators={availableOperators}
+                  onAssignmentsChange={setOperatorAssignments}
+                />
+              </div>
+            );
+          })()}
 
           <div className="flex justify-end space-x-2 mt-4 pt-4 border-t border-slate-700">
             <button
