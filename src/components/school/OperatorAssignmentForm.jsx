@@ -1,19 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { Users } from 'lucide-react';
 
-export const OperatorAssignmentForm = ({ selectedDates, availableOperators, onAssignmentsChange }) => {
+export const OperatorAssignmentForm = ({ selectedDates, availableOperators, initialAssignments = [], onAssignmentsChange }) => {
   const [assignments, setAssignments] = useState([]);
 
   // Sync state dengan selectedDates dari luar
   useEffect(() => {
     setAssignments(prev => {
-      // Buat array baru berdasarkan selectedDates yang ada
+      // Sumber data: prev jika ada, atau initialAssignments
+      const source = (prev && prev.length > 0) ? prev : (initialAssignments || []);
       const newAssignments = selectedDates.map((date, index) => {
-        // Coba cari data lama berdasarkan tanggal
-        const existing = prev.find(a => a.date === date);
+        // Coba cari data lama berdasarkan tanggal atau day
+        const existing = source.find(a => a.date === date || a.day === index + 1);
         if (existing) {
-          // Pertahankan state lama (day mungkin berubah urutannya, kita update)
-          return { ...existing, day: index + 1 };
+          return {
+            ...existing,
+            day: index + 1,
+            date: date,
+            operators: existing.isFullTeam ? availableOperators.map(op => op.id) : (existing.operators || [])
+          };
         }
         // Jika belum ada, buat baru: Hari ke-1 Full Team, sisanya Partial
         return {

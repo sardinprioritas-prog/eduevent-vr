@@ -211,6 +211,30 @@ export const SchoolManagement = () => {
 
   const handleEdit = (school) => {
     setEditingSchool(school);
+    let initialOpAssignments = school.operatorAssignments || [];
+    if ((!initialOpAssignments || initialOpAssignments.length === 0) && (school.eventDate || school.eventDate2)) {
+      const reconstructed = [];
+      if (school.eventDate) {
+        const isFull = !school.assignedTo || school.assignedTo.length === 0;
+        reconstructed.push({
+          day: 1,
+          date: school.eventDate,
+          isFullTeam: isFull,
+          operators: isFull ? [] : (Array.isArray(school.assignedTo) ? school.assignedTo : [school.assignedTo]),
+        });
+      }
+      if (school.eventDate2) {
+        const isFull = !school.assignedTo2 || school.assignedTo2.length === 0;
+        reconstructed.push({
+          day: 2,
+          date: school.eventDate2,
+          isFullTeam: isFull,
+          operators: isFull ? [] : (Array.isArray(school.assignedTo2) ? school.assignedTo2 : [school.assignedTo2]),
+        });
+      }
+      initialOpAssignments = reconstructed;
+    }
+
     setFormData({
       cityId: school.cityId,
       name: school.name,
@@ -221,9 +245,9 @@ export const SchoolManagement = () => {
       assignedTo: Array.isArray(school.assignedTo) ? school.assignedTo : (school.assignedTo ? [school.assignedTo] : []),
       assignedTo2: Array.isArray(school.assignedTo2) ? school.assignedTo2 : (school.assignedTo2 ? [school.assignedTo2] : []),
       active: school.active !== false,
-      operatorAssignments: school.operatorAssignments || [],
+      operatorAssignments: initialOpAssignments,
     });
-    setOperatorAssignments(school.operatorAssignments || []);
+    setOperatorAssignments(initialOpAssignments);
     setShowForm(true);
   };
 
@@ -351,7 +375,7 @@ export const SchoolManagement = () => {
                 ))}
               </select>
             </div>
-            <div className="lg:col-span-1">
+            <div className="lg:col-span-2">
               <label className="block text-xs font-medium text-slate-400 mb-1 flex items-center gap-1.5">
                 Nama Sekolah
                 {portalSchoolOptions.length > 0 && (
@@ -485,87 +509,6 @@ export const SchoolManagement = () => {
                 );
               })()}
             </div>
-            <div className="lg:col-span-1">
-              <label className="block text-xs font-medium text-slate-400 mb-1">
-                Ditugaskan Ke {formData.eventDate2 ? '(Event 1)' : ''}
-              </label>
-              <div className="flex flex-col gap-2 p-2.5 bg-slate-950 border border-slate-700 rounded-xl max-h-[82px] overflow-y-auto custom-scrollbar">
-                <label className="flex items-center space-x-2 text-[11px] text-slate-200 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={!formData.assignedTo || formData.assignedTo.length === 0}
-                    onChange={(e) => {
-                      if (e.target.checked) setFormData({ ...formData, assignedTo: [] });
-                    }}
-                    className="w-3.5 h-3.5 rounded border-slate-600 bg-slate-900 text-blue-500 focus:ring-blue-500/50 cursor-pointer accent-blue-500"
-                  />
-                  <span className="truncate">Semua Operator</span>
-                </label>
-                {users.filter(u => u.role === 'operator' && u.city === getCityName(formData.cityId)).map(op => {
-                  const isChecked = Array.isArray(formData.assignedTo) && formData.assignedTo.includes(op.id);
-                  return (
-                    <label key={op.id} className="flex items-center space-x-2 text-[11px] text-slate-200 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={isChecked}
-                        onChange={(e) => {
-                          const currentArr = Array.isArray(formData.assignedTo) ? formData.assignedTo : [];
-                          if (e.target.checked) {
-                            setFormData({ ...formData, assignedTo: [...currentArr, op.id] });
-                          } else {
-                            setFormData({ ...formData, assignedTo: currentArr.filter(id => id !== op.id) });
-                          }
-                        }}
-                        className="w-3.5 h-3.5 rounded border-slate-600 bg-slate-900 text-blue-500 focus:ring-blue-500/50 cursor-pointer accent-blue-500"
-                      />
-                      <span className="truncate">{op.name}</span>
-                    </label>
-                  );
-                })}
-              </div>
-            </div>
-
-            {formData.eventDate2 && (
-              <div className="lg:col-span-1">
-                <label className="block text-xs font-medium text-slate-400 mb-1">
-                  Ditugaskan Ke (Event 2)
-                </label>
-                <div className="flex flex-col gap-2 p-2.5 bg-slate-950 border border-slate-700 rounded-xl max-h-[82px] overflow-y-auto custom-scrollbar">
-                  <label className="flex items-center space-x-2 text-[11px] text-slate-200 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={!formData.assignedTo2 || formData.assignedTo2.length === 0}
-                      onChange={(e) => {
-                        if (e.target.checked) setFormData({ ...formData, assignedTo2: [] });
-                      }}
-                      className="w-3.5 h-3.5 rounded border-slate-600 bg-slate-900 text-blue-500 focus:ring-blue-500/50 cursor-pointer accent-blue-500"
-                    />
-                    <span className="truncate">Semua Operator</span>
-                  </label>
-                  {users.filter(u => u.role === 'operator' && u.city === getCityName(formData.cityId)).map(op => {
-                    const isChecked = Array.isArray(formData.assignedTo2) && formData.assignedTo2.includes(op.id);
-                    return (
-                      <label key={op.id} className="flex items-center space-x-2 text-[11px] text-slate-200 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={isChecked}
-                          onChange={(e) => {
-                            const currentArr = Array.isArray(formData.assignedTo2) ? formData.assignedTo2 : [];
-                            if (e.target.checked) {
-                              setFormData({ ...formData, assignedTo2: [...currentArr, op.id] });
-                            } else {
-                              setFormData({ ...formData, assignedTo2: currentArr.filter(id => id !== op.id) });
-                            }
-                          }}
-                          className="w-3.5 h-3.5 rounded border-slate-600 bg-slate-900 text-blue-500 focus:ring-blue-500/50 cursor-pointer accent-blue-500"
-                        />
-                        <span className="truncate">{op.name}</span>
-                      </label>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
           </div>
 
           {/* Penugasan Tim Operator per Hari (dari Portal Sekolah) */}
@@ -582,8 +525,9 @@ export const SchoolManagement = () => {
               if (reg.selectedDatesNov && reg.selectedDatesNov.length > 0) {
                 [...reg.selectedDatesNov].sort((a,b)=>a-b).forEach(d => datesForAssignment.push(`${d} November`));
               }
-            } else if (editingSchool) {
-              // Saat mode edit, pakai tanggal event yang sudah ada
+            }
+            if (datesForAssignment.length === 0) {
+              // Jika tidak dari reg (misal input manual atau edit sekolah), pakai tanggal event di form
               if (formData.eventDate) datesForAssignment.push(formData.eventDate);
               if (formData.eventDate2) datesForAssignment.push(formData.eventDate2);
             }
@@ -591,8 +535,10 @@ export const SchoolManagement = () => {
             return (
               <div className="mt-5 pt-5 border-t border-slate-700/60">
                 <OperatorAssignmentForm
+                  key={editingSchool ? editingSchool.id : (formData.name || 'new')}
                   selectedDates={datesForAssignment}
                   availableOperators={availableOperators}
+                  initialAssignments={operatorAssignments}
                   onAssignmentsChange={setOperatorAssignments}
                 />
               </div>
@@ -710,15 +656,45 @@ export const SchoolManagement = () => {
                   </td>
                   <td className="py-3 px-4">
                     {(() => {
-                      const { label, isAll } = getOperatorLabel(s.assignedTo);
-                      return isAll ? (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-blue-500/10 text-blue-400 border border-blue-500/20">
-                          All Team
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-500/10 text-amber-300 border border-amber-500/20 max-w-[140px] truncate" title={label}>
-                          {label}
-                        </span>
+                      const day1Label = getOperatorLabel(s.assignedTo);
+                      const hasDay2 = !!(s.eventDate2 || s.assignedTo2);
+                      const day2Label = hasDay2 ? getOperatorLabel(s.assignedTo2) : null;
+
+                      if (!hasDay2) {
+                        return day1Label.isAll ? (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                            All Team
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-500/10 text-amber-300 border border-amber-500/20 max-w-[140px] truncate" title={day1Label.label}>
+                            {day1Label.label}
+                          </span>
+                        );
+                      }
+
+                      return (
+                        <div className="flex flex-col gap-1">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-[9px] font-bold text-slate-400">H1:</span>
+                            {day1Label.isAll ? (
+                              <span className="px-1.5 py-0.2 rounded text-[9px] font-semibold bg-blue-500/10 text-blue-400">All Team</span>
+                            ) : (
+                              <span className="px-1.5 py-0.2 rounded text-[9px] font-semibold bg-amber-500/10 text-amber-300 max-w-[110px] truncate" title={day1Label.label}>
+                                {day1Label.label}
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-[9px] font-bold text-slate-400">H2:</span>
+                            {day2Label.isAll ? (
+                              <span className="px-1.5 py-0.2 rounded text-[9px] font-semibold bg-blue-500/10 text-blue-400">All Team</span>
+                            ) : (
+                              <span className="px-1.5 py-0.2 rounded text-[9px] font-semibold bg-amber-500/10 text-amber-300 max-w-[110px] truncate" title={day2Label.label}>
+                                {day2Label.label}
+                              </span>
+                            )}
+                          </div>
+                        </div>
                       );
                     })()}
                   </td>
