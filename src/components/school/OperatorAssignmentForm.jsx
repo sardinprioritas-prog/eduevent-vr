@@ -72,7 +72,9 @@ export const OperatorAssignmentForm = ({ selectedDates, availableOperators, init
         </div>
         <div>
           <h2 className="text-lg font-bold text-slate-100">Penugasan Tim Operator</h2>
-          <p className="text-xs text-slate-500">Pilih tim yang bertugas untuk setiap hari pelaksanaan kegiatan.</p>
+          <p className="text-xs text-slate-500">
+            {assignments.length > 1 ? 'Pilih tim yang bertugas untuk setiap hari pelaksanaan kegiatan.' : 'Pilih tim yang bertugas untuk pelaksanaan kegiatan.'}
+          </p>
         </div>
       </div>
       
@@ -80,7 +82,7 @@ export const OperatorAssignmentForm = ({ selectedDates, availableOperators, init
         <div key={index} className="p-5 rounded-2xl bg-slate-900/60 border border-slate-800/80">
           <div className="flex justify-between items-center mb-4">
             <h4 className="font-semibold text-sm text-sky-400">
-              Hari ke-{assign.day} ({assign.date})
+              {assignments.length > 1 ? `Hari ke-${assign.day} (${assign.date})` : `Penugasan Operator (${assign.date})`}
             </h4>
           </div>
 

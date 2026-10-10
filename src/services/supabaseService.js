@@ -48,7 +48,7 @@ const toAppSchool = (row) => ({
   eventDate: row.event_date,
   eventDate2: row.event_date_2 || null,
   assignedTo: row.assigned_to || [],
-  assignedTo2: row.assigned_to_2 || [],
+  assignedTo2: row.event_date_2 ? (row.assigned_to_2 || []) : null,
   operatorAssignments: row.operator_assignments || [],
   active: row.active,
   createdAt: row.created_at,
@@ -102,7 +102,7 @@ const toDbSchool = (sch) => ({
   event_date: sch.eventDate || null,
   event_date_2: sch.eventDate2 || null,
   assigned_to: sch.assignedTo || [],
-  assigned_to_2: sch.assignedTo2 || [],
+  assigned_to_2: sch.eventDate2 ? (sch.assignedTo2 || []) : null,
   operator_assignments: sch.operatorAssignments || [],
   active: sch.active,
 });

@@ -211,8 +211,14 @@ export const SchoolManagement = () => {
 
   const handleEdit = (school) => {
     setEditingSchool(school);
+    const hasDay2 = Boolean(school.eventDate2 && school.eventDate2.trim() !== '');
+
     let initialOpAssignments = school.operatorAssignments || [];
-    if ((!initialOpAssignments || initialOpAssignments.length === 0) && (school.eventDate || school.eventDate2)) {
+    if (!hasDay2) {
+      initialOpAssignments = initialOpAssignments.filter(a => a.day === 1);
+    }
+
+    if ((!initialOpAssignments || initialOpAssignments.length === 0) && (school.eventDate || (hasDay2 && school.eventDate2))) {
       const reconstructed = [];
       if (school.eventDate) {
         const isFull = !school.assignedTo || school.assignedTo.length === 0;
@@ -223,7 +229,7 @@ export const SchoolManagement = () => {
           operators: isFull ? [] : (Array.isArray(school.assignedTo) ? school.assignedTo : [school.assignedTo]),
         });
       }
-      if (school.eventDate2) {
+      if (hasDay2 && school.eventDate2) {
         const isFull = !school.assignedTo2 || school.assignedTo2.length === 0;
         reconstructed.push({
           day: 2,
@@ -241,9 +247,9 @@ export const SchoolManagement = () => {
       studentCount: school.studentCount,
       demoDate: school.demoDate || '',
       eventDate: school.eventDate || '',
-      eventDate2: school.eventDate2 || '',
+      eventDate2: hasDay2 ? (school.eventDate2 || '') : '',
       assignedTo: Array.isArray(school.assignedTo) ? school.assignedTo : (school.assignedTo ? [school.assignedTo] : []),
-      assignedTo2: Array.isArray(school.assignedTo2) ? school.assignedTo2 : (school.assignedTo2 ? [school.assignedTo2] : []),
+      assignedTo2: hasDay2 ? (Array.isArray(school.assignedTo2) ? school.assignedTo2 : (school.assignedTo2 ? [school.assignedTo2] : [])) : [],
       active: school.active !== false,
       operatorAssignments: initialOpAssignments,
     });
@@ -255,15 +261,17 @@ export const SchoolManagement = () => {
     e.preventDefault();
     if (!formData.name || !formData.cityId) return;
 
+    const hasDay2 = Boolean(formData.eventDate2 && formData.eventDate2.trim() !== '');
+
     // Derive assignedTo & assignedTo2 dari operatorAssignments (Penugasan Tim Operator per Hari)
     // Hari ke-1 → assignedTo, Hari ke-2 → assignedTo2
     // isFullTeam = null (semua operator), Partial = array ID operator terpilih
     let derivedAssignedTo = Array.isArray(formData.assignedTo) && formData.assignedTo.length > 0 ? formData.assignedTo : null;
-    let derivedAssignedTo2 = Array.isArray(formData.assignedTo2) && formData.assignedTo2.length > 0 ? formData.assignedTo2 : null;
+    let derivedAssignedTo2 = null;
 
     if (operatorAssignments && operatorAssignments.length > 0) {
       const day1 = operatorAssignments.find(a => a.day === 1);
-      const day2 = operatorAssignments.find(a => a.day === 2);
+      const day2 = hasDay2 ? operatorAssignments.find(a => a.day === 2) : null;
 
       if (day1) {
         derivedAssignedTo = day1.isFullTeam ? null : (day1.operators.length > 0 ? day1.operators : null);
@@ -271,18 +279,24 @@ export const SchoolManagement = () => {
       if (day2) {
         derivedAssignedTo2 = day2.isFullTeam ? null : (day2.operators.length > 0 ? day2.operators : null);
       }
+    } else if (hasDay2) {
+      derivedAssignedTo2 = Array.isArray(formData.assignedTo2) && formData.assignedTo2.length > 0 ? formData.assignedTo2 : null;
     }
+
+    const cleanOperatorAssignments = hasDay2
+      ? operatorAssignments
+      : (operatorAssignments || []).filter(a => a.day === 1);
 
     handleSaveSchool({
       ...(editingSchool ? { id: editingSchool.id } : {}),
       ...formData,
       demoDate: formData.demoDate || null,
       eventDate: formData.eventDate || null,
-      eventDate2: formData.eventDate2 || null,
+      eventDate2: hasDay2 ? formData.eventDate2 : null,
       assignedTo: derivedAssignedTo,
-      assignedTo2: derivedAssignedTo2,
+      assignedTo2: hasDay2 ? derivedAssignedTo2 : null,
       studentCount: parseInt(formData.studentCount) || 0,
-      operatorAssignments: operatorAssignments,
+      operatorAssignments: cleanOperatorAssignments,
     });
     resetForm();
   };
@@ -470,7 +484,7 @@ export const SchoolManagement = () => {
               {(() => {
                 const reg = portalSchoolOptions.find(r => r.schoolName === formData.name);
                 const isAuto = !!reg;
-                const hasSecondDate = isAuto && reg.selectedDates && reg.selectedDates.length >= 2;
+                const hasSecondDate = Boolean(formData.eventDate2 || (isAuto && ((reg?.selectedDates?.length || 0) + (reg?.selectedDatesNov?.length || 0) >= 2)));
                 return (
                   <>
                     <label className="block text-xs font-medium text-slate-400 mb-1 flex items-center gap-1.5">
@@ -511,31 +525,45 @@ export const SchoolManagement = () => {
             </div>
           </div>
 
-          {/* Penugasan Tim Operator per Hari (dari Portal Sekolah) */}
+          {/* Penugasan Tim Operator per Hari */}
           {(() => {
             const reg = portalSchoolOptions.find(r => r.schoolName === formData.name);
             const availableOperators = users
               .filter(u => u.role === 'operator' && u.city === getCityName(formData.cityId))
               .map(u => ({ id: u.id, name: u.name }));
+            
+            // Tanggal penugasan mengikuti tanggal event yang ditentukan di form
             const datesForAssignment = [];
-            if (reg) {
-              if (reg.selectedDates && reg.selectedDates.length > 0) {
-                [...reg.selectedDates].sort((a,b)=>a-b).forEach(d => datesForAssignment.push(`${d} Oktober`));
+            if (formData.eventDate) {
+              let d1Label = formData.eventDate;
+              if (reg) {
+                const allRegDates = [];
+                if (reg.selectedDates) reg.selectedDates.forEach(d => allRegDates.push({ str: `${d} Oktober`, iso: `2026-10-${String(d).padStart(2, '0')}` }));
+                if (reg.selectedDatesNov) reg.selectedDatesNov.forEach(d => allRegDates.push({ str: `${d} November`, iso: `2026-11-${String(d).padStart(2, '0')}` }));
+                const match = allRegDates.find(r => r.iso === formData.eventDate);
+                if (match) d1Label = match.str;
               }
-              if (reg.selectedDatesNov && reg.selectedDatesNov.length > 0) {
-                [...reg.selectedDatesNov].sort((a,b)=>a-b).forEach(d => datesForAssignment.push(`${d} November`));
+              datesForAssignment.push(d1Label);
+            }
+
+            // Hari ke-2 hanya ditambahkan jika eventDate2 memang diisi (kegiatan 2 hari)
+            if (formData.eventDate2 && formData.eventDate2.trim() !== '') {
+              let d2Label = formData.eventDate2;
+              if (reg) {
+                const allRegDates = [];
+                if (reg.selectedDates) reg.selectedDates.forEach(d => allRegDates.push({ str: `${d} Oktober`, iso: `2026-10-${String(d).padStart(2, '0')}` }));
+                if (reg.selectedDatesNov) reg.selectedDatesNov.forEach(d => allRegDates.push({ str: `${d} November`, iso: `2026-11-${String(d).padStart(2, '0')}` }));
+                const match = allRegDates.find(r => r.iso === formData.eventDate2);
+                if (match) d2Label = match.str;
               }
+              datesForAssignment.push(d2Label);
             }
-            if (datesForAssignment.length === 0) {
-              // Jika tidak dari reg (misal input manual atau edit sekolah), pakai tanggal event di form
-              if (formData.eventDate) datesForAssignment.push(formData.eventDate);
-              if (formData.eventDate2) datesForAssignment.push(formData.eventDate2);
-            }
+
             if (datesForAssignment.length === 0 || availableOperators.length === 0) return null;
             return (
               <div className="mt-5 pt-5 border-t border-slate-700/60">
                 <OperatorAssignmentForm
-                  key={editingSchool ? editingSchool.id : (formData.name || 'new')}
+                  key={`${editingSchool ? editingSchool.id : (formData.name || 'new')}-${datesForAssignment.length}`}
                   selectedDates={datesForAssignment}
                   availableOperators={availableOperators}
                   initialAssignments={operatorAssignments}
@@ -657,7 +685,7 @@ export const SchoolManagement = () => {
                   <td className="py-3 px-4">
                     {(() => {
                       const day1Label = getOperatorLabel(s.assignedTo);
-                      const hasDay2 = !!(s.eventDate2 || s.assignedTo2);
+                      const hasDay2 = Boolean(s.eventDate2 && s.eventDate2.trim() !== '');
                       const day2Label = hasDay2 ? getOperatorLabel(s.assignedTo2) : null;
 
                       if (!hasDay2) {
