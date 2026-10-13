@@ -434,12 +434,18 @@ export const SchoolPortal = () => {
   const [shareReg, setShareReg] = useState(null); // For share modal
   const [showIgModal, setShowIgModal] = useState(false); // For Instagram Ad modal
 
-  // Sort registrations ascending by earliest selected date
+  // Sort registrations ascending by earliest selected date (Oktober lalu November)
   const sortedRegistrations = useMemo(() => {
+    const earliestKey = (reg) => {
+      const oct = (reg.selectedDates || []).map(Number).filter(n => !isNaN(n));
+      const nov = (reg.selectedDatesNov || []).map(Number).filter(n => !isNaN(n)).map(n => 100 + n);
+      const all = [...oct, ...nov];
+      return all.length > 0 ? Math.min(...all) : Infinity;
+    };
     return [...schoolRegistrations].sort((a, b) => {
-      const aDate = a.selectedDates && a.selectedDates.length > 0 ? Math.min(...a.selectedDates) : Infinity;
-      const bDate = b.selectedDates && b.selectedDates.length > 0 ? Math.min(...b.selectedDates) : Infinity;
-      return aDate - bDate;
+      const diff = earliestKey(a) - earliestKey(b);
+      if (diff !== 0 && !isNaN(diff)) return diff;
+      return (a.schoolName || '').localeCompare(b.schoolName || '');
     });
   }, [schoolRegistrations]);
 
@@ -1451,13 +1457,13 @@ export const SchoolPortal = () => {
                       <td className="py-3.5 px-4 text-center font-extrabold text-indigo-300">{reg.totalStudents} siswa</td>
                       <td className="py-3.5 px-4 text-center">
                         <div className="flex flex-col items-center gap-1">
-                          {reg.selectedDates && reg.selectedDates.length > 0 && reg.selectedDates.map(d => (
+                          {reg.selectedDates && reg.selectedDates.length > 0 && [...reg.selectedDates].sort((a, b) => Number(a) - Number(b)).map(d => (
                             <span key={`oct-${d}`} className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-md bg-violet-900/40 border border-violet-600/30 text-violet-300 text-[10px] font-bold">
                               <Calendar className="w-2.5 h-2.5" />
                               <span>{d} Okt 2026</span>
                             </span>
                           ))}
-                          {reg.selectedDatesNov && reg.selectedDatesNov.length > 0 && reg.selectedDatesNov.map(d => (
+                          {reg.selectedDatesNov && reg.selectedDatesNov.length > 0 && [...reg.selectedDatesNov].sort((a, b) => Number(a) - Number(b)).map(d => (
                             <span key={`nov-${d}`} className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-md bg-teal-900/40 border border-teal-600/30 text-teal-300 text-[10px] font-bold">
                               <Calendar className="w-2.5 h-2.5" />
                               <span>{d} Nov 2026</span>
