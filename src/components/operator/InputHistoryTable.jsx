@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useAuth } from '../../context/useAuth';
-import { History, Search, Edit3, Trash2, Calendar, MapPin, Users, Award, CheckCircle, FileText } from 'lucide-react';
+import { History, Search, Edit3, Trash2, Calendar, MapPin, Users, Award, CheckCircle, FileText, School } from 'lucide-react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
@@ -27,9 +27,7 @@ export const InputHistoryTable = ({ onEditEvent, readOnly = false }) => {
   // Tampilkan hanya event dari kota currentUser (operator/pioneer)
   // Untuk operator, batasi agar hanya melihat event dari sekolah yang ditugaskan padanya
   // atau event yang diinputnya sendiri.
-  const filteredEvents = events.filter((e) => {
-    const matchesSearch = (e.schoolName || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          (e.cityName || '').toLowerCase().includes(searchQuery.toLowerCase());
+  const scopedEvents = events.filter((e) => {
     const isSameCity = (e.cityName || '').trim().toLowerCase() === (currentUser?.city || '').trim().toLowerCase();
 
     let isAuthorized = true;
@@ -49,8 +47,24 @@ export const InputHistoryTable = ({ onEditEvent, readOnly = false }) => {
       }
     }
 
-    return matchesSearch && isSameCity && isAuthorized;
+    return isSameCity && isAuthorized;
   });
+
+  const filteredEvents = scopedEvents.filter((e) => {
+    const q = searchQuery.toLowerCase();
+    return (e.schoolName || '').toLowerCase().includes(q) ||
+           (e.cityName || '').toLowerCase().includes(q);
+  });
+
+  // Ringkasan: total siswa partisipan & jumlah sekolah unik yang telah berkegiatan
+  const computeStats = (list) => ({
+    totalParticipants: list.reduce((sum, e) => sum + (Number(e.participatingStudents) || 0), 0),
+    totalSchools: new Set(
+      list.map(e => (e.schoolName || '').trim().toLowerCase()).filter(Boolean)
+    ).size,
+  });
+  const stats = computeStats(scopedEvents);
+  const searchStats = computeStats(filteredEvents);
 
   // Export to PDF
   const exportToPDF = () => {
@@ -68,7 +82,7 @@ export const InputHistoryTable = ({ onEditEvent, readOnly = false }) => {
     doc.setFontSize(9);
     doc.setTextColor(100, 116, 139);
     doc.text(
-      `Operator: ${currentUser?.name || '-'}  |  Tanggal Cetak: ${new Date().toLocaleDateString('id-ID')}  |  Total: ${filteredEvents.length} kegiatan`,
+      `Operator: ${currentUser?.name || '-'}  |  Tanggal Cetak: ${new Date().toLocaleDateString('id-ID')}  |  Total: ${filteredEvents.length} kegiatan  |  Siswa Partisipan: ${searchStats.totalParticipants.toLocaleString('id-ID')}  |  Sekolah: ${searchStats.totalSchools}`,
       14, 22
     );
 
@@ -143,6 +157,47 @@ export const InputHistoryTable = ({ onEditEvent, readOnly = false }) => {
           </div>
         </div>
       </div>
+
+      {/* Ringkasan Statistik */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+        <div className="relative overflow-hidden rounded-xl p-4 bg-gradient-to-br from-emerald-500/10 to-slate-900/60 border border-emerald-500/20">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-emerald-300/80">Jumlah Siswa Partisipan</p>
+              <p className="text-2xl font-extrabold text-emerald-300 mt-1 font-mono">
+                {stats.totalParticipants.toLocaleString('id-ID')}
+              </p>
+              <p className="text-[11px] text-slate-400 mt-0.5">dari {scopedEvents.length} kegiatan VR</p>
+            </div>
+            <div className="p-3 rounded-xl bg-emerald-500/15 text-emerald-400 border border-emerald-500/20">
+              <Users className="w-6 h-6" />
+            </div>
+          </div>
+        </div>
+
+        <div className="relative overflow-hidden rounded-xl p-4 bg-gradient-to-br from-indigo-500/10 to-slate-900/60 border border-indigo-500/20">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-indigo-300/80">Sekolah Telah Berkegiatan</p>
+              <p className="text-2xl font-extrabold text-indigo-300 mt-1 font-mono">
+                {stats.totalSchools.toLocaleString('id-ID')}
+              </p>
+              <p className="text-[11px] text-slate-400 mt-0.5">sekolah unik di wilayah {currentUser?.city || '-'}</p>
+            </div>
+            <div className="p-3 rounded-xl bg-indigo-500/15 text-indigo-400 border border-indigo-500/20">
+              <School className="w-6 h-6" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {searchQuery && filteredEvents.length > 0 && (
+        <p className="text-[11px] text-slate-400 mb-3">
+          Hasil pencarian: <span className="text-slate-200 font-semibold">{filteredEvents.length}</span> kegiatan ·{' '}
+          <span className="text-emerald-300 font-semibold">{searchStats.totalParticipants.toLocaleString('id-ID')}</span> siswa ·{' '}
+          <span className="text-indigo-300 font-semibold">{searchStats.totalSchools}</span> sekolah
+        </p>
+      )}
 
       {filteredEvents.length === 0 ? (
         <div className="text-center py-12 bg-slate-900/40 rounded-xl border border-slate-800/80">
