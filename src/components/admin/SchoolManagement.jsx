@@ -4,7 +4,40 @@ import { PlusCircle, Pencil, Trash2, Building2, MapPin, Users, Calendar, AlertCi
 import { OperatorAssignmentForm } from '../school/OperatorAssignmentForm';
 
 export const SchoolManagement = () => {
-  const { schools, cities, schoolRegistrations, handleSaveSchool, handleDeleteSchool, currentUser, users, showToast } = useAuth();
+  const { schools, cities, events, schoolRegistrations, handleSaveSchool, handleDeleteSchool, currentUser, users, showToast } = useAuth();
+
+  // Portal Pioneer: sembunyikan sekolah yang event-nya sudah terlaksana
+  // (sudah tercatat di Riwayat Input Kegiatan VR).
+  const hideCompletedSchools = currentUser?.role === 'pioneer';
+
+  // Kunci unik sekolah: "kota|nama sekolah" (lowercase, tanpa awalan 'kota ')
+  const normCity = (name) => (name || '').toLowerCase().replace('kota ', '').trim();
+  const schoolKey = (cityName, schoolName) => `${normCity(cityName)}|${(schoolName || '').trim().toLowerCase()}`;
+
+  // Sekolah dianggap SELESAI jika (sama seperti logika EventInputForm):
+  //   - ada sesi Fullday, ATAU
+  //   - 2 Hari: Hari-1 + Hari-2 sudah diinput, ATAU
+  //   - 3 Hari: Hari-1 + Hari-2 + Hari-3 sudah diinput
+  const completedSchoolKeys = useMemo(() => {
+    const grouped = {};
+    (events || []).forEach(evt => {
+      const key = schoolKey(evt.cityName, evt.schoolName);
+      (grouped[key] = grouped[key] || []).push(evt);
+    });
+    const done = new Set();
+    Object.entries(grouped).forEach(([key, evts]) => {
+      const has = (s) => evts.some(e => e.session === s);
+      const is3Hari = evts.some(e => e.duration === '3 Hari');
+      const isCompleted = has('Fullday')
+        || (!is3Hari && has('Hari-1') && has('Hari-2'))
+        || (is3Hari && has('Hari-1') && has('Hari-2') && has('Hari-3'));
+      if (isCompleted) done.add(key);
+    });
+    return done;
+  }, [events]);
+
+  const isSchoolCompleted = (cityName, schoolName) =>
+    completedSchoolKeys.has(schoolKey(cityName, schoolName));
   
   const [showForm, setShowForm] = useState(false);
   const [editingSchool, setEditingSchool] = useState(null);
@@ -88,9 +121,14 @@ export const SchoolManagement = () => {
         return false;
       }
 
+      // 3. Portal Pioneer: sembunyikan sekolah yang event-nya sudah terlaksana
+      if (hideCompletedSchools && isSchoolCompleted(selectedCity.name, reg.schoolName)) {
+        return false;
+      }
+
       return true;
     });
-  }, [schoolRegistrations, formData.cityId, cities, schools, editingSchool]);
+  }, [schoolRegistrations, formData.cityId, cities, schools, editingSchool, hideCompletedSchools, completedSchoolKeys]);
 
   // Handler saat sekolah dipilih dari dropdown Portal
   const handleSchoolSelect = (schoolName) => {
@@ -135,10 +173,15 @@ export const SchoolManagement = () => {
 
   const filteredSchools = (schools || []).filter((s) => {
     const matchesSearch = (s?.name || '').toLowerCase().includes(searchQuery.toLowerCase());
+    const schoolCity = cities.find(c => c.id === s?.cityId);
+
+    // Portal Pioneer: sekolah yang sudah terlaksana event tidak ditampilkan
+    if (hideCompletedSchools && isSchoolCompleted(schoolCity?.name, s?.name)) {
+      return false;
+    }
     
     // Filter by city for non-admin/pimpinan
     if (currentUser?.role !== 'admin' && currentUser?.role !== 'pimpinan') {
-      const schoolCity = cities.find(c => c.id === s?.cityId);
       return matchesSearch && (schoolCity?.name || '').trim().toLowerCase() === (currentUser?.city || '').trim().toLowerCase();
     }
     
