@@ -357,6 +357,7 @@ export const SchoolPortal = () => {
     cities,
     events,
     currentUser,
+    users,
     handleSaveSchoolRegistration,
     handleDeleteSchoolRegistration,
     dateLocks,
@@ -1516,8 +1517,11 @@ export const SchoolPortal = () => {
                             onClick={() => {
                               if (confirm(`Apakah Anda yakin ingin menghapus pendaftaran ${reg.schoolName}?`)) {
                                 const passcode = window.prompt('Masukkan Passcode Pioneer untuk menghapus registrasi ini:');
-                                if (passcode) {
-                                  const isValidPioneer = users?.some(u => u.passcode === passcode && u.role === 'pioneer');
+                                if (passcode && passcode.trim()) {
+                                  const entered = passcode.trim();
+                                  const isValidPioneer = (users || []).some(
+                                    u => u.role === 'pioneer' && String(u.passcode ?? '').trim() === entered
+                                  );
                                   if (isValidPioneer) {
                                     handleDeleteSchoolRegistration(reg.id);
                                   } else {
