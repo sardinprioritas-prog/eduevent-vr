@@ -1,9 +1,10 @@
 import React, { useMemo, useState } from 'react';
 import { useAuth } from '../../context/useAuth';
 import { Wallet, TrendingUp, Target, Award, Eye, EyeOff } from 'lucide-react';
+import { getOperatorShare, formatStudents } from '../../utils/operatorShare';
 
 export const SalaryWidget = ({ role = 'operator' }) => {
-  const { events, schools, currentUser, salarySettings, payouts } = useAuth();
+  const { events, schools, users, currentUser, salarySettings, payouts } = useAuth();
   const [isVisible, setIsVisible] = useState(true);
 
   const { fee, bonus, totalParticipating, uniqueEventDays, qualifyingDays } = useMemo(() => {
@@ -39,36 +40,21 @@ export const SalaryWidget = ({ role = 'operator' }) => {
       if (!isSameCity) return false;
       if (paidEventIds.has(evt.id)) return false;
       if (userHasOldFormatPayout && evt.payoutId) return false;
-
-      // Operator hanya dihitung fee-nya untuk sekolah yang ditugaskan atau yang diinputnya
-      if (currentUser?.role === 'operator') {
-        const school = (schools || []).find(
-          s => (s.name || '').trim().toLowerCase() === (evt.schoolName || '').trim().toLowerCase()
-        );
-        if (school) {
-          const assigned1 = school.assignedTo;
-          const assigned2 = school.assignedTo2;
-          const isAssigned1 = !assigned1 || (Array.isArray(assigned1) && assigned1.length === 0) || (Array.isArray(assigned1) && assigned1.includes(currentUser.id)) || assigned1 === currentUser.id;
-          const isAssigned2 = school.eventDate2 && (!assigned2 || (Array.isArray(assigned2) && assigned2.length === 0) || (Array.isArray(assigned2) && assigned2.includes(currentUser.id)) || assigned2 === currentUser.id);
-          if (!isAssigned1 && !isAssigned2) return false;
-        } else {
-          // Jika sekolah tak ditemukan, cek apakah dia yang menginputnya
-          if ((evt.operatorName || '').trim().toLowerCase() !== (currentUser?.name || '').trim().toLowerCase()) return false;
-        }
-      }
-
       return true;
     });
 
-    const totalStudents = cityEventsUnpaid.reduce((sum, evt) => {
-      return sum + (parseInt(evt.participatingStudents, 10) || 0);
-    }, 0);
+    // Porsi siswa per event untuk user ini.
+    // Operator: hanya event yang ditugaskan; Full Team → dibagi rata jumlah operator kota.
+    const shares = cityEventsUnpaid
+      .map(evt => ({ evt, share: getOperatorShare(evt, currentUser, { schools, users }) }))
+      .filter(({ share }) => share.eligible);
+
+    const totalStudents = shares.reduce((sum, { share }) => sum + share.students, 0);
 
     // Kelompokkan per tanggal → hitung siswa harian → qualifying days
     const dailyStudentMap = new Map();
-    cityEventsUnpaid.forEach(evt => {
-      const students = parseInt(evt.participatingStudents, 10) || 0;
-      dailyStudentMap.set(evt.date, (dailyStudentMap.get(evt.date) || 0) + students);
+    shares.forEach(({ evt, share }) => {
+      dailyStudentMap.set(evt.date, (dailyStudentMap.get(evt.date) || 0) + share.students);
     });
     const totalEventDays = dailyStudentMap.size;
     const daysAbove250 = [...dailyStudentMap.values()].filter(count => count >= 250).length;
@@ -80,10 +66,10 @@ export const SalaryWidget = ({ role = 'operator' }) => {
       uniqueEventDays: totalEventDays,
       qualifyingDays: daysAbove250,
     };
-  }, [events, schools, currentUser, salarySettings, payouts]);
+  }, [events, schools, users, currentUser, salarySettings, payouts]);
 
   // Perhitungan final
-  const baseSalary = totalParticipating * fee;
+  const baseSalary = Math.round(totalParticipating * fee);
   let bonusSalary = 0;
   let isBonusAchieved = false;
   let bonusStatusText = "";
@@ -148,7 +134,7 @@ export const SalaryWidget = ({ role = 'operator' }) => {
             Total Siswa
           </div>
           <div className="text-2xl font-bold text-slate-100">
-            {isVisible ? totalParticipating.toLocaleString('id-ID') : '••••••'}
+            {isVisible ? formatStudents(totalParticipating) : '••••••'}
           </div>
         </div>
 

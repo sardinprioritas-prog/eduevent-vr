@@ -3,6 +3,7 @@ import { useAuth } from '../../context/useAuth';
 import { History, Calendar, FileText, Trash2 } from 'lucide-react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { formatStudents } from '../../utils/operatorShare';
 
 export const PayoutHistoryTable = () => {
   const { payouts, currentUser, showToast, handleDeletePayout, users } = useAuth();
@@ -56,7 +57,7 @@ export const PayoutHistoryTable = () => {
       const base = [
         i + 1,
         date,
-        `${p.details?.totalStudents || 0} siswa`,
+        `${formatStudents(p.details?.totalStudents || 0)} siswa`,
       ];
       if (currentUser?.role === 'pioneer') {
         const qDays = p.details?.qualifyingDays != null
@@ -137,7 +138,7 @@ export const PayoutHistoryTable = () => {
                     })}
                   </td>
                   <td className="py-4 px-4 text-center text-sm">
-                    {p.details?.totalStudents || 0} Siswa
+                    {formatStudents(p.details?.totalStudents || 0)} Siswa
                     {currentUser?.role === 'pioneer' && (
                       <div className="text-xs text-slate-500">
                         {p.details?.qualifyingDays != null

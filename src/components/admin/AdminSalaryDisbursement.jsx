@@ -4,6 +4,7 @@ import { Wallet, Target, Award, CheckCircle, FileText, ChevronDown, ChevronRight
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { sendFonnteWhatsApp } from '../../services/fonnteService';
+import { getOperatorShare, formatStudents } from '../../utils/operatorShare';
 
 export const AdminSalaryDisbursement = () => {
   const { users, events, schools, salarySettings, payouts, handleDisburseFee, showToast } = useAuth();
@@ -42,51 +43,36 @@ export const AdminSalaryDisbursement = () => {
       const isSameCity = (evt.cityName || '').trim().toLowerCase() === (user.city || '').trim().toLowerCase();
       if (!isSameCity) return false;
       if (paidEventIds.has(evt.id)) return false;
-      if (userHasOldFormatPayout && evt.payoutId) return false;
-
-      // Operator hanya dihitung fee-nya untuk sekolah yang ditugaskan atau yang diinputnya
-      if (user.role === 'operator') {
-        const school = (schools || []).find(
-          s => (s.name || '').trim().toLowerCase() === (evt.schoolName || '').trim().toLowerCase()
-        );
-        if (school) {
-          const assigned1 = school.assignedTo;
-          const assigned2 = school.assignedTo2;
-          const isAssigned1 = !assigned1 || (Array.isArray(assigned1) && assigned1.length === 0) || (Array.isArray(assigned1) && assigned1.includes(user.id)) || assigned1 === user.id;
-          const isAssigned2 = school.eventDate2 && (!assigned2 || (Array.isArray(assigned2) && assigned2.length === 0) || (Array.isArray(assigned2) && assigned2.includes(user.id)) || assigned2 === user.id);
-          if (!isAssigned1 && !isAssigned2) return false;
-        } else {
-          // Jika sekolah tak ditemukan, cek apakah dia yang menginputnya
-          if ((evt.operatorName || '').trim().toLowerCase() !== (user.name || '').trim().toLowerCase()) {
-            return false;
-          }
-        }
-      }
-
       return true;
     });
 
-    // Hitung total siswa
+    // Porsi siswa per event untuk user ini
+    const eligibleEventShares = unpaidEvents
+      .map(evt => ({ evt, share: getOperatorShare(evt, user, { schools, users }) }))
+      .filter(({ share }) => share.eligible);
+
+    // Hitung total siswa (porsi) & buat rincian sekolah
     let totalStudents = 0;
     const schoolBreakdown = [];
 
-    unpaidEvents.forEach(evt => {
-      const students = parseInt(evt.participatingStudents, 10) || 0;
-      totalStudents += students;
+    eligibleEventShares.forEach(({ evt, share }) => {
+      totalStudents += share.students;
 
       schoolBreakdown.push({
         schoolName: evt.schoolName,
         date: evt.date,
-        students,
+        students: share.students,
+        rawStudents: share.totalStudents,
+        isFullTeam: share.isFullTeam,
+        divisor: share.divisor,
         session: evt.session,
       });
     });
 
     // Kelompokkan event per tanggal → hitung total siswa per hari (untuk bonus pioneer)
     const dailyStudentMap = new Map();
-    unpaidEvents.forEach(evt => {
-      const students = parseInt(evt.participatingStudents, 10) || 0;
-      dailyStudentMap.set(evt.date, (dailyStudentMap.get(evt.date) || 0) + students);
+    eligibleEventShares.forEach(({ evt, share }) => {
+      dailyStudentMap.set(evt.date, (dailyStudentMap.get(evt.date) || 0) + share.students);
     });
     const uniqueEventDays = dailyStudentMap.size;
     // Hari yang memenuhi syarat bonus: siswa >= 250 (sebagai multiplier bonus Pioneer)
@@ -118,7 +104,7 @@ export const AdminSalaryDisbursement = () => {
       unpaidEvents,
       schoolBreakdown,
       isBonusAchieved,
-      eventIdsToUpdate: unpaidEvents.map(e => e.id)
+      eventIdsToUpdate: eligibleEventShares.map(({ evt }) => evt.id)
     };
   };
 
@@ -158,7 +144,8 @@ export const AdminSalaryDisbursement = () => {
       if (userData.phoneNumber) {
         const role = userData.role === 'pioneer' ? 'Pioner' : 'operator';
         const formattedTotalFee = `Rp ${userData.feeData.totalSalary.toLocaleString('id-ID')}`;
-        const message = `Pencairan Fee untuk ${role} atas nama ${userData.name} dengan jumlah siswa ${userData.feeData.totalStudents} dengan total nominal ${formattedTotalFee} telah Berhasil. Terima Kasih`;
+        const formattedStudents = formatStudents(userData.feeData.totalStudents);
+        const message = `Pencairan Fee untuk ${role} atas nama ${userData.name} dengan jumlah siswa ${formattedStudents} dengan total nominal ${formattedTotalFee} telah Berhasil. Terima Kasih`;
         
         const isSent = await sendFonnteWhatsApp(userData.phoneNumber, message);
         if (isSent) {
@@ -201,7 +188,7 @@ export const AdminSalaryDisbursement = () => {
       u.name,
       u.role.toUpperCase(),
       u.city,
-      `${u.feeData.totalStudents} siswa`,
+      `${formatStudents(u.feeData.totalStudents)} siswa`,
       `Rp ${u.feeData.baseSalary.toLocaleString('id-ID')}`,
       `Rp ${u.feeData.bonusSalary.toLocaleString('id-ID')}`,
       `Rp ${u.feeData.totalSalary.toLocaleString('id-ID')}`,
@@ -289,7 +276,7 @@ export const AdminSalaryDisbursement = () => {
                     </td>
                     <td className="py-4 px-4 text-sm text-slate-300">{user.city}</td>
                     <td className="py-4 px-4 text-center text-sm">
-                      <div>{feeData.totalStudents} Siswa</div>
+                      <div>{formatStudents(feeData.totalStudents)} Siswa</div>
                       {user.role === 'pioneer' && <div className="text-xs text-slate-500">{feeData.uniqueEventDays} Hari</div>}
                     </td>
                     <td className="py-4 px-4 text-right text-sm">Rp {feeData.baseSalary.toLocaleString('id-ID')}</td>
@@ -340,12 +327,26 @@ export const AdminSalaryDisbursement = () => {
                                   <td className="py-2 px-4 font-medium text-slate-200">{row.schoolName}</td>
                                   <td className="py-2 px-4 text-slate-400">{row.date}</td>
                                   <td className="py-2 px-4 text-slate-400">{row.session}</td>
-                                  <td className="py-2 px-4 text-center text-slate-300">{row.students}</td>
+                                  <td className="py-2 px-4 text-center text-slate-300">
+                                    {formatStudents(row.students)}
+                                    {row.isFullTeam && (
+                                      <div className="text-[10px] text-slate-500">
+                                        ({row.rawStudents} ÷ {row.divisor})
+                                      </div>
+                                    )}
+                                  </td>
                                   <td className="py-2 px-4 text-center">
+                                    {row.isFullTeam ? (
+                                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-sky-500/15 text-sky-400 border border-sky-500/30" title={`Full Team (${row.divisor} operator) — dibagi ${row.divisor}`}>
+                                        <Users2 className="w-3 h-3" />
+                                        Full Team (1/{row.divisor})
+                                      </span>
+                                    ) : (
                                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
                                         <Award className="w-3 h-3" />
                                         100%
                                       </span>
+                                    )}
                                   </td>
                                 </tr>
                               ))}
@@ -354,7 +355,7 @@ export const AdminSalaryDisbursement = () => {
                               <tr className="border-t border-slate-700/50 bg-slate-800/30">
                                 <td colSpan={4} className="py-2 px-4 font-bold text-slate-300">Total Siswa</td>
                                 <td className="py-2 px-4 text-right font-bold text-emerald-400">
-                                  {feeData.totalStudents} siswa
+                                  {formatStudents(feeData.totalStudents)} siswa
                                 </td>
                               </tr>
                             </tfoot>
