@@ -99,7 +99,7 @@ export const ParentStudentRegistration = () => {
         parentName: formData.parentName.trim(),
         parentPhone: formData.parentPhone.trim(),
         notes: formData.notes.trim() || null,
-        status: 'verified',
+        status: 'unpaid',
       };
 
       const result = await handleSaveStudentRegistration(payload);

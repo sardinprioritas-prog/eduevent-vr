@@ -34,6 +34,8 @@ import {
   Link2,
   ExternalLink,
   QrCode,
+  Check,
+  Clock,
 } from 'lucide-react';
 
 
@@ -1172,6 +1174,9 @@ export const SchoolPortal = () => {
               {editingRegId && (() => {
                 const selfStudents = (studentRegistrations || []).filter(s => s.schoolRegId === editingRegId);
                 if (selfStudents.length === 0) return null;
+                const paidSelfStudents = selfStudents.filter(s => s.status === 'paid' || s.paymentStatus === 'paid');
+                const unpaidSelfStudents = selfStudents.filter(s => !(s.status === 'paid' || s.paymentStatus === 'paid'));
+
                 return (
                   <div className="p-3.5 rounded-xl bg-indigo-950/50 border border-indigo-500/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div className="flex items-center space-x-3">
@@ -1179,30 +1184,59 @@ export const SchoolPortal = () => {
                         <UserCheck className="w-5 h-5" />
                       </div>
                       <div>
-                        <span className="text-xs font-bold text-white block">
-                          Terdapat {selfStudents.length} Siswa Terdaftar Mandiri
-                        </span>
-                        <span className="text-[11px] text-slate-300">
-                          Data masuk via formulir online orang tua / guru kelas.
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="text-xs font-bold text-white">
+                            Terdapat {selfStudents.length} Siswa Terdaftar Mandiri
+                          </span>
+                          <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                            <Check className="w-3 h-3" />
+                            <span>{paidSelfStudents.length} Lunas</span>
+                          </span>
+                          {unpaidSelfStudents.length > 0 && (
+                            <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                              <Clock className="w-3 h-3" />
+                              <span>{unpaidSelfStudents.length} Belum</span>
+                            </span>
+                          )}
+                        </div>
+                        <span className="text-[11px] text-slate-300 block mt-1">
+                          {paidSelfStudents.length === 0
+                            ? '⚠️ Belum ada siswa berstatus lunas. Validasi pembayaran di Portal Guru Kelas terlebih dahulu.'
+                            : `Hanya ${paidSelfStudents.length} siswa dengan status lunas yang akan ditarik ke rombel.`}
                         </span>
                       </div>
                     </div>
                     <button
                       type="button"
                       onClick={() => {
+                        if (paidSelfStudents.length === 0) {
+                          alert('⚠️ Validasi Pembayaran:\n\nBelum ada siswa dengan status SUDAH MEMBAYAR.\n\nHanya siswa yang sudah membayar (dikonfirmasi oleh Guru Kelas) yang dapat ditarik ke rombel sekolah.');
+                          return;
+                        }
                         const rombelMap = {};
-                        selfStudents.forEach(s => {
+                        paidSelfStudents.forEach(s => {
                           rombelMap[s.gradeRombel] = (rombelMap[s.gradeRombel] || 0) + 1;
                         });
                         const mergedDetails = { ...classDetails, ...rombelMap };
                         setClassDetails(mergedDetails);
                         const total = Object.values(mergedDetails).reduce((acc, curr) => acc + (parseInt(curr) || 0), 0);
                         setTotalStudents(total);
-                        if (showToast) showToast(`Berhasil menyinkronkan ${selfStudents.length} siswa mandiri ke form rombel!`, 'success');
+                        if (showToast) {
+                          showToast(
+                            `Berhasil menyinkronkan ${paidSelfStudents.length} siswa lunas ke form rombel!${
+                              unpaidSelfStudents.length > 0 ? ` (${unpaidSelfStudents.length} belum lunas tidak dihitung)` : ''
+                            }`,
+                            'success'
+                          );
+                        }
                       }}
-                      className="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-md shadow-indigo-600/30 whitespace-nowrap transition-all active:scale-[0.98]"
+                      className={`px-3.5 py-2 rounded-xl font-bold text-xs whitespace-nowrap transition-all shadow-md active:scale-[0.98] ${
+                        paidSelfStudents.length > 0
+                          ? 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-indigo-600/30'
+                          : 'bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-slate-200 border border-slate-700'
+                      }`}
                     >
-                      Tarik Angka ke Rombel
+                      Tarik Angka ({paidSelfStudents.length} Lunas)
                     </button>
                   </div>
                 );
@@ -2020,9 +2054,16 @@ export const SchoolPortal = () => {
         const parentLink = `${window.location.origin}/daftar-siswa/${studentModalReg.id}`;
         const teacherLink = `${window.location.origin}/guru-kelas/${studentModalReg.id}`;
 
+        const paidStudents = thisStudents.filter(s => s.status === 'paid' || s.paymentStatus === 'paid');
+        const unpaidStudents = thisStudents.filter(s => !(s.status === 'paid' || s.paymentStatus === 'paid'));
+
         const rombelBreakdown = {};
+        const paidRombelBreakdown = {};
         thisStudents.forEach(s => {
           rombelBreakdown[s.gradeRombel] = (rombelBreakdown[s.gradeRombel] || 0) + 1;
+        });
+        paidStudents.forEach(s => {
+          paidRombelBreakdown[s.gradeRombel] = (paidRombelBreakdown[s.gradeRombel] || 0) + 1;
         });
 
         const copyText = (text, type) => {
@@ -2042,14 +2083,25 @@ export const SchoolPortal = () => {
             alert('Belum ada siswa yang mendaftar secara mandiri.');
             return;
           }
-          const mergedDetails = { ...(studentModalReg.classDetails || {}), ...rombelBreakdown };
+          if (paidStudents.length === 0) {
+            alert('⚠️ Validasi Pembayaran:\n\nBelum ada siswa dengan status SUDAH MEMBAYAR.\n\nHanya siswa yang sudah membayar (dikonfirmasi oleh Guru Kelas) yang dapat diterapkan ke rombel sekolah. Silakan minta Guru Kelas mengonfirmasi status pembayaran siswa terlebih dahulu.');
+            return;
+          }
+          const mergedDetails = { ...(studentModalReg.classDetails || {}), ...paidRombelBreakdown };
           const total = Object.values(mergedDetails).reduce((acc, curr) => acc + (parseInt(curr) || 0), 0);
           handleSaveSchoolRegistration({
             ...studentModalReg,
             classDetails: mergedDetails,
             totalStudents: total,
           });
-          if (showToast) showToast(`Berhasil menyinkronkan ${thisStudents.length} siswa ke data rombel sekolah!`, 'success');
+          if (showToast) {
+            showToast(
+              `Berhasil menerapkan ${paidStudents.length} siswa (status lunas) ke rombel sekolah!${
+                unpaidStudents.length > 0 ? ` (${unpaidStudents.length} siswa belum bayar tidak dimasukkan)` : ''
+              }`,
+              'success'
+            );
+          }
           setStudentModalReg(null);
         };
 
@@ -2079,24 +2131,43 @@ export const SchoolPortal = () => {
 
               {/* Body */}
               <div className="p-5 overflow-y-auto space-y-5 text-xs">
-                {/* Status Siswa Terdaftar */}
-                <div className="p-4 rounded-xl bg-indigo-950/40 border border-indigo-500/30 flex items-center justify-between">
-                  <div>
+                {/* Status Siswa Terdaftar & Validasi Pembayaran */}
+                <div className="p-4 rounded-xl bg-indigo-950/40 border border-indigo-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="space-y-1">
                     <span className="text-[10px] uppercase font-bold text-indigo-400 tracking-wider block">
                       Total Pendaftar Mandiri
                     </span>
-                    <span className="text-xl font-extrabold text-white">
-                      {thisStudents.length} Siswa
-                    </span>
-                    <span className="text-slate-400 block mt-0.5">
-                      Telah mengisi formulir pendaftaran orang tua / guru kelas
+                    <div className="flex items-baseline space-x-2">
+                      <span className="text-xl font-extrabold text-white">
+                        {thisStudents.length} Siswa
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+                      <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                        <Check className="w-3 h-3" />
+                        <span>{paidStudents.length} Sudah Bayar</span>
+                      </span>
+                      <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                        <Clock className="w-3 h-3" />
+                        <span>{unpaidStudents.length} Belum Bayar</span>
+                      </span>
+                    </div>
+                    <span className="text-slate-400 block text-[11px] pt-1">
+                      {paidStudents.length === 0
+                        ? '⚠️ Guru kelas perlu mengubah status siswa ke "Sudah Membayar" sebelum angka dapat diterapkan.'
+                        : `Hanya ${paidStudents.length} siswa yang sudah membayar yang akan diterapkan ke rombel.`}
                     </span>
                   </div>
                   <button
                     onClick={applyToSchool}
-                    className="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-md shadow-indigo-600/30 transition-all active:scale-[0.98]"
+                    className={`px-3.5 py-2.5 rounded-xl font-bold text-xs whitespace-nowrap transition-all flex items-center justify-center space-x-1.5 shadow-md ${
+                      paidStudents.length > 0
+                        ? 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-indigo-600/30 active:scale-[0.98]'
+                        : 'bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-slate-200 border border-slate-700 cursor-pointer'
+                    }`}
                   >
-                    Terapkan Angka ke Rombel
+                    <Check className="w-4 h-4" />
+                    <span>Terapkan Angka ({paidStudents.length} Lunas)</span>
                   </button>
                 </div>
 
@@ -2177,24 +2248,40 @@ export const SchoolPortal = () => {
 
                 {/* 3. Distribusi Siswa per Rombel */}
                 <div className="space-y-2">
-                  <h4 className="font-bold text-slate-300 uppercase tracking-wider text-[11px]">
-                    Rincian Pendaftar per Rombel
-                  </h4>
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-bold text-slate-300 uppercase tracking-wider text-[11px]">
+                      Rincian Pendaftar per Rombel
+                    </h4>
+                    <span className="text-[10px] text-slate-400">
+                      Format: <span className="text-emerald-400 font-bold">Lunas</span> / Total
+                    </span>
+                  </div>
                   {Object.keys(rombelBreakdown).length === 0 ? (
                     <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 text-center text-slate-500">
                       Belum ada siswa yang mendaftar di rombel mana pun.
                     </div>
                   ) : (
-                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-                      {Object.entries(rombelBreakdown).map(([rombel, count]) => (
-                        <div
-                          key={rombel}
-                          className="p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-center"
-                        >
-                          <span className="block text-slate-400 font-bold text-[10px]">Kelas {rombel}</span>
-                          <span className="text-sm font-extrabold text-indigo-300">{count} siswa</span>
-                        </div>
-                      ))}
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                      {Object.entries(rombelBreakdown).map(([rombel, totalCount]) => {
+                        const paidInRombel = paidRombelBreakdown[rombel] || 0;
+                        const unpaidInRombel = totalCount - paidInRombel;
+                        return (
+                          <div
+                            key={rombel}
+                            className="p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-center"
+                          >
+                            <span className="block text-slate-400 font-bold text-[10px]">Kelas {rombel}</span>
+                            <span className="text-sm font-extrabold text-white block mt-0.5">
+                              <span className="text-emerald-400">{paidInRombel}</span>
+                              <span className="text-slate-500 font-normal"> / {totalCount}</span>
+                            </span>
+                            <span className="text-[9px] text-slate-400 block mt-0.5">
+                              {paidInRombel > 0 ? `${paidInRombel} lunas` : 'belum lunas'}
+                              {unpaidInRombel > 0 && ` • ${unpaidInRombel} belum`}
+                            </span>
+                          </div>
+                        );
+                      })}
                     </div>
                   )}
                 </div>

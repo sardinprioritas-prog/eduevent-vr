@@ -16,6 +16,10 @@ import {
   X,
   ExternalLink,
   UserCheck,
+  Clock,
+  Check,
+  AlertCircle,
+  Filter,
 } from 'lucide-react';
 
 export const TeacherClassView = () => {
@@ -38,6 +42,7 @@ export const TeacherClassView = () => {
   }, [schoolRegId, selectedSchoolId, schoolRegistrations]);
 
   const [activeRombel, setActiveRombel] = useState(initialRombel);
+  const [paymentFilter, setPaymentFilter] = useState('all'); // 'all' | 'paid' | 'unpaid'
   const [searchQuery, setSearchQuery] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
   const [newStudent, setNewStudent] = useState({
@@ -46,6 +51,7 @@ export const TeacherClassView = () => {
     parentName: '',
     parentPhone: '',
     notes: '',
+    status: 'paid', // Default sudah bayar jika ditambahkan manual oleh guru
   });
 
   // Daftar seluruh rombel sekolah ini
@@ -71,10 +77,13 @@ export const TeacherClassView = () => {
     return studentRegistrations.filter((s) => s.schoolRegId === activeSchool.id);
   }, [activeSchool, studentRegistrations]);
 
-  // Filter siswa berdasarkan rombel & pencarian
+  // Filter siswa berdasarkan rombel, status bayar & pencarian
   const filteredStudents = useMemo(() => {
     return schoolStudents.filter((s) => {
       if (activeRombel && s.gradeRombel !== activeRombel) return false;
+      const isPaid = s.status === 'paid' || s.paymentStatus === 'paid';
+      if (paymentFilter === 'paid' && !isPaid) return false;
+      if (paymentFilter === 'unpaid' && isPaid) return false;
       if (searchQuery.trim()) {
         const query = searchQuery.toLowerCase();
         const matchName = (s.studentName || '').toLowerCase().includes(query);
@@ -83,7 +92,13 @@ export const TeacherClassView = () => {
       }
       return true;
     });
-  }, [schoolStudents, activeRombel, searchQuery]);
+  }, [schoolStudents, activeRombel, paymentFilter, searchQuery]);
+
+  // Statistik pembayaran
+  const paidCount = useMemo(() => {
+    return schoolStudents.filter((s) => s.status === 'paid' || s.paymentStatus === 'paid').length;
+  }, [schoolStudents]);
+  const unpaidCount = schoolStudents.length - paidCount;
 
   // Hitung jumlah siswa per rombel
   const countPerRombel = useMemo(() => {
@@ -93,6 +108,28 @@ export const TeacherClassView = () => {
     });
     return map;
   }, [schoolStudents]);
+
+  const togglePaymentStatus = async (std) => {
+    const isPaid = std.status === 'paid' || std.paymentStatus === 'paid';
+    const nextStatus = isPaid ? 'unpaid' : 'paid';
+    try {
+      await handleSaveStudentRegistration({
+        ...std,
+        status: nextStatus,
+        paymentStatus: nextStatus,
+      });
+      if (showToast) {
+        showToast(
+          nextStatus === 'paid'
+            ? `Status ${std.studentName} diubah menjadi: SUDAH MEMBAYAR`
+            : `Status ${std.studentName} diubah menjadi: BELUM MEMBAYAR`,
+          nextStatus === 'paid' ? 'success' : 'info'
+        );
+      }
+    } catch (err) {
+      console.error('[togglePaymentStatus]', err);
+    }
+  };
 
   const handleCreateStudent = async (e) => {
     e.preventDefault();
@@ -110,7 +147,8 @@ export const TeacherClassView = () => {
         parentName: newStudent.parentName.trim() || '-',
         parentPhone: newStudent.parentPhone.trim() || '-',
         notes: newStudent.notes.trim() || null,
-        status: 'verified',
+        status: newStudent.status || 'paid',
+        paymentStatus: newStudent.status || 'paid',
       });
       setShowAddModal(false);
       setNewStudent({
@@ -119,6 +157,7 @@ export const TeacherClassView = () => {
         parentName: '',
         parentPhone: '',
         notes: '',
+        status: 'paid',
       });
     } catch (err) {
       console.error(err);
@@ -215,7 +254,7 @@ export const TeacherClassView = () => {
                     <span>{activeSchool.schoolName}</span>
                   </h2>
                   <p className="text-xs text-slate-400 mt-0.5">
-                    Guru PJ: <span className="text-slate-200 font-semibold">{activeSchool.pjName || '-'}</span> • Total Pendaftar Mandiri: <span className="text-emerald-400 font-bold">{schoolStudents.length} siswa</span>
+                    Guru PJ: <span className="text-slate-200 font-semibold">{activeSchool.pjName || '-'}</span>
                   </p>
                 </div>
 
@@ -232,37 +271,105 @@ export const TeacherClassView = () => {
                 </div>
               </div>
 
-              {/* Rombel Tabs / Pills */}
-              <div className="pt-2 border-t border-slate-800 flex items-center space-x-2 overflow-x-auto pb-1 text-xs">
-                <button
-                  onClick={() => setActiveRombel('')}
-                  className={`px-3 py-1.5 rounded-xl font-bold whitespace-nowrap transition-all ${
-                    activeRombel === ''
-                      ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30'
-                      : 'bg-slate-800/80 text-slate-300 hover:bg-slate-800'
-                  }`}
-                >
-                  Semua Rombel ({schoolStudents.length})
-                </button>
-                {availableRombels.map((code) => {
-                  const count = countPerRombel[code] || 0;
-                  return (
-                    <button
-                      key={code}
-                      onClick={() => setActiveRombel(code)}
-                      className={`px-3 py-1.5 rounded-xl font-bold whitespace-nowrap transition-all flex items-center space-x-1.5 ${
-                        activeRombel === code
-                          ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30'
-                          : 'bg-slate-800/80 text-slate-300 hover:bg-slate-800'
-                      }`}
-                    >
-                      <span>Kelas {code}</span>
-                      <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${count > 0 ? 'bg-indigo-400/30 text-indigo-200' : 'bg-slate-700 text-slate-400'}`}>
-                        {count}
-                      </span>
-                    </button>
-                  );
-                })}
+              {/* Status Pembayaran Summary Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
+                <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between">
+                  <div>
+                    <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider block">Total Terdaftar</span>
+                    <span className="text-lg font-extrabold text-white">{schoolStudents.length} Siswa</span>
+                  </div>
+                  <Users className="w-5 h-5 text-slate-500" />
+                </div>
+                <div className="p-3 rounded-xl bg-emerald-950/30 border border-emerald-500/30 flex items-center justify-between">
+                  <div>
+                    <span className="text-[10px] text-emerald-400 uppercase font-bold tracking-wider block">Sudah Membayar</span>
+                    <span className="text-lg font-extrabold text-emerald-300">{paidCount} Siswa</span>
+                  </div>
+                  <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+                </div>
+                <div className="p-3 rounded-xl bg-amber-950/30 border border-amber-500/30 flex items-center justify-between">
+                  <div>
+                    <span className="text-[10px] text-amber-400 uppercase font-bold tracking-wider block">Belum Membayar</span>
+                    <span className="text-lg font-extrabold text-amber-300">{unpaidCount} Siswa</span>
+                  </div>
+                  <Clock className="w-5 h-5 text-amber-400" />
+                </div>
+              </div>
+
+              {/* Filter Pembayaran & Rombel Tabs */}
+              <div className="pt-2 border-t border-slate-800 space-y-2">
+                {/* Payment Filter Pills */}
+                <div className="flex items-center space-x-2 text-xs">
+                  <span className="text-slate-400 text-[11px] font-semibold flex items-center mr-1">
+                    <Filter className="w-3.5 h-3.5 mr-1" />
+                    Status:
+                  </span>
+                  <button
+                    onClick={() => setPaymentFilter('all')}
+                    className={`px-2.5 py-1 rounded-lg font-bold transition-all text-xs ${
+                      paymentFilter === 'all'
+                        ? 'bg-indigo-600 text-white'
+                        : 'bg-slate-800 text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    Semua ({schoolStudents.length})
+                  </button>
+                  <button
+                    onClick={() => setPaymentFilter('paid')}
+                    className={`px-2.5 py-1 rounded-lg font-bold transition-all text-xs flex items-center space-x-1 ${
+                      paymentFilter === 'paid'
+                        ? 'bg-emerald-600 text-white'
+                        : 'bg-slate-800 text-emerald-400 hover:bg-emerald-950/40'
+                    }`}
+                  >
+                    <CheckCircle2 className="w-3 h-3" />
+                    <span>Sudah Bayar ({paidCount})</span>
+                  </button>
+                  <button
+                    onClick={() => setPaymentFilter('unpaid')}
+                    className={`px-2.5 py-1 rounded-lg font-bold transition-all text-xs flex items-center space-x-1 ${
+                      paymentFilter === 'unpaid'
+                        ? 'bg-amber-600 text-white'
+                        : 'bg-slate-800 text-amber-400 hover:bg-amber-950/40'
+                    }`}
+                  >
+                    <Clock className="w-3 h-3" />
+                    <span>Belum Bayar ({unpaidCount})</span>
+                  </button>
+                </div>
+
+                {/* Rombel Tabs */}
+                <div className="flex items-center space-x-2 overflow-x-auto pb-1 text-xs">
+                  <button
+                    onClick={() => setActiveRombel('')}
+                    className={`px-3 py-1.5 rounded-xl font-bold whitespace-nowrap transition-all ${
+                      activeRombel === ''
+                        ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30'
+                        : 'bg-slate-800/80 text-slate-300 hover:bg-slate-800'
+                    }`}
+                  >
+                    Semua Rombel ({schoolStudents.length})
+                  </button>
+                  {availableRombels.map((code) => {
+                    const count = countPerRombel[code] || 0;
+                    return (
+                      <button
+                        key={code}
+                        onClick={() => setActiveRombel(code)}
+                        className={`px-3 py-1.5 rounded-xl font-bold whitespace-nowrap transition-all flex items-center space-x-1.5 ${
+                          activeRombel === code
+                            ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30'
+                            : 'bg-slate-800/80 text-slate-300 hover:bg-slate-800'
+                        }`}
+                      >
+                        <span>Kelas {code}</span>
+                        <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${count > 0 ? 'bg-indigo-400/30 text-indigo-200' : 'bg-slate-700 text-slate-400'}`}>
+                          {count}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             </div>
 
@@ -304,55 +411,82 @@ export const TeacherClassView = () => {
                         <th className="py-3 px-4 text-center">Kelas</th>
                         <th className="py-3 px-4">Nama Orang Tua</th>
                         <th className="py-3 px-4">No. WhatsApp</th>
+                        <th className="py-3 px-4 text-center">Status Pembayaran</th>
                         <th className="py-3 px-4">Waktu Daftar</th>
                         <th className="py-3 px-4 text-right">Aksi</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-800/60 text-slate-200">
-                      {filteredStudents.map((std, idx) => (
-                        <tr key={std.id} className="hover:bg-slate-800/30 transition-colors">
-                          <td className="py-3 px-4 text-center text-slate-500">{idx + 1}</td>
-                          <td className="py-3 px-4 font-bold text-white">{std.studentName}</td>
-                          <td className="py-3 px-4 text-center">
-                            <span className="px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 font-bold">
-                              {std.gradeRombel}
-                            </span>
-                          </td>
-                          <td className="py-3 px-4 text-slate-300">{std.parentName || '-'}</td>
-                          <td className="py-3 px-4">
-                            {std.parentPhone && std.parentPhone !== '-' ? (
-                              <a
-                                href={`https://wa.me/${std.parentPhone.replace(/[^0-9]/g, '').replace(/^0/, '62')}`}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="inline-flex items-center space-x-1 text-emerald-400 hover:text-emerald-300"
+                      {filteredStudents.map((std, idx) => {
+                        const isPaid = std.status === 'paid' || std.paymentStatus === 'paid';
+                        return (
+                          <tr key={std.id} className="hover:bg-slate-800/30 transition-colors">
+                            <td className="py-3 px-4 text-center text-slate-500">{idx + 1}</td>
+                            <td className="py-3 px-4 font-bold text-white">{std.studentName}</td>
+                            <td className="py-3 px-4 text-center">
+                              <span className="px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 font-bold">
+                                {std.gradeRombel}
+                              </span>
+                            </td>
+                            <td className="py-3 px-4 text-slate-300">{std.parentName || '-'}</td>
+                            <td className="py-3 px-4">
+                              {std.parentPhone && std.parentPhone !== '-' ? (
+                                <a
+                                  href={`https://wa.me/${std.parentPhone.replace(/[^0-9]/g, '').replace(/^0/, '62')}`}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="inline-flex items-center space-x-1 text-emerald-400 hover:text-emerald-300"
+                                >
+                                  <Phone className="w-3 h-3" />
+                                  <span>{std.parentPhone}</span>
+                                </a>
+                              ) : (
+                                <span className="text-slate-500">-</span>
+                              )}
+                            </td>
+                            <td className="py-3 px-4 text-center">
+                              <button
+                                onClick={() => togglePaymentStatus(std)}
+                                className={`inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-bold transition-all cursor-pointer shadow-sm ${
+                                  isPaid
+                                    ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/30'
+                                    : 'bg-amber-500/20 text-amber-300 border border-amber-500/30 hover:bg-amber-500/30'
+                                }`}
+                                title={isPaid ? 'Klik untuk ubah menjadi Belum Bayar' : 'Klik untuk verifikasi Sudah Bayar'}
                               >
-                                <Phone className="w-3 h-3" />
-                                <span>{std.parentPhone}</span>
-                              </a>
-                            ) : (
-                              <span className="text-slate-500">-</span>
-                            )}
-                          </td>
-                          <td className="py-3 px-4 text-slate-400">
-                            {new Date(std.createdAt).toLocaleDateString('id-ID', {
-                              day: 'numeric',
-                              month: 'short',
-                              hour: '2-digit',
-                              minute: '2-digit',
-                            })}
-                          </td>
-                          <td className="py-3 px-4 text-right">
-                            <button
-                              onClick={() => handleDelete(std.id, std.studentName)}
-                              className="p-1 rounded bg-slate-800 hover:bg-rose-950/60 text-slate-400 hover:text-rose-400 transition-colors"
-                              title="Hapus data siswa"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
+                                {isPaid ? (
+                                  <>
+                                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                                    <span>Sudah Bayar</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Clock className="w-3.5 h-3.5 text-amber-400" />
+                                    <span>Belum Bayar</span>
+                                  </>
+                                )}
+                              </button>
+                            </td>
+                            <td className="py-3 px-4 text-slate-400">
+                              {new Date(std.createdAt).toLocaleDateString('id-ID', {
+                                day: 'numeric',
+                                month: 'short',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                              })}
+                            </td>
+                            <td className="py-3 px-4 text-right">
+                              <button
+                                onClick={() => handleDelete(std.id, std.studentName)}
+                                className="p-1 rounded bg-slate-800 hover:bg-rose-950/60 text-slate-400 hover:text-rose-400 transition-colors"
+                                title="Hapus data siswa"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>
@@ -427,14 +561,15 @@ export const TeacherClassView = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-slate-400 mb-1">Nomor WhatsApp</label>
-                <input
-                  type="tel"
-                  placeholder="08..."
-                  value={newStudent.parentPhone}
-                  onChange={(e) => setNewStudent({ ...newStudent, parentPhone: e.target.value })}
+                <label className="block text-xs font-medium text-slate-400 mb-1">Status Pembayaran</label>
+                <select
+                  value={newStudent.status}
+                  onChange={(e) => setNewStudent({ ...newStudent, status: e.target.value })}
                   className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-indigo-500"
-                />
+                >
+                  <option value="paid">Sudah Membayar</option>
+                  <option value="unpaid">Belum Membayar</option>
+                </select>
               </div>
 
               <div className="flex justify-end space-x-2 pt-2">
