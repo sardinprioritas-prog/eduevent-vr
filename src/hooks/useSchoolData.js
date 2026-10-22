@@ -85,7 +85,7 @@ export const useSchoolData = (regionName) => {
           return;
         }
 
-        const res = await fetch(excelPath);
+        const res = await fetch(excelPath, { cache: 'no-cache' });
         if (!res.ok) throw new Error(`Gagal memuat berkas Excel untuk ${regionName} (${excelPath})`);
 
         const arrayBuffer = await res.arrayBuffer();
