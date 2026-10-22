@@ -1,35 +1,38 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/useAuth';
-import { MapPin, Plus, Edit2, Trash2, CheckCircle2, XCircle, Search } from 'lucide-react';
+import { MapPin, Plus, Edit2, Trash2, CheckCircle2, XCircle, Search, Eye, EyeOff, KeyRound } from 'lucide-react';
+
+const EMPTY_FORM = { name: '', province: 'Sulawesi Selatan', passcode: '', active: true };
 
 export const CityManagement = () => {
   const { cities, handleSaveCity, handleDeleteCity } = useAuth();
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingCity, setEditingCity] = useState(null);
 
-  const [formData, setFormData] = useState({
-    name: '',
-    province: 'Sulawesi Selatan',
-    active: true,
-  });
+  const [formData, setFormData] = useState(EMPTY_FORM);
+  const [showFormPasscode, setShowFormPasscode] = useState(false);
+  const [visiblePasscodes, setVisiblePasscodes] = useState({});
 
   const [searchQuery, setSearchQuery] = useState('');
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!formData.name.trim()) return;
+    if (!formData.name.trim() || !formData.passcode.trim()) return;
+
+    const payload = { ...formData, passcode: formData.passcode.trim() };
 
     if (editingCity) {
       handleSaveCity({
         ...editingCity,
-        ...formData,
+        ...payload,
       });
       setEditingCity(null);
     } else {
-      handleSaveCity(formData);
+      handleSaveCity(payload);
     }
 
-    setFormData({ name: '', province: 'Sulawesi Selatan', active: true });
+    setFormData(EMPTY_FORM);
+    setShowFormPasscode(false);
     setShowAddForm(false);
   };
 
@@ -38,15 +41,22 @@ export const CityManagement = () => {
     setFormData({
       name: city.name,
       province: city.province || 'Sulawesi Selatan',
+      passcode: city.passcode || '',
       active: city.active !== false,
     });
+    setShowFormPasscode(false);
     setShowAddForm(true);
   };
 
   const cancelForm = () => {
     setShowAddForm(false);
     setEditingCity(null);
-    setFormData({ name: '', province: 'Sulawesi Selatan', active: true });
+    setShowFormPasscode(false);
+    setFormData(EMPTY_FORM);
+  };
+
+  const togglePasscodeVisibility = (id) => {
+    setVisiblePasscodes((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
   const filteredCities = cities.filter((c) =>
@@ -98,7 +108,7 @@ export const CityManagement = () => {
           <h3 className="text-xs font-bold text-slate-200 uppercase tracking-wider">
             {editingCity ? 'Edit Data Kota' : 'Tambah Wilayah / Kota Baru'}
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
               <label className="block text-xs font-medium text-slate-400 mb-1">Nama Kota / Kabupaten</label>
               <input
@@ -119,6 +129,30 @@ export const CityManagement = () => {
                 onChange={(e) => setFormData({ ...formData, province: e.target.value })}
                 className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-blue-500"
               />
+            </div>
+            <div>
+              <label htmlFor="city-passcode" className="block text-xs font-medium text-slate-400 mb-1">Passcode</label>
+              <div className="relative">
+                <KeyRound className="w-3.5 h-3.5 absolute left-3 top-2.5 text-slate-500" />
+                <input
+                  id="city-passcode"
+                  type={showFormPasscode ? 'text' : 'password'}
+                  required
+                  autoComplete="new-password"
+                  placeholder="Masukkan passcode kota"
+                  value={formData.passcode}
+                  onChange={(e) => setFormData({ ...formData, passcode: e.target.value })}
+                  className="w-full bg-slate-950 border border-slate-700 rounded-xl pl-8 pr-9 py-2 text-xs text-slate-100 focus:outline-none focus:border-blue-500"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowFormPasscode(!showFormPasscode)}
+                  className="absolute right-2.5 top-2 text-slate-500 hover:text-slate-300"
+                  title={showFormPasscode ? 'Sembunyikan passcode' : 'Tampilkan passcode'}
+                >
+                  {showFormPasscode ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
             </div>
             <div>
               <label className="block text-xs font-medium text-slate-400 mb-1">Status Aktivasi</label>
@@ -158,6 +192,7 @@ export const CityManagement = () => {
             <tr className="border-b border-slate-800 text-slate-400 font-semibold uppercase tracking-wider bg-slate-900/80">
               <th className="py-3 px-4">Nama Kota</th>
               <th className="py-3 px-4">Provinsi</th>
+              <th className="py-3 px-4">Passcode</th>
               <th className="py-3 px-4 text-center">Status</th>
               <th className="py-3 px-4 text-right">Aksi</th>
             </tr>
@@ -167,6 +202,24 @@ export const CityManagement = () => {
               <tr key={city.id} className="hover:bg-slate-800/40 transition-colors">
                 <td className="py-3 px-4 font-bold text-slate-100">{city.name}</td>
                 <td className="py-3 px-4 text-slate-400">{city.province || 'Sulawesi Selatan'}</td>
+                <td className="py-3 px-4">
+                  {city.passcode ? (
+                    <div className="flex items-center space-x-2">
+                      <span className="font-mono text-slate-300">
+                        {visiblePasscodes[city.id] ? city.passcode : '••••••'}
+                      </span>
+                      <button
+                        onClick={() => togglePasscodeVisibility(city.id)}
+                        className="text-slate-500 hover:text-slate-300"
+                        title={visiblePasscodes[city.id] ? 'Sembunyikan passcode' : 'Tampilkan passcode'}
+                      >
+                        {visiblePasscodes[city.id] ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                      </button>
+                    </div>
+                  ) : (
+                    <span className="text-slate-600 italic">Belum diatur</span>
+                  )}
+                </td>
                 <td className="py-3 px-4 text-center">
                   {city.active !== false ? (
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">

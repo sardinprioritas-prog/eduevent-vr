@@ -9,9 +9,11 @@ CREATE TABLE IF NOT EXISTS cities (
   id          TEXT PRIMARY KEY DEFAULT ('city-' || floor(extract(epoch from now()) * 1000)::text),
   name        TEXT NOT NULL,
   province    TEXT NOT NULL DEFAULT 'Sulawesi Selatan',
+  passcode    TEXT,
   active      BOOLEAN NOT NULL DEFAULT true,
   created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+ALTER TABLE cities ADD COLUMN IF NOT EXISTS passcode TEXT;
 
 -- 2. TABLE: users (Pengguna & Akses RBAC)
 -- ============================================================

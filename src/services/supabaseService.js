@@ -23,6 +23,7 @@ const toAppCity = (row) => ({
   id: row.id,
   name: row.name,
   province: row.province,
+  passcode: row.passcode || '',
   active: row.active,
   createdAt: row.created_at,
 });
@@ -143,6 +144,7 @@ const toDbCity = (c) => ({
   id: c.id,
   name: c.name,
   province: c.province || 'Sulawesi Selatan',
+  passcode: c.passcode || null,
   active: c.active !== false,
 });
 
