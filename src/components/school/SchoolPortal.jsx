@@ -695,6 +695,13 @@ export const SchoolPortal = () => {
     setPasscodeError('');
   };
 
+  const handleRequestStudentModal = (reg) => {
+    setPendingRegAction({ type: 'student_modal', reg });
+    setShowPasscodeModal(true);
+    setInputPasscode('');
+    setPasscodeError('');
+  };
+
   const handleVerifyPasscode = () => {
     const adminPasscode = 'ADMINVR2026';
     const reg = pendingRegAction.reg;
@@ -713,9 +720,11 @@ export const SchoolPortal = () => {
       setShowPasscodeModal(false);
       if (pendingRegAction.type === 'edit') {
         handleEditRegistration(reg);
+      } else if (pendingRegAction.type === 'student_modal') {
+        setStudentModalReg(reg);
       }
     } else {
-      setPasscodeError('PIN Akses salah! Jika Anda admin, gunakan Master PIN.');
+      setPasscodeError('PIN Akses salah! Masukkan Passcode guru/sekolah ini atau Master PIN.');
     }
   };
 
@@ -1568,9 +1577,9 @@ export const SchoolPortal = () => {
                             <Share2 className="w-4 h-4" />
                           </button>
                           <button
-                            onClick={() => setStudentModalReg(reg)}
+                            onClick={() => handleRequestStudentModal(reg)}
                             className="p-1.5 rounded-lg bg-indigo-950/60 hover:bg-indigo-900/80 text-indigo-300 hover:text-indigo-200 border border-indigo-500/30 transition-all flex items-center space-x-1"
-                            title="Pendaftaran Siswa Mandiri & Link Guru Kelas"
+                            title="Pendaftaran Siswa Mandiri & Link Guru Kelas (Membutuhkan Passcode)"
                           >
                             <UserCheck className="w-4 h-4" />
                             {(() => {
@@ -1834,8 +1843,11 @@ export const SchoolPortal = () => {
             
             <div className="p-6">
               <p className="text-xs text-slate-300 mb-4 text-center leading-relaxed">
-                Masukkan PIN Akses sekolah ini untuk mengubah data. <br/>
-                Jika Anda Admin, masukkan <span className="font-bold text-indigo-400">Master PIN</span>.
+                {pendingRegAction?.type === 'share'
+                  ? 'Hanya Pioneer/Admin yang dapat membagikan jadwal. Masukkan Master PIN.'
+                  : pendingRegAction?.type === 'student_modal'
+                  ? 'Masukkan PIN Akses / Passcode sekolah ini untuk membuka link pendaftaran siswa & guru kelas.'
+                  : 'Masukkan PIN Akses sekolah ini untuk mengubah data. Jika Anda Admin, masukkan Master PIN.'}
               </p>
               
               <div className="space-y-4">
