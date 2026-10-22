@@ -1,8 +1,11 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Shield, X, MapPin, Key } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/useAuth';
 
-const REGIONS = [
+// Fallback lama: dipakai hanya jika kota di Master Data belum punya passcode,
+// atau jika data kota belum termuat sama sekali.
+const LEGACY_REGIONS = [
   { id: 'palu', name: 'Kota Palu', passcode: 'PLW-01' },
   { id: 'samarinda', name: 'Samarinda', passcode: 'SMD-11' },
   { id: 'balikpapan', name: 'Balikpapan', passcode: 'BPN-12' },
@@ -10,11 +13,36 @@ const REGIONS = [
   { id: 'baubau', name: 'BauBau', passcode: 'BUW-14' }
 ];
 
+// "Kota Bau-Bau" -> "baubau"
+const normalizeName = (name = '') =>
+  name.toLowerCase().replace(/^kota\s+/, '').replace(/[\s\-_.]/g, '');
+
 export const PortalSekolahModal = ({ isOpen, onClose }) => {
   const navigate = useNavigate();
+  const { cities = [] } = useAuth();
   const [selectedRegion, setSelectedRegion] = useState('');
   const [passcode, setPasscode] = useState('');
   const [error, setError] = useState('');
+
+  const regions = useMemo(() => {
+    const activeCities = cities.filter((c) => c.active !== false);
+    if (activeCities.length === 0) return LEGACY_REGIONS;
+
+    return activeCities
+      .map((city) => {
+        const legacy = LEGACY_REGIONS.find(
+          (r) => normalizeName(r.name) === normalizeName(city.name)
+        );
+        return {
+          id: city.id,
+          // Pertahankan nama lama agar cocok dengan data pendaftaran yang sudah ada
+          name: legacy ? legacy.name : city.name,
+          passcode: (city.passcode || '').trim() || legacy?.passcode || '',
+        };
+      })
+      .filter((r) => r.passcode)
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [cities]);
 
   if (!isOpen) return null;
 
@@ -27,13 +55,13 @@ export const PortalSekolahModal = ({ isOpen, onClose }) => {
       return;
     }
 
-    const region = REGIONS.find(r => r.id === selectedRegion);
+    const region = regions.find(r => r.id === selectedRegion);
     if (!region) {
       setError('Wilayah tidak valid');
       return;
     }
 
-    if (passcode !== region.passcode) {
+    if (passcode.trim() !== region.passcode) {
       setError('Passcode tidak valid untuk wilayah ini');
       return;
     }
@@ -78,7 +106,7 @@ export const PortalSekolahModal = ({ isOpen, onClose }) => {
               className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all appearance-none"
             >
               <option value="">-- Pilih Wilayah --</option>
-              {REGIONS.map(r => (
+              {regions.map(r => (
                 <option key={r.id} value={r.id}>{r.name}</option>
               ))}
             </select>
