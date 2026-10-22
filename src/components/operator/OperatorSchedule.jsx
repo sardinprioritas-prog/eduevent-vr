@@ -25,19 +25,25 @@ const formatDate = (str) => {
 const getStatus = (eventDate, eventDate2) => {
   const d1 = parseDate(eventDate);
   const d2 = parseDate(eventDate2);
-  const latest = d2 || d1;
-  const earliest = d1;
 
-  if (!earliest) return { label: 'Belum Terjadwal', color: 'slate' };
+  if (!d1 && !d2) return { label: 'Belum Terjadwal', color: 'slate' };
+
+  const latest = (d1 && d2) ? (d2 > d1 ? d2 : d1) : (d2 || d1);
+  const earliest = (d1 && d2) ? (d1 < d2 ? d1 : d2) : (d1 || d2);
 
   if (latest < TODAY) return { label: 'Selesai', color: 'emerald' };
 
   if (
-    earliest.getTime() === TODAY.getTime() ||
+    (d1 && d1.getTime() === TODAY.getTime()) ||
     (d2 && d2.getTime() === TODAY.getTime())
   ) return { label: 'Hari Ini!', color: 'amber' };
 
-  const days = Math.ceil((earliest - TODAY) / (1000 * 60 * 60 * 24));
+  // Cari tanggal tugas berikutnya (terdekat yang belum lewat)
+  const upcomingDate = (d1 && d1 >= TODAY)
+    ? ((d2 && d2 >= TODAY && d2 < d1) ? d2 : d1)
+    : ((d2 && d2 >= TODAY) ? d2 : earliest);
+
+  const days = Math.ceil((upcomingDate - TODAY) / (1000 * 60 * 60 * 24));
   if (days === 1) return { label: 'Besok', color: 'blue' };
   if (days <= 7) return { label: `${days} hari lagi`, color: 'indigo' };
   return { label: `${days} hari lagi`, color: 'slate' };
@@ -118,7 +124,7 @@ export const OperatorSchedule = () => {
         // Sembunyikan sekolah jika event yang ditugaskan ke operator ini sudah selesai
         const sNameKey = (s.name || '').trim().toLowerCase();
         
-        const evts = events.filter(e => (e.schoolName || '').trim().toLowerCase() === sNameKey);
+        const evts = (events || []).filter(e => (e.schoolName || '').trim().toLowerCase() === sNameKey);
         const hasFullday = evts.some(e => e.session === 'Fullday');
         const hasHari1   = evts.some(e => e.session === 'Hari-1');
         const hasHari2   = evts.some(e => e.session === 'Hari-2');
@@ -143,8 +149,8 @@ export const OperatorSchedule = () => {
         const reg = (schoolRegistrations || []).find(
           (r) => r.schoolName?.toLowerCase().trim() === s.name?.toLowerCase().trim()
         );
-        let eff1 = s.eventDate;
-        let eff2 = s.eventDate2;
+        let rawDate1 = s.eventDate;
+        let rawDate2 = s.eventDate2;
         
         const hasOct = reg?.selectedDates && reg.selectedDates.length > 0;
         const hasNov = reg?.selectedDatesNov && reg.selectedDatesNov.length > 0;
@@ -156,10 +162,10 @@ export const OperatorSchedule = () => {
           allDates.sort((a, b) => a.m !== b.m ? a.m - b.m : a.d - b.d);
           
           if (allDates.length > 0) {
-            eff1 = `${allDates[0].y}-${String(allDates[0].m).padStart(2, '0')}-${String(allDates[0].d).padStart(2, '0')}`;
-            eff2 = null;
+            rawDate1 = `${allDates[0].y}-${String(allDates[0].m).padStart(2, '0')}-${String(allDates[0].d).padStart(2, '0')}`;
+            rawDate2 = null;
             if (allDates.length > 1) {
-              eff2 = `${allDates[1].y}-${String(allDates[1].m).padStart(2, '0')}-${String(allDates[1].d).padStart(2, '0')}`;
+              rawDate2 = `${allDates[1].y}-${String(allDates[1].m).padStart(2, '0')}-${String(allDates[1].d).padStart(2, '0')}`;
             }
           }
         }
@@ -167,22 +173,30 @@ export const OperatorSchedule = () => {
         const assigned1 = s.assignedTo;
         const assigned2 = s.assignedTo2;
         const isAssigned1 = !assigned1 || (Array.isArray(assigned1) && assigned1.length === 0) || (Array.isArray(assigned1) && assigned1.includes(userId)) || assigned1 === userId;
-        const isAssigned2 = s.eventDate2 && (!assigned2 || (Array.isArray(assigned2) && assigned2.length === 0) || (Array.isArray(assigned2) && assigned2.includes(userId)) || assigned2 === userId);
+        const isAssigned2 = rawDate2 && (!assigned2 || (Array.isArray(assigned2) && assigned2.length === 0) || (Array.isArray(assigned2) && assigned2.includes(userId)) || assigned2 === userId);
         
-        if (!isAssigned1) eff1 = null;
-        if (!isAssigned2) eff2 = null;
+        const eff1 = isAssigned1 ? rawDate1 : null;
+        const eff2 = isAssigned2 ? rawDate2 : null;
 
-        return { ...s, effectiveDate1: eff1, effectiveDate2: eff2 };
+        return { 
+          ...s, 
+          rawDate1, 
+          rawDate2, 
+          effectiveDate1: eff1, 
+          effectiveDate2: eff2,
+          isAssigned1,
+          isAssigned2,
+        };
       })
       .sort((a, b) => {
-        const da = parseDate(a.effectiveDate1);
-        const db = parseDate(b.effectiveDate1);
+        const da = parseDate(a.effectiveDate1 || a.effectiveDate2 || a.rawDate1 || a.rawDate2);
+        const db = parseDate(b.effectiveDate1 || b.effectiveDate2 || b.rawDate1 || b.rawDate2);
         if (!da && !db) return 0;
         if (!da) return 1;
         if (!db) return -1;
         return da - db;
       });
-  }, [schools, cities, currentUser, schoolRegistrations, completedSchoolNames]);
+  }, [schools, cities, currentUser, schoolRegistrations, completedSchoolNames, events]);
 
   return (
     <div className="glass-card rounded-2xl p-6 border border-slate-800 shadow-2xl">
@@ -229,8 +243,11 @@ export const OperatorSchedule = () => {
 
 const ScheduleCard = ({ school, cities, schoolData = [], schoolRegistrations = [], dimmed = false }) => {
   const cityName = cities.find((c) => c.id === school.cityId)?.name || '-';
-  const status = getStatus(school.effectiveDate1 || school.eventDate, school.effectiveDate2 || school.eventDate2);
-  const isMultiDay = !!school.effectiveDate2;
+  // Hitung status berdasarkan tanggal tugas operator (effectiveDate1 / effectiveDate2)
+  const status = getStatus(
+    school.effectiveDate1 || (!school.effectiveDate2 ? school.rawDate1 : null),
+    school.effectiveDate2 || (!school.effectiveDate1 ? school.rawDate2 : null)
+  );
   const borderCls = cardBorderStyles[status.color] || cardBorderStyles.slate;
   const isToday = status.color === 'amber';
 
@@ -245,6 +262,8 @@ const ScheduleCard = ({ school, cities, schoolData = [], schoolRegistrations = [
     (r) => r.schoolName?.toLowerCase().trim() === school.name?.toLowerCase().trim()
   );
   const participatingCount = reg?.totalStudents || school.studentCount || 0;
+
+  const hasAnyDate = Boolean(school.effectiveDate1 || school.effectiveDate2 || school.rawDate1 || school.rawDate2);
 
   return (
     <div
@@ -290,26 +309,45 @@ const ScheduleCard = ({ school, cities, schoolData = [], schoolRegistrations = [
         </div>
 
         {/* Tanggal Event */}
-        {school.effectiveDate1 ? (
+        {hasAnyDate ? (
           <div className="flex items-start gap-2">
             <Clock className="w-3 h-3 mt-0.5 text-purple-400/70 flex-shrink-0" />
             <div className="text-[11px] text-slate-300 leading-relaxed">
-              <div className="flex items-center gap-1.5 flex-wrap">
-                <span>{formatDate(school.effectiveDate1)}</span>
-                {(school.effectiveDate1 && school.effectiveDate2) && (
-                  <span className="px-1 py-0 rounded text-[9px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30">
-                    Hari 1
+              {/* Baris Hari 1 */}
+              {school.effectiveDate1 ? (
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span>{formatDate(school.effectiveDate1)}</span>
+                  {school.rawDate2 && (
+                    <span className="px-1 py-0 rounded text-[9px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                      Hari 1
+                    </span>
+                  )}
+                </div>
+              ) : school.rawDate1 && school.rawDate2 ? (
+                <div className="flex items-center gap-1.5 flex-wrap text-slate-500 text-[10px]">
+                  <span>{formatDate(school.rawDate1)}</span>
+                  <span className="px-1 py-0 rounded text-[8px] bg-slate-800 text-slate-400 border border-slate-700">
+                    Hari 1 (Tim Lain)
                   </span>
-                )}
-              </div>
-              {school.effectiveDate2 && (
-                <div className="flex items-center gap-1.5 flex-wrap mt-1">
+                </div>
+              ) : null}
+
+              {/* Baris Hari 2 */}
+              {school.effectiveDate2 ? (
+                <div className={`flex items-center gap-1.5 flex-wrap ${(school.effectiveDate1 || school.rawDate1) ? 'mt-1' : ''}`}>
                   <span>{formatDate(school.effectiveDate2)}</span>
                   <span className="px-1 py-0 rounded text-[9px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30">
                     Hari 2
                   </span>
                 </div>
-              )}
+              ) : school.rawDate2 && school.effectiveDate1 ? (
+                <div className="flex items-center gap-1.5 flex-wrap text-slate-500 text-[10px] mt-1">
+                  <span>{formatDate(school.rawDate2)}</span>
+                  <span className="px-1 py-0 rounded text-[8px] bg-slate-800 text-slate-400 border border-slate-700">
+                    Hari 2 (Tim Lain)
+                  </span>
+                </div>
+              ) : null}
             </div>
           </div>
         ) : (

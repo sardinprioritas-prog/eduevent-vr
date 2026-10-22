@@ -301,10 +301,47 @@ export const EventInputForm = ({ editingEvent, onCancelEdit }) => {
                 // Gunakan sumber data dengan prioritas: Book1 (Excel) → Dapodik Portal → studentCount DB
                 const finalDapodik = excelMatched?.jumlahSiswa || portalReg?.dapodikStudents || portalReg?.totalStudents || selectedSchool?.studentCount || formData.dapodikStudents;
 
+                // Cek konfigurasi durasi & sesi otomatis jika sekolah bertahap 2 hari
+                const isTwoDays = Boolean(selectedSchool?.eventDate2);
+                let autoDuration = formData.duration;
+                let autoSession = formData.session;
+                let autoDate = formData.date;
+
+                if (isTwoDays) {
+                  autoDuration = '2 Hari';
+                  const a1 = selectedSchool?.assignedTo;
+                  const a2 = selectedSchool?.assignedTo2;
+                  const isA1 = !a1 || (Array.isArray(a1) && a1.length === 0) || (Array.isArray(a1) && a1.includes(currentUser?.id)) || a1 === currentUser?.id;
+                  const isA2 = !a2 || (Array.isArray(a2) && a2.length === 0) || (Array.isArray(a2) && a2.includes(currentUser?.id)) || a2 === currentUser?.id;
+
+                  if (!isA1 && isA2) {
+                    autoSession = 'Hari-2';
+                    if (selectedSchool?.eventDate2) autoDate = selectedSchool.eventDate2;
+                  } else if (isA1 && !isA2) {
+                    autoSession = 'Hari-1';
+                    if (selectedSchool?.eventDate) autoDate = selectedSchool.eventDate;
+                  } else if (isA1 && isA2) {
+                    const sNameKey = (selectedSchoolName || '').trim().toLowerCase();
+                    const hasHari1 = events.some(evt => (evt.schoolName || '').trim().toLowerCase() === sNameKey && evt.session === 'Hari-1');
+                    if (hasHari1) {
+                      autoSession = 'Hari-2';
+                      if (selectedSchool?.eventDate2) autoDate = selectedSchool.eventDate2;
+                    } else {
+                      autoSession = 'Hari-1';
+                      if (selectedSchool?.eventDate) autoDate = selectedSchool.eventDate;
+                    }
+                  }
+                } else if (selectedSchool?.eventDate) {
+                  autoDate = selectedSchool.eventDate;
+                }
+
                 setFormData({ 
                   ...formData, 
                   schoolName: selectedSchoolName,
-                  dapodikStudents: finalDapodik
+                  dapodikStudents: finalDapodik,
+                  duration: autoDuration,
+                  session: autoSession,
+                  date: autoDate
                 });
               }}
               className="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl px-4 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all appearance-none cursor-pointer"
