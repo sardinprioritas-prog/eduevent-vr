@@ -736,7 +736,7 @@ const toAppStudentReg = (row) => ({
   status: row.status || 'verified',
   notes: row.notes,
   createdAt: row.created_at,
-  updatedAt: row.updated_at,
+  updatedAt: row.updated_at || row.created_at,
 });
 
 const toDbStudentReg = (std) => ({
@@ -748,7 +748,6 @@ const toDbStudentReg = (std) => ({
   parent_phone: std.parentPhone || null,
   status: std.status || 'verified',
   notes: std.notes || null,
-  updated_at: new Date().toISOString(),
 });
 
 export const sbGetStudentRegistrations = async (schoolRegId = null) => {

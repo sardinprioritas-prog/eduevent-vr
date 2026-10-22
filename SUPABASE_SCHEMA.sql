@@ -253,6 +253,11 @@ ALTER TABLE student_registrations ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Allow all student_registrations" ON student_registrations;
 CREATE POLICY "Allow all student_registrations" ON student_registrations FOR ALL USING (true);
 
+-- Migrasi jika tabel sudah terlanjur dibuat tanpa kolom tertentu:
+ALTER TABLE student_registrations ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT now();
+ALTER TABLE student_registrations ADD COLUMN IF NOT EXISTS notes TEXT;
+ALTER TABLE student_registrations ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'verified';
+
 -- ============================================================
 -- SELESAI! Cek tabel di: Table Editor (sidebar kiri Supabase)
 -- ============================================================
