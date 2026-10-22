@@ -1578,14 +1578,27 @@ export const SchoolPortal = () => {
                           </button>
                           <button
                             onClick={() => handleRequestStudentModal(reg)}
-                            className="p-1.5 rounded-lg bg-indigo-950/60 hover:bg-indigo-900/80 text-indigo-300 hover:text-indigo-200 border border-indigo-500/30 transition-all flex items-center space-x-1"
-                            title="Pendaftaran Siswa Mandiri & Link Guru Kelas (Membutuhkan Passcode)"
+                            disabled={isCompleted}
+                            className={`p-1.5 rounded-lg border transition-all flex items-center space-x-1 ${
+                              isCompleted
+                                ? 'bg-slate-800/50 text-slate-600 border-transparent cursor-not-allowed'
+                                : 'bg-indigo-950/60 hover:bg-indigo-900/80 text-indigo-300 hover:text-indigo-200 border-indigo-500/30'
+                            }`}
+                            title={
+                              isCompleted
+                                ? 'Pendaftaran dinonaktifkan (kegiatan sudah terlaksana)'
+                                : 'Pendaftaran Siswa Mandiri & Link Guru Kelas (Membutuhkan Passcode)'
+                            }
                           >
                             <UserCheck className="w-4 h-4" />
                             {(() => {
                               const sCount = (studentRegistrations || []).filter(s => s.schoolRegId === reg.id).length;
                               return sCount > 0 ? (
-                                <span className="text-[10px] font-extrabold px-1 rounded-full bg-indigo-500 text-white leading-tight">
+                                <span
+                                  className={`text-[10px] font-extrabold px-1 rounded-full leading-tight ${
+                                    isCompleted ? 'bg-slate-700 text-slate-400' : 'bg-indigo-500 text-white'
+                                  }`}
+                                >
                                   {sCount}
                                 </span>
                               ) : null;
