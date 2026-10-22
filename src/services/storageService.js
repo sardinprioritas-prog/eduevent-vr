@@ -11,6 +11,7 @@ const KEYS = {
   FINANCES: 'eduevent_finances',
   FINANCE_PASSCODE: 'eduevent_finance_passcode',
   SCHOOL_REGISTRATIONS: 'eduevent_school_registrations',
+  STUDENT_REGISTRATIONS: 'eduevent_student_registrations',
 };
 
 // Initialize Storage if empty
@@ -59,6 +60,9 @@ export const initStorage = () => {
   }
   if (!localStorage.getItem(KEYS.SCHOOL_REGISTRATIONS)) {
     localStorage.setItem(KEYS.SCHOOL_REGISTRATIONS, JSON.stringify([]));
+  }
+  if (!localStorage.getItem(KEYS.STUDENT_REGISTRATIONS)) {
+    localStorage.setItem(KEYS.STUDENT_REGISTRATIONS, JSON.stringify([]));
   }
 };
 
@@ -333,6 +337,51 @@ export const deleteSchoolRegistration = (id) => {
   const list = getSchoolRegistrations();
   const updated = list.filter((item) => item.id !== id);
   localStorage.setItem(KEYS.SCHOOL_REGISTRATIONS, JSON.stringify(updated));
+  return updated;
+};
+
+// Student Registrations API (Pendaftaran Mandiri Orang Tua)
+export const getStudentRegistrations = (schoolRegId = null) => {
+  initStorage();
+  const all = JSON.parse(localStorage.getItem(KEYS.STUDENT_REGISTRATIONS) || '[]');
+  if (schoolRegId) {
+    return all.filter(s => s.schoolRegId === schoolRegId);
+  }
+  return all;
+};
+
+export const saveStudentRegistration = (student) => {
+  initStorage();
+  const list = JSON.parse(localStorage.getItem(KEYS.STUDENT_REGISTRATIONS) || '[]');
+  let updated;
+  if (student.id) {
+    updated = list.map((item) =>
+      item.id === student.id
+        ? { ...item, ...student, updatedAt: new Date().toISOString() }
+        : item
+    );
+  } else {
+    const newStudent = {
+      ...student,
+      id: `std-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+      status: student.status || 'verified',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    updated = [newStudent, ...list];
+  }
+  localStorage.setItem(KEYS.STUDENT_REGISTRATIONS, JSON.stringify(updated));
+  return updated;
+};
+
+export const deleteStudentRegistration = (id, schoolRegId = null) => {
+  initStorage();
+  const list = JSON.parse(localStorage.getItem(KEYS.STUDENT_REGISTRATIONS) || '[]');
+  const updated = list.filter((item) => item.id !== id);
+  localStorage.setItem(KEYS.STUDENT_REGISTRATIONS, JSON.stringify(updated));
+  if (schoolRegId) {
+    return updated.filter(s => s.schoolRegId === schoolRegId);
+  }
   return updated;
 };
 

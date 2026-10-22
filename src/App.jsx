@@ -23,6 +23,8 @@ import { SchoolPortal } from './components/school/SchoolPortal';
 import { Login } from './components/auth/Login';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { ReceiptGenerator } from './components/pioneer/ReceiptGenerator';
+import { ParentStudentRegistration } from './components/student/ParentStudentRegistration';
+import { TeacherClassView } from './components/teacher/TeacherClassView';
 import { MapPin, Loader2 } from 'lucide-react';
 
 const DashboardLayout = ({ role, children }) => {
@@ -257,6 +259,14 @@ const AppRoutes = () => {
           <SchoolPortal />
         </DashboardLayout>
       } />
+
+      {/* Public Parent Student Registration Route */}
+      <Route path="/daftar-siswa/:schoolRegId" element={<ParentStudentRegistration />} />
+      <Route path="/daftar-siswa" element={<ParentStudentRegistration />} />
+
+      {/* Class Teacher Portal Route */}
+      <Route path="/guru-kelas/:schoolRegId" element={<TeacherClassView />} />
+      <Route path="/guru-kelas" element={<TeacherClassView />} />
 
       {/* Catch-all redirect */}
       <Route path="*" element={<Navigate to="/" replace />} />

@@ -27,6 +27,9 @@ import {
   getSchoolRegistrations,
   saveSchoolRegistration,
   deleteSchoolRegistration,
+  getStudentRegistrations,
+  saveStudentRegistration,
+  deleteStudentRegistration,
 } from '../services/storageService';
 
 import {
@@ -61,6 +64,9 @@ import {
   sbSaveDateLock,
   sbDeleteDateLock,
   subscribeToDateLocks,
+  sbGetStudentRegistrations,
+  sbSaveStudentRegistration,
+  sbDeleteStudentRegistration,
 } from '../services/supabaseService';
 
 
@@ -82,6 +88,7 @@ export const AuthProvider = ({ children }) => {
   const [toast, setToast]               = useState(null);
   const [kadinCity, setKadinCity]       = useState('Bone');
   const [schoolRegistrations, setSchoolRegistrations] = useState([]);
+  const [studentRegistrations, setStudentRegistrations] = useState([]);
   const [dateLocks, setDateLocks] = useState([]);
 
   // Supabase sync state
@@ -131,7 +138,7 @@ export const AuthProvider = ({ children }) => {
 
     if (isSupabaseConfigured) {
       try {
-        const [loadedCities, loadedUsers, loadedEvents, loadedSchools, loadedSalarySettings, loadedPayouts, loadedFinances, loadedSchoolRegs, loadedDateLocks] = await Promise.all([
+        const [loadedCities, loadedUsers, loadedEvents, loadedSchools, loadedSalarySettings, loadedPayouts, loadedFinances, loadedSchoolRegs, loadedDateLocks, loadedStudentRegs] = await Promise.all([
           sbGetCities(),
           sbGetUsers(),
           sbGetEvents(),
@@ -141,6 +148,7 @@ export const AuthProvider = ({ children }) => {
           sbGetFinances(),
           sbGetSchoolRegistrations(),
           sbGetDateLocks().catch(() => []),
+          sbGetStudentRegistrations().catch(() => []),
         ]);
 
         setCities(loadedCities);
@@ -152,6 +160,7 @@ export const AuthProvider = ({ children }) => {
         setFinances(loadedFinances);
         setSchoolRegistrations(loadedSchoolRegs);
         setDateLocks(loadedDateLocks);
+        setStudentRegistrations(loadedStudentRegs);
         setIsOnline(true);
         setDbMode('supabase');
 
@@ -208,6 +217,7 @@ export const AuthProvider = ({ children }) => {
       }
     }
     setSchoolRegistrations(getSchoolRegistrations());
+    setStudentRegistrations(getStudentRegistrations());
     setDbMode('local');
     setIsSyncing(false);
   }, []);
@@ -496,6 +506,50 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // ============================================================
+  // STUDENT REGISTRATIONS HANDLERS (Pendaftaran Mandiri Siswa/Ortu)
+  // ============================================================
+  const handleSaveStudentRegistration = async (studentData) => {
+    try {
+      let updated;
+      if (isSupabaseConfigured && dbMode === 'supabase') {
+        updated = await sbSaveStudentRegistration(studentData);
+      } else {
+        updated = saveStudentRegistration(studentData);
+      }
+      setStudentRegistrations(prev => {
+        const without = prev.filter(s => s.id !== studentData.id);
+        const saved = updated.find(s => s.id === (studentData.id || updated[0]?.id));
+        return saved ? [saved, ...without] : updated;
+      });
+      showToast(
+        studentData.id ? 'Data siswa berhasil diperbarui' : 'Pendaftaran siswa berhasil disimpan!',
+        'success'
+      );
+      return updated;
+    } catch (err) {
+      console.error('[handleSaveStudentRegistration]', err);
+      showToast('Gagal menyimpan pendaftaran siswa: ' + err.message, 'error');
+      throw err;
+    }
+  };
+
+  const handleDeleteStudentRegistration = async (id, schoolRegId = null) => {
+    try {
+      if (isSupabaseConfigured && dbMode === 'supabase') {
+        await sbDeleteStudentRegistration(id, schoolRegId);
+      } else {
+        deleteStudentRegistration(id, schoolRegId);
+      }
+      setStudentRegistrations(prev => prev.filter(s => s.id !== id));
+      showToast('Data siswa berhasil dihapus', 'info');
+    } catch (err) {
+      console.error('[handleDeleteStudentRegistration]', err);
+      showToast('Gagal menghapus data siswa: ' + err.message, 'error');
+      throw err;
+    }
+  };
+
 
   // ============================================================
   // EVENT HANDLERS (Hybrid CRUD)
@@ -781,6 +835,9 @@ export const AuthProvider = ({ children }) => {
         dateLocks,
         handleSaveDateLock,
         handleDeleteDateLock,
+        studentRegistrations,
+        handleSaveStudentRegistration,
+        handleDeleteStudentRegistration,
       }}
     >
       {children}

@@ -721,3 +721,71 @@ export const subscribeToDateLocks = (callback) => {
 
   return () => supabase.removeChannel(channel);
 };
+
+// ============================================================
+// STUDENT REGISTRATIONS API (Pendaftaran Mandiri Orang Tua)
+// ============================================================
+
+const toAppStudentReg = (row) => ({
+  id: row.id,
+  schoolRegId: row.school_reg_id,
+  studentName: row.student_name,
+  gradeRombel: row.grade_rombel,
+  parentName: row.parent_name,
+  parentPhone: row.parent_phone,
+  status: row.status || 'verified',
+  notes: row.notes,
+  createdAt: row.created_at,
+  updatedAt: row.updated_at,
+});
+
+const toDbStudentReg = (std) => ({
+  id: std.id,
+  school_reg_id: std.schoolRegId,
+  student_name: std.studentName,
+  grade_rombel: std.gradeRombel,
+  parent_name: std.parentName || null,
+  parent_phone: std.parentPhone || null,
+  status: std.status || 'verified',
+  notes: std.notes || null,
+  updated_at: new Date().toISOString(),
+});
+
+export const sbGetStudentRegistrations = async (schoolRegId = null) => {
+  let query = supabase
+    .from('student_registrations')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (schoolRegId) {
+    query = query.eq('school_reg_id', schoolRegId);
+  }
+
+  const { data, error } = await query;
+  if (error) throw error;
+  return (data || []).map(toAppStudentReg);
+};
+
+export const sbSaveStudentRegistration = async (student) => {
+  const dbData = toDbStudentReg(student);
+  if (!student.id) {
+    dbData.id = `std-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+  }
+  const { error } = await supabase
+    .from('student_registrations')
+    .upsert(dbData, { onConflict: 'id' });
+
+  if (error) throw error;
+  return sbGetStudentRegistrations(student.schoolRegId);
+};
+
+export const sbDeleteStudentRegistration = async (id, schoolRegId = null) => {
+  const { error } = await supabase
+    .from('student_registrations')
+    .delete()
+    .eq('id', id);
+
+  if (error) throw error;
+  return sbGetStudentRegistrations(schoolRegId);
+};
+

@@ -231,6 +231,28 @@ ALTER TABLE school_registrations ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Allow all school_registrations" ON school_registrations;
 CREATE POLICY "Allow all school_registrations" ON school_registrations FOR ALL USING (true);
 
+-- 9. TABLE: student_registrations (Pendaftaran Siswa Mandiri oleh Orang Tua)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS student_registrations (
+  id              TEXT PRIMARY KEY DEFAULT ('std-' || floor(extract(epoch from now()) * 1000)::text),
+  school_reg_id   TEXT NOT NULL REFERENCES school_registrations(id) ON DELETE CASCADE,
+  student_name    TEXT NOT NULL,
+  grade_rombel    TEXT NOT NULL,
+  parent_name     TEXT,
+  parent_phone    TEXT,
+  status          TEXT DEFAULT 'verified',
+  notes           TEXT,
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at      TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_student_school_reg ON student_registrations(school_reg_id);
+CREATE INDEX IF NOT EXISTS idx_student_rombel     ON student_registrations(school_reg_id, grade_rombel);
+
+ALTER TABLE student_registrations ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Allow all student_registrations" ON student_registrations;
+CREATE POLICY "Allow all student_registrations" ON student_registrations FOR ALL USING (true);
+
 -- ============================================================
 -- SELESAI! Cek tabel di: Table Editor (sidebar kiri Supabase)
 -- ============================================================
