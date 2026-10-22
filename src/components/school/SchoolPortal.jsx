@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useAuth } from '../../context/useAuth';
 import { useLocation } from 'react-router-dom';
 import { useSchoolData } from '../../hooks/useSchoolData';
+import { isSameRegion } from '../../config/regionSchoolSources';
 import {
   GraduationCap,
   MapPin,
@@ -48,12 +49,6 @@ const InstagramIcon = ({ className }) => (
     <line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/>
   </svg>
 );
-
-// ── Konstanta Kecamatan ─────────────────────────────────────────
-const KECAMATAN_OPTIONS = [
-  'PALU BARAT', 'ULUJADI', 'PALU SELATAN', 'PALU TIMUR',
-  'PALU UTARA', 'MANTIKULORE', 'TATANGA', 'TAWAELI',
-];
 
 // ── Helper Kalender Oktober & November ──────────────────────────
 const OCTOBER_YEAR = 2026;
@@ -365,8 +360,8 @@ export const SchoolPortal = () => {
   const location = useLocation();
   const regionName = location.state?.regionName;
 
-  // Load data sekolah dari Excel (via JSON)
-  const { schoolData, loading: excelLoading } = useSchoolData();
+  // Load data sekolah dari Excel spesifik wilayah (Palu -> Book1.xlsx, BauBau -> Book2.xlsx)
+  const { schoolData, kecamatanList, loading: excelLoading, hasSource } = useSchoolData(regionName);
 
   const [formData, setFormData] = useState({
     schoolName: '',
@@ -387,28 +382,34 @@ export const SchoolPortal = () => {
   const [editingRegId, setEditingRegId] = useState(null);
   const syncDebounceRef = useRef(null);
 
-  // Set nama sekolah yang sudah terdaftar di schoolRegistrations untuk wilayah ini.
+  // ── FILTER ISOLASI WILAYAH ──────────────────────────────────────
+  // Data registrasi HANYA untuk wilayah yang sedang dibuka agar tidak saling mempengaruhi
+  const regionRegistrations = useMemo(() => {
+    const curRegion = regionName || 'Kota Palu';
+    return (schoolRegistrations || []).filter((reg) => {
+      return isSameRegion(reg.cityName, curRegion);
+    });
+  }, [schoolRegistrations, regionName]);
+
+  // Set nama sekolah yang sudah terdaftar di wilayah ini.
   // KECUALI jika sedang dalam mode edit (editingRegId), registrasi tersebut dikecualikan agar tetap muncul di dropdown.
   const registeredSchoolNames = useMemo(() => {
     const set = new Set();
-    const curCity = (regionName || 'Kota Palu').toLowerCase().replace('kota ', '').trim();
-    (schoolRegistrations || []).forEach(reg => {
+    regionRegistrations.forEach(reg => {
       if (editingRegId && reg.id === editingRegId) return;
-      const regCity = (reg.cityName || '').toLowerCase().replace('kota ', '').trim();
-      if (!regCity || regCity === curCity || regCity.includes(curCity) || curCity.includes(regCity)) {
-        if (reg.schoolName) {
-          set.add(reg.schoolName.trim().toLowerCase());
-        }
+      if (reg.schoolName) {
+        set.add(reg.schoolName.trim().toLowerCase());
       }
     });
     return set;
-  }, [schoolRegistrations, editingRegId, regionName]);
+  }, [regionRegistrations, editingRegId]);
 
   // Sekolah yang tersedia berdasarkan kecamatan terpilih, mengecualikan sekolah yang sudah mendaftar
   const schoolsByKecamatan = useMemo(() => {
     if (!formData.kecamatan) return [];
+    const kecNorm = formData.kecamatan.trim().toUpperCase();
     return schoolData.filter(s => {
-      if (s.kecamatan !== formData.kecamatan) return false;
+      if ((s.kecamatan || '').trim().toUpperCase() !== kecNorm) return false;
       const sName = (s.schoolName || '').trim().toLowerCase();
       if (registeredSchoolNames.has(sName)) {
         return false;
@@ -419,7 +420,11 @@ export const SchoolPortal = () => {
 
   // Data sekolah yang sedang dipilih (termasuk jumlahSiswa dari Excel)
   const selectedSchoolData = formData.schoolName
-    ? schoolData.find(s => s.schoolName === formData.schoolName && s.kecamatan === formData.kecamatan)
+    ? schoolData.find(
+        s =>
+          (s.schoolName || '').trim().toLowerCase() === formData.schoolName.trim().toLowerCase() &&
+          (s.kecamatan || '').trim().toUpperCase() === formData.kecamatan.trim().toUpperCase()
+      )
     : null;
 
   const [classDetails, setClassDetails] = useState({});
@@ -429,13 +434,10 @@ export const SchoolPortal = () => {
   const [activeTab, setActiveTab] = useState('input'); // 'input' | 'riwayat'
   const [selectedReg, setSelectedReg] = useState(null); // For detail modal
 
-  
-
-
   const [shareReg, setShareReg] = useState(null); // For share modal
   const [showIgModal, setShowIgModal] = useState(false); // For Instagram Ad modal
 
-  // Sort registrations ascending by earliest selected date (Oktober lalu November)
+  // Sort registrations ascending by earliest selected date (Oktober lalu November) — KHUSUS WILAYAH INI
   const sortedRegistrations = useMemo(() => {
     const earliestKey = (reg) => {
       const oct = (reg.selectedDates || []).map(Number).filter(n => !isNaN(n));
@@ -443,12 +445,12 @@ export const SchoolPortal = () => {
       const all = [...oct, ...nov];
       return all.length > 0 ? Math.min(...all) : Infinity;
     };
-    return [...schoolRegistrations].sort((a, b) => {
+    return [...regionRegistrations].sort((a, b) => {
       const diff = earliestKey(a) - earliestKey(b);
       if (diff !== 0 && !isNaN(diff)) return diff;
       return (a.schoolName || '').localeCompare(b.schoolName || '');
     });
-  }, [schoolRegistrations]);
+  }, [regionRegistrations]);
 
   // Helper normalisasi nama sekolah untuk pencocokan yang akurat
   const cleanSchoolName = (name) => (name || '').toLowerCase().replace(/[^a-z0-9]/g, ' ').replace(/\s+/g, ' ').trim();
@@ -496,32 +498,36 @@ export const SchoolPortal = () => {
   const adminLockedDates = useMemo(() => {
     if (!dateLocks || dateLocks.length === 0) return [];
     const schoolNameNorm = (formData.schoolName || '').trim().toLowerCase();
+    const curRegion = regionName || 'Kota Palu';
     return dateLocks
       .filter((lock) => {
         if (lock.month !== 10 || lock.year !== 2026) return false;
         if (lock.schoolName && lock.schoolName.trim().toLowerCase() === schoolNameNorm) return false;
+        if (lock.cityName && !isSameRegion(lock.cityName, curRegion)) return false;
         return true;
       })
       .map((lock) => lock.day);
-  }, [dateLocks, formData.schoolName]);
+  }, [dateLocks, formData.schoolName, regionName]);
 
   // ── Admin Date Locks November ─────────────────────────────────
   const adminLockedDatesNov = useMemo(() => {
     if (!dateLocks || dateLocks.length === 0) return [];
     const schoolNameNorm = (formData.schoolName || '').trim().toLowerCase();
+    const curRegion = regionName || 'Kota Palu';
     return dateLocks
       .filter((lock) => {
         if (lock.month !== 11 || lock.year !== 2026) return false;
         if (lock.schoolName && lock.schoolName.trim().toLowerCase() === schoolNameNorm) return false;
+        if (lock.cityName && !isSameRegion(lock.cityName, curRegion)) return false;
         return true;
       })
       .map((lock) => lock.day);
-  }, [dateLocks, formData.schoolName]);
+  }, [dateLocks, formData.schoolName, regionName]);
 
-  // ── Map tanggal Oktober ke nama sekolah ──────────────────
+  // ── Map tanggal Oktober ke nama sekolah (ISOLASI WILAYAH) ──────
   const bookedSchoolsMap = useMemo(() => {
     const map = {};
-    schoolRegistrations.forEach(reg => {
+    regionRegistrations.forEach(reg => {
       if (editingRegId && reg.id === editingRegId) return;
       (reg.selectedDates || []).forEach(d => {
         if (!map[d]) map[d] = [];
@@ -529,12 +535,12 @@ export const SchoolPortal = () => {
       });
     });
     return map;
-  }, [schoolRegistrations, editingRegId]);
+  }, [regionRegistrations, editingRegId]);
 
-  // ── Map tanggal November ke nama sekolah ─────────────────
+  // ── Map tanggal November ke nama sekolah (ISOLASI WILAYAH) ─────
   const bookedSchoolsMapNov = useMemo(() => {
     const map = {};
-    schoolRegistrations.forEach(reg => {
+    regionRegistrations.forEach(reg => {
       if (editingRegId && reg.id === editingRegId) return;
       (reg.selectedDatesNov || []).forEach(d => {
         if (!map[d]) map[d] = [];
@@ -542,7 +548,7 @@ export const SchoolPortal = () => {
       });
     });
     return map;
-  }, [schoolRegistrations, editingRegId]);
+  }, [regionRegistrations, editingRegId]);
 
   // ── Semua tanggal Oktober yang SUDAH dipesan (≥2) ATAU dikunci admin ─────
   const allBookedDates = useMemo(() => {
@@ -607,11 +613,10 @@ export const SchoolPortal = () => {
     syncDebounceRef.current = setTimeout(() => {
       setSyncStatus('checking');
 
-      const matched = schoolRegistrations.find((reg) => {
+      const matched = regionRegistrations.find((reg) => {
         const schoolMatch = (reg.schoolName || '').trim().toLowerCase() === formData.schoolName.trim().toLowerCase();
-        const kecamatanMatch = reg.kecamatan === formData.kecamatan;
-        const cityMatch = reg.cityName === (regionName || 'Kota Palu');
-        return schoolMatch && kecamatanMatch && cityMatch;
+        const kecamatanMatch = (reg.kecamatan || '').trim().toUpperCase() === formData.kecamatan.trim().toUpperCase();
+        return schoolMatch && kecamatanMatch;
       });
 
       if (matched) {
@@ -638,7 +643,7 @@ export const SchoolPortal = () => {
       if (syncDebounceRef.current) clearTimeout(syncDebounceRef.current);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [formData.schoolName, formData.kecamatan, regionName, schoolRegistrations]);
+  }, [formData.schoolName, formData.kecamatan, regionRegistrations]);
 
   const handleClassValueChange = (className, value) => {
     if (value === '' || (/^\d+$/.test(value) && parseInt(value) >= 0)) {
@@ -727,7 +732,8 @@ export const SchoolPortal = () => {
     }
 
     const currentCityName = regionName || 'Kota Palu';
-    const matchedCity = cities.find(c => c.name === currentCityName);
+    const matchedCity = (cities || []).find(c => isSameRegion(c.name, currentCityName));
+    const finalCityName = matchedCity ? matchedCity.name : currentCityName;
 
     const registrationData = {
       ...(editingRegId ? { id: editingRegId } : {}),
@@ -735,7 +741,7 @@ export const SchoolPortal = () => {
       kecamatan: formData.kecamatan,
       pjName: formData.pjName.trim(),
       noHp: formData.noHp.trim(),
-      cityName: currentCityName,
+      cityName: finalCityName,
       cityId: matchedCity?.id || null,
       rombelCount: parseInt(formData.rombelCount) || 1,
       classDetails: classDetails,
@@ -923,9 +929,9 @@ export const SchoolPortal = () => {
                 }`}
               >
                 Riwayat Pendaftaran
-                {schoolRegistrations.length > 0 && (
+                {regionRegistrations.length > 0 && (
                   <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[10px] font-bold text-white">
-                    {schoolRegistrations.length}
+                    {regionRegistrations.length}
                   </span>
                 )}
               </button>
@@ -1001,9 +1007,9 @@ export const SchoolPortal = () => {
                       className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 appearance-none focus:ring-1 focus:ring-indigo-500 transition-all"
                     >
                       <option value="">-- Pilih Kecamatan --</option>
-                      {KECAMATAN_OPTIONS.map(kec => (
+                      {kecamatanList.map(kec => (
                         <option key={kec} value={kec}>
-                          {kec} ({schoolData.filter(s => s.kecamatan === kec).length} sekolah)
+                          {kec} ({schoolData.filter(s => (s.kecamatan || '').trim().toUpperCase() === kec).length} sekolah)
                         </option>
                       ))}
                     </select>
@@ -1377,7 +1383,7 @@ export const SchoolPortal = () => {
             </div>
           </div>
 
-          {schoolRegistrations.length === 0 ? (
+          {regionRegistrations.length === 0 ? (
             <div className="text-center py-16 text-slate-500">
               <GraduationCap className="w-12 h-12 mx-auto mb-4 opacity-30 text-indigo-400" />
               <p className="text-sm font-semibold">Belum Ada Data Pendaftaran Terdaftar</p>
