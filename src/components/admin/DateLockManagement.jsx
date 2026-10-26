@@ -18,6 +18,7 @@ import {
 const CALENDAR_CONFIG = {
   october:  { year: 2026, month: 9,  totalDays: 31, label: 'Oktober 2026',  dbMonth: 10 },
   november: { year: 2026, month: 10, totalDays: 30, label: 'November 2026', dbMonth: 11 },
+  december: { year: 2026, month: 11, totalDays: 31, label: 'Desember 2026', dbMonth: 12 },
 };
 
 const buildMonthDays = (year, month, totalDays) => {
@@ -50,9 +51,10 @@ const AdminMonthCalendar = ({ calKey, lockMap, bookedSchoolsMap, onDayClick }) =
   };
 
   const isNov = calKey === 'november';
-  const headerBg = isNov ? 'bg-violet-950/40' : 'bg-slate-800/60';
-  const headerText = isNov ? 'text-violet-200' : 'text-white';
-  const iconColor = isNov ? 'text-violet-300' : 'text-slate-300';
+  const isDec = calKey === 'december';
+  const headerBg = isDec ? 'bg-amber-950/40' : isNov ? 'bg-violet-950/40' : 'bg-slate-800/60';
+  const headerText = isDec ? 'text-amber-200' : isNov ? 'text-violet-200' : 'text-white';
+  const iconColor = isDec ? 'text-amber-300' : isNov ? 'text-violet-300' : 'text-slate-300';
 
   return (
     <div className="rounded-2xl overflow-hidden border border-slate-800 bg-slate-900/60">
@@ -168,7 +170,13 @@ export const DateLockManagement = () => {
     return map;
   }, [dateLocks]);
 
-  const activeLockMap = activeMonth === 'october' ? lockMapOct : lockMapNov;
+  const lockMapDec = useMemo(() => {
+    const map = {};
+    dateLocks.forEach((lock) => { if (lock.month === 12 && lock.year === 2026) map[lock.day] = lock; });
+    return map;
+  }, [dateLocks]);
+
+  const activeLockMap = activeMonth === 'october' ? lockMapOct : activeMonth === 'november' ? lockMapNov : lockMapDec;
 
   const bookedSchoolsMapOct = useMemo(() => {
     const map = {};
@@ -186,7 +194,15 @@ export const DateLockManagement = () => {
     return map;
   }, [schoolRegistrations]);
 
-  const activeBookedMap = activeMonth === 'october' ? bookedSchoolsMapOct : bookedSchoolsMapNov;
+  const bookedSchoolsMapDec = useMemo(() => {
+    const map = {};
+    schoolRegistrations.forEach((reg) => {
+      (reg.selectedDatesDec || []).forEach((d) => { if (!map[d]) map[d] = []; map[d].push(reg.schoolName); });
+    });
+    return map;
+  }, [schoolRegistrations]);
+
+  const activeBookedMap = activeMonth === 'october' ? bookedSchoolsMapOct : activeMonth === 'november' ? bookedSchoolsMapNov : bookedSchoolsMapDec;
 
   const registeredSchools = useMemo(() => {
     return [...new Set(schoolRegistrations.map((r) => r.schoolName))].sort();
@@ -243,8 +259,10 @@ export const DateLockManagement = () => {
     const scheduledSchools = schoolRegistrations.filter(reg => {
       if (activeMonth === 'october') {
         return reg.selectedDates && reg.selectedDates.length > 0;
-      } else {
+      } else if (activeMonth === 'november') {
         return reg.selectedDatesNov && reg.selectedDatesNov.length > 0;
+      } else {
+        return reg.selectedDatesDec && reg.selectedDatesDec.length > 0;
       }
     });
 
@@ -255,10 +273,10 @@ export const DateLockManagement = () => {
 
     // Sort berdasarkan tanggal terkecil yang dipilih
     const sortedSchools = [...scheduledSchools].sort((a, b) => {
-      const datesA = activeMonth === 'october' ? a.selectedDates : a.selectedDatesNov;
-      const datesB = activeMonth === 'october' ? b.selectedDates : b.selectedDatesNov;
-      const minA = Math.min(...datesA);
-      const minB = Math.min(...datesB);
+      const datesA = activeMonth === 'october' ? a.selectedDates : activeMonth === 'november' ? a.selectedDatesNov : a.selectedDatesDec;
+      const datesB = activeMonth === 'october' ? b.selectedDates : activeMonth === 'november' ? b.selectedDatesNov : b.selectedDatesDec;
+      const minA = Math.min(...(datesA || []));
+      const minB = Math.min(...(datesB || []));
       return minA - minB;
     });
 
@@ -266,9 +284,12 @@ export const DateLockManagement = () => {
     text += `--------------------------------------------------------\n\n`;
 
     sortedSchools.forEach((reg, index) => {
-      const dates = activeMonth === 'october' 
-        ? reg.selectedDates.map(d => `${d} Oktober 2026`).join(', ')
-        : reg.selectedDatesNov.map(d => `${d} November 2026`).join(', ');
+      const rawDates = activeMonth === 'october'
+        ? reg.selectedDates
+        : activeMonth === 'november'
+        ? reg.selectedDatesNov
+        : reg.selectedDatesDec;
+      const dates = (rawDates || []).map(d => `${d} ${cfg.label}`).join(', ');
 
       text += `${index + 1}. ${reg.schoolName}\n`;
       text += `   👤 PJ: ${reg.pjName || 'Belum diisi'}\n`;
@@ -310,7 +331,7 @@ export const DateLockManagement = () => {
 
       {/* Tab Switcher Bulan */}
       <div className="flex items-center space-x-2 p-1 bg-slate-900/80 rounded-xl border border-slate-800 w-fit">
-        {(['october', 'november']).map((key) => {
+        {(['october', 'november', 'december']).map((key) => {
           const c = CALENDAR_CONFIG[key];
           const isActive = activeMonth === key;
           const lockCount = dateLocks.filter(l => l.month === c.dbMonth && l.year === 2026).length;
@@ -322,7 +343,9 @@ export const DateLockManagement = () => {
                 isActive
                   ? key === 'october'
                     ? 'bg-rose-600/80 text-white shadow-lg shadow-rose-600/20'
-                    : 'bg-violet-600/80 text-white shadow-lg shadow-violet-600/20'
+                    : key === 'november'
+                    ? 'bg-violet-600/80 text-white shadow-lg shadow-violet-600/20'
+                    : 'bg-amber-600/80 text-white shadow-lg shadow-amber-600/20'
                   : 'text-slate-400 hover:text-slate-200'
               }`}
             >
@@ -359,7 +382,7 @@ export const DateLockManagement = () => {
           <p><strong className="text-blue-200">Klik tanggal</strong> di kalender untuk mengunci / mengedit / membuka kunci.</p>
           <p>• <strong>Dikunci Total</strong> : tidak ada sekolah yang bisa memilih tanggal ini.</p>
           <p>• <strong>Eksklusif</strong> : hanya sekolah yang ditunjuk yang bisa memilih tanggal ini.</p>
-          <p>Gunakan <strong className="text-blue-200">tab bulan</strong> di atas untuk beralih antara Oktober dan November.</p>
+          <p>Gunakan <strong className="text-blue-200">tab bulan</strong> di atas untuk beralih antara Oktober, November, dan Desember.</p>
         </div>
       </div>
 
