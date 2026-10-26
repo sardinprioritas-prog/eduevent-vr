@@ -154,11 +154,13 @@ export const OperatorSchedule = () => {
         
         const hasOct = reg?.selectedDates && reg.selectedDates.length > 0;
         const hasNov = reg?.selectedDatesNov && reg.selectedDatesNov.length > 0;
+        const hasDec = reg?.selectedDatesDec && reg.selectedDatesDec.length > 0;
         
-        if (hasOct || hasNov) {
+        if (hasOct || hasNov || hasDec) {
           const allDates = [];
           if (hasOct) reg.selectedDates.forEach(d => allDates.push({ y: 2026, m: 10, d }));
           if (hasNov) reg.selectedDatesNov.forEach(d => allDates.push({ y: 2026, m: 11, d }));
+          if (hasDec) reg.selectedDatesDec.forEach(d => allDates.push({ y: 2026, m: 12, d }));
           allDates.sort((a, b) => a.m !== b.m ? a.m - b.m : a.d - b.d);
           
           if (allDates.length > 0) {

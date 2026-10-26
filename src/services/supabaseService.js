@@ -538,6 +538,7 @@ const toAppSchoolReg = (row) => ({
   dapodikStudents: row.dapodik_students || 0,
   selectedDates: row.selected_dates || [],
   selectedDatesNov: row.selected_dates_nov || [],
+  selectedDatesDec: row.selected_dates_dec || [],
   passcode: row.passcode,
   createdAt: row.created_at,
   updatedAt: row.updated_at,
@@ -561,6 +562,7 @@ const toDbSchoolReg = (reg) => ({
   dapodik_students: reg.dapodikStudents || 0,
   selected_dates: reg.selectedDates || [],
   selected_dates_nov: reg.selectedDatesNov || [],
+  selected_dates_dec: reg.selectedDatesDec || [],
   passcode: reg.passcode || null,
 });
 
@@ -580,9 +582,20 @@ export const sbSaveSchoolRegistration = async (registration) => {
     // INSERT baru
     dbData.id = `reg-${Date.now()}`;
   }
-  const { error } = await supabase
+  let { error } = await supabase
     .from('school_registrations')
     .upsert(dbData, { onConflict: 'id' });
+
+  // Fallback: kolom selected_dates_dec belum dibuat di database
+  if (error && /selected_dates_dec/.test(error.message || '')) {
+    if ((dbData.selected_dates_dec || []).length > 0) {
+      throw new Error('Kolom "selected_dates_dec" belum ada di database. Jalankan migrasi SQL untuk mengaktifkan kalender Desember.');
+    }
+    const { selected_dates_dec: _omit, ...rest } = dbData;
+    ({ error } = await supabase
+      .from('school_registrations')
+      .upsert(rest, { onConflict: 'id' }));
+  }
 
   if (error) throw error;
   return sbGetSchoolRegistrations();

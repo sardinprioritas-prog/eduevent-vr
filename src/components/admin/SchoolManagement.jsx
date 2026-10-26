@@ -144,11 +144,13 @@ export const SchoolManagement = () => {
       let autoEventDate2 = '';
       const hasOct = reg.selectedDates && reg.selectedDates.length > 0;
       const hasNov = reg.selectedDatesNov && reg.selectedDatesNov.length > 0;
+      const hasDec = reg.selectedDatesDec && reg.selectedDatesDec.length > 0;
       
-      if (hasOct || hasNov) {
+      if (hasOct || hasNov || hasDec) {
         const allDates = [];
         if (hasOct) reg.selectedDates.forEach(d => allDates.push({ y: 2026, m: 10, d }));
         if (hasNov) reg.selectedDatesNov.forEach(d => allDates.push({ y: 2026, m: 11, d }));
+        if (hasDec) reg.selectedDatesDec.forEach(d => allDates.push({ y: 2026, m: 12, d }));
         
         allDates.sort((a, b) => a.m !== b.m ? a.m - b.m : a.d - b.d);
         
@@ -462,7 +464,8 @@ export const SchoolManagement = () => {
                         let dateText = '';
                         const hasOct = reg.selectedDates && reg.selectedDates.length > 0;
                         const hasNov = reg.selectedDatesNov && reg.selectedDatesNov.length > 0;
-                        if (hasOct || hasNov) {
+                        const hasDec = reg.selectedDatesDec && reg.selectedDatesDec.length > 0;
+                        if (hasOct || hasNov || hasDec) {
                           const dates = [];
                           if (hasOct) {
                             const sorted = [...reg.selectedDates].sort((a, b) => a - b);
@@ -471,6 +474,10 @@ export const SchoolManagement = () => {
                           if (hasNov) {
                             const sorted = [...reg.selectedDatesNov].sort((a, b) => a - b);
                             dates.push(`${sorted.join(', ')} Nov`);
+                          }
+                          if (hasDec) {
+                            const sorted = [...reg.selectedDatesDec].sort((a, b) => a - b);
+                            dates.push(`${sorted.join(', ')} Des`);
                           }
                           dateText = ` (Event: ${dates.join(' & ')})`;
                         }
@@ -527,7 +534,7 @@ export const SchoolManagement = () => {
               {(() => {
                 const reg = portalSchoolOptions.find(r => r.schoolName === formData.name);
                 const isAuto = !!reg;
-                const hasSecondDate = Boolean(formData.eventDate2 || (isAuto && ((reg?.selectedDates?.length || 0) + (reg?.selectedDatesNov?.length || 0) >= 2)));
+                const hasSecondDate = Boolean(formData.eventDate2 || (isAuto && ((reg?.selectedDates?.length || 0) + (reg?.selectedDatesNov?.length || 0) + (reg?.selectedDatesDec?.length || 0) >= 2)));
                 return (
                   <>
                     <label className="block text-xs font-medium text-slate-400 mb-1 flex items-center gap-1.5">
@@ -583,6 +590,7 @@ export const SchoolManagement = () => {
                 const allRegDates = [];
                 if (reg.selectedDates) reg.selectedDates.forEach(d => allRegDates.push({ str: `${d} Oktober`, iso: `2026-10-${String(d).padStart(2, '0')}` }));
                 if (reg.selectedDatesNov) reg.selectedDatesNov.forEach(d => allRegDates.push({ str: `${d} November`, iso: `2026-11-${String(d).padStart(2, '0')}` }));
+                if (reg.selectedDatesDec) reg.selectedDatesDec.forEach(d => allRegDates.push({ str: `${d} Desember`, iso: `2026-12-${String(d).padStart(2, '0')}` }));
                 const match = allRegDates.find(r => r.iso === formData.eventDate);
                 if (match) d1Label = match.str;
               }
@@ -596,6 +604,7 @@ export const SchoolManagement = () => {
                 const allRegDates = [];
                 if (reg.selectedDates) reg.selectedDates.forEach(d => allRegDates.push({ str: `${d} Oktober`, iso: `2026-10-${String(d).padStart(2, '0')}` }));
                 if (reg.selectedDatesNov) reg.selectedDatesNov.forEach(d => allRegDates.push({ str: `${d} November`, iso: `2026-11-${String(d).padStart(2, '0')}` }));
+                if (reg.selectedDatesDec) reg.selectedDatesDec.forEach(d => allRegDates.push({ str: `${d} Desember`, iso: `2026-12-${String(d).padStart(2, '0')}` }));
                 const match = allRegDates.find(r => r.iso === formData.eventDate2);
                 if (match) d2Label = match.str;
               }

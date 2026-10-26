@@ -61,12 +61,44 @@ const OCTOBER_YEAR = 2026;
 const OCTOBER_MONTH = 9;  // 0-indexed
 const NOVEMBER_YEAR = 2026;
 const NOVEMBER_MONTH = 10; // 0-indexed
+const DECEMBER_YEAR = 2026;
+const DECEMBER_MONTH = 11; // 0-indexed
+
+// Konfigurasi tampilan per bulan untuk MonthCalendar
+const MONTH_CONFIG = {
+  october:  { year: OCTOBER_YEAR,  mIdx: OCTOBER_MONTH,  totalDays: 31, name: 'Oktober',  accent: 'indigo' },
+  november: { year: NOVEMBER_YEAR, mIdx: NOVEMBER_MONTH, totalDays: 30, name: 'November', accent: 'teal' },
+  december: { year: DECEMBER_YEAR, mIdx: DECEMBER_MONTH, totalDays: 31, name: 'Desember', accent: 'amber' },
+};
+
+// Kelas Tailwind statis per aksen (agar tidak ter-purge)
+const ACCENT_CLASSES = {
+  indigo: {
+    headerBg: 'bg-indigo-950/40', icon: 'text-indigo-400', title: 'text-indigo-200',
+    mine: 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30 ring-2 ring-indigo-400/40',
+    hover: 'hover:bg-indigo-900/50 hover:text-indigo-200 hover:border-indigo-500/50',
+    selBox: 'bg-emerald-950/30 border-emerald-500/25', selIcon: 'text-emerald-400', selText: 'text-emerald-300',
+  },
+  teal: {
+    headerBg: 'bg-teal-950/40', icon: 'text-teal-400', title: 'text-teal-200',
+    mine: 'bg-teal-600 text-white shadow-lg shadow-teal-600/30 ring-2 ring-teal-400/40',
+    hover: 'hover:bg-teal-900/50 hover:text-teal-200 hover:border-teal-500/50',
+    selBox: 'bg-teal-950/30 border-teal-500/25', selIcon: 'text-teal-400', selText: 'text-teal-300',
+  },
+  amber: {
+    headerBg: 'bg-amber-950/40', icon: 'text-amber-400', title: 'text-amber-200',
+    mine: 'bg-amber-600 text-white shadow-lg shadow-amber-600/30 ring-2 ring-amber-400/40',
+    hover: 'hover:bg-amber-900/50 hover:text-amber-200 hover:border-amber-500/50',
+    selBox: 'bg-amber-950/30 border-amber-500/25', selIcon: 'text-amber-400', selText: 'text-amber-300',
+  },
+};
 
 const generateShareMessage = (reg) => {
   if (!reg) return '';
   const octDates = (reg.selectedDates || []).map(d => `${d} Oktober 2026`);
   const novDates = (reg.selectedDatesNov || []).map(d => `${d} November 2026`);
-  const allDates = [...octDates, ...novDates];
+  const decDates = (reg.selectedDatesDec || []).map(d => `${d} Desember 2026`);
+  const allDates = [...octDates, ...novDates, ...decDates];
   const dateStr = allDates.length > 0 ? allDates.join(', ') : 'Belum ditentukan';
   
   return `Halo Bapak/Ibu ${reg.pjName || 'Guru PJ'},\n\nSalam dari kami tim Triesakti Edutainment.\n\nBersama pesan ini kami sampaikan informasi jadwal pelaksanaan kegiatan Outing Class VR untuk ${reg.schoolName}:\n\n🗓️ Tanggal: ${dateStr}\n👥 Total Siswa Sementara: ${reg.totalStudents} Siswa\n\nUntuk update data siswa sementara dimohon untuk diinput H-1, dan di hari pelaksanaan siswa masih bisa melakukan pendaftaran. Untuk kelancaran kegiatan nanti, mohon dipersiapkan ruangan yang akan digunakan agar tim setibanya di sekolah langsung prepare setup perangkat. Jika ada pertanyaan lebih lanjut, silakan balas pesan ini.\n\nTerima kasih,\nTim Triesakti Edutainment`;
@@ -138,11 +170,12 @@ const MonthCalendar = ({
   adminLockedDates = [],
   adminLockMap = {},
 }) => {
-  const isOct = month === 'october';
-  const year  = isOct ? OCTOBER_YEAR  : NOVEMBER_YEAR;
-  const mIdx  = isOct ? OCTOBER_MONTH : NOVEMBER_MONTH;
-  const label = isOct ? 'Oktober 2026' : 'November 2026';
-  const totalDays = isOct ? 31 : 30;
+  const cfg   = MONTH_CONFIG[month] || MONTH_CONFIG.october;
+  const acc   = ACCENT_CLASSES[cfg.accent];
+  const year  = cfg.year;
+  const mIdx  = cfg.mIdx;
+  const label = `${cfg.name} ${cfg.year}`;
+  const totalDays = cfg.totalDays;
 
   const days = useMemo(() => buildMonthDays(year, mIdx, totalDays), [year, mIdx, totalDays]);
   const [hoveredDay, setHoveredDay] = useState(null);
@@ -213,11 +246,9 @@ const MonthCalendar = ({
       {/* Grid Kalender */}
       <div className="rounded-2xl overflow-hidden border border-slate-800 bg-slate-900/60">
         {/* Header bulan */}
-        <div className={`flex items-center justify-center gap-2 p-4 border-b border-slate-800 ${
-          isOct ? 'bg-indigo-950/40' : 'bg-teal-950/40'
-        }`}>
-          <Calendar className={`w-4 h-4 ${isOct ? 'text-indigo-400' : 'text-teal-400'}`} />
-          <span className={`text-sm font-bold ${isOct ? 'text-indigo-200' : 'text-teal-200'}`}>{label}</span>
+        <div className={`flex items-center justify-center gap-2 p-4 border-b border-slate-800 ${acc.headerBg}`}>
+          <Calendar className={`w-4 h-4 ${acc.icon}`} />
+          <span className={`text-sm font-bold ${acc.title}`}>{label}</span>
         </div>
 
         {/* Nama hari */}
@@ -250,9 +281,7 @@ const MonthCalendar = ({
             } else if (status === 'weekend') {
               colorClass = 'bg-slate-900/40 text-slate-700';
             } else if (status === 'mine') {
-              colorClass = isOct
-                ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30 ring-2 ring-indigo-400/40'
-                : 'bg-teal-600 text-white shadow-lg shadow-teal-600/30 ring-2 ring-teal-400/40';
+              colorClass = acc.mine;
             } else if (status === 'admin-locked') {
               const lockInfo = adminLockMap[day];
               colorClass = lockInfo?.schoolName
@@ -265,9 +294,7 @@ const MonthCalendar = ({
               cursor = 'cursor-pointer';
             } else {
               // available
-              const hoverCls = isOct
-                ? 'hover:bg-indigo-900/50 hover:text-indigo-200 hover:border-indigo-500/50'
-                : 'hover:bg-teal-900/50 hover:text-teal-200 hover:border-teal-500/50';
+              const hoverCls = acc.hover;
               colorClass = `bg-slate-900 text-slate-200 ${isClickable ? `${hoverCls} border border-slate-800` : 'border border-slate-800/40'}`;
               cursor = isClickable ? 'cursor-pointer' : 'cursor-default';
             }
@@ -320,16 +347,12 @@ const MonthCalendar = ({
 
       {/* Tanggal terpilih */}
       {myDates && myDates.length > 0 && (
-        <div className={`flex items-center space-x-3 p-4 rounded-xl border ${
-          isOct
-            ? 'bg-emerald-950/30 border-emerald-500/25'
-            : 'bg-teal-950/30 border-teal-500/25'
-        }`}>
-          <CheckCircle className={`w-5 h-5 shrink-0 ${isOct ? 'text-emerald-400' : 'text-teal-400'}`} />
+        <div className={`flex items-center space-x-3 p-4 rounded-xl border ${acc.selBox}`}>
+          <CheckCircle className={`w-5 h-5 shrink-0 ${acc.selIcon}`} />
           <div>
-            <p className={`text-xs font-bold ${isOct ? 'text-emerald-300' : 'text-teal-300'}`}>Tanggal Kegiatan Terpilih:</p>
+            <p className={`text-xs font-bold ${acc.selText}`}>Tanggal Kegiatan Terpilih:</p>
             <p className="text-sm font-extrabold text-white mt-0.5">
-              {myDates.map(d => `${d} ${isOct ? 'Oktober' : 'November'} 2026`).join(' • ')}
+              {myDates.map(d => `${d} ${cfg.name} ${cfg.year}`).join(' • ')}
             </p>
           </div>
           {!disabled && (
@@ -439,6 +462,7 @@ export const SchoolPortal = () => {
   const [totalStudents, setTotalStudents] = useState(0);
   const [selectedDates, setSelectedDates] = useState([]);    // tanggal kegiatan Oktober
   const [selectedDatesNov, setSelectedDatesNov] = useState([]); // tanggal kegiatan November
+  const [selectedDatesDec, setSelectedDatesDec] = useState([]); // tanggal kegiatan Desember
   const [activeTab, setActiveTab] = useState('input'); // 'input' | 'riwayat'
   const [selectedReg, setSelectedReg] = useState(null); // For detail modal
   const [studentModalReg, setStudentModalReg] = useState(null); // For student registration & teacher link modal
@@ -452,7 +476,8 @@ export const SchoolPortal = () => {
     const earliestKey = (reg) => {
       const oct = (reg.selectedDates || []).map(Number).filter(n => !isNaN(n));
       const nov = (reg.selectedDatesNov || []).map(Number).filter(n => !isNaN(n)).map(n => 100 + n);
-      const all = [...oct, ...nov];
+      const dec = (reg.selectedDatesDec || []).map(Number).filter(n => !isNaN(n)).map(n => 200 + n);
+      const all = [...oct, ...nov, ...dec];
       return all.length > 0 ? Math.min(...all) : Infinity;
     };
     return [...regionRegistrations].sort((a, b) => {
@@ -534,6 +559,21 @@ export const SchoolPortal = () => {
       .map((lock) => lock.day);
   }, [dateLocks, formData.schoolName, regionName]);
 
+  // ── Admin Date Locks Desember ─────────────────────────────────
+  const adminLockedDatesDec = useMemo(() => {
+    if (!dateLocks || dateLocks.length === 0) return [];
+    const schoolNameNorm = (formData.schoolName || '').trim().toLowerCase();
+    const curRegion = regionName || 'Kota Palu';
+    return dateLocks
+      .filter((lock) => {
+        if (lock.month !== 12 || lock.year !== 2026) return false;
+        if (lock.schoolName && lock.schoolName.trim().toLowerCase() === schoolNameNorm) return false;
+        if (lock.cityName && !isSameRegion(lock.cityName, curRegion)) return false;
+        return true;
+      })
+      .map((lock) => lock.day);
+  }, [dateLocks, formData.schoolName, regionName]);
+
   // ── Map tanggal Oktober ke nama sekolah (ISOLASI WILAYAH) ──────
   const bookedSchoolsMap = useMemo(() => {
     const map = {};
@@ -560,6 +600,19 @@ export const SchoolPortal = () => {
     return map;
   }, [regionRegistrations, editingRegId]);
 
+  // ── Map tanggal Desember ke nama sekolah (ISOLASI WILAYAH) ─────
+  const bookedSchoolsMapDec = useMemo(() => {
+    const map = {};
+    regionRegistrations.forEach(reg => {
+      if (editingRegId && reg.id === editingRegId) return;
+      (reg.selectedDatesDec || []).forEach(d => {
+        if (!map[d]) map[d] = [];
+        map[d].push(reg.schoolName);
+      });
+    });
+    return map;
+  }, [regionRegistrations, editingRegId]);
+
   // ── Semua tanggal Oktober yang SUDAH dipesan (≥2) ATAU dikunci admin ─────
   const allBookedDates = useMemo(() => {
     const fromBookings = Object.keys(bookedSchoolsMap)
@@ -577,6 +630,15 @@ export const SchoolPortal = () => {
     const combined = new Set([...fromBookings, ...adminLockedDatesNov]);
     return [...combined];
   }, [bookedSchoolsMapNov, adminLockedDatesNov]);
+
+  // ── Semua tanggal Desember yang SUDAH dipesan (≥2) ATAU dikunci admin ────
+  const allBookedDatesDec = useMemo(() => {
+    const fromBookings = Object.keys(bookedSchoolsMapDec)
+      .filter(d => bookedSchoolsMapDec[d].length >= 2)
+      .map(d => parseInt(d));
+    const combined = new Set([...fromBookings, ...adminLockedDatesDec]);
+    return [...combined];
+  }, [bookedSchoolsMapDec, adminLockedDatesDec]);
 
   // ── Jumlah siswa sekolah yang dipilih (dari Excel) ─────────────
   const excelStudentCount = selectedSchoolData?.jumlahSiswa || 0;
@@ -641,6 +703,7 @@ export const SchoolPortal = () => {
         setClassDetails(matched.classDetails || {});
         setSelectedDates(matched.selectedDates || []);
         setSelectedDatesNov(matched.selectedDatesNov || []);
+        setSelectedDatesDec(matched.selectedDatesDec || []);
       } else {
         setSyncStatus('not_found');
         setEditingRegId(null);
@@ -676,6 +739,7 @@ export const SchoolPortal = () => {
     setClassDetails(reg.classDetails || {});
     setSelectedDates(reg.selectedDates || []);
     setSelectedDatesNov(reg.selectedDatesNov || []);
+    setSelectedDatesDec(reg.selectedDatesDec || []);
     setTotalStudents(reg.totalStudents || 0);
     setSyncStatus('matched');
     setEditingRegId(reg.id);
@@ -768,6 +832,7 @@ export const SchoolPortal = () => {
       dapodikStudents: excelStudentCount || 0,
       selectedDates: selectedDates,
       selectedDatesNov: selectedDatesNov,
+      selectedDatesDec: selectedDatesDec,
       passcode: formData.passcode,
     };
 
@@ -786,6 +851,7 @@ export const SchoolPortal = () => {
     setTotalStudents(0);
     setSelectedDates([]);
     setSelectedDatesNov([]);
+    setSelectedDatesDec([]);
     setSyncStatus('idle');
     setEditingRegId(null);
     setActiveTab('riwayat');
@@ -798,6 +864,7 @@ export const SchoolPortal = () => {
     setClassDetails({});
     setSelectedDates([]);
     setSelectedDatesNov([]);
+    setSelectedDatesDec([]);
     setFormData(prev => ({
       ...prev,
       schoolName: '',
@@ -1328,7 +1395,7 @@ export const SchoolPortal = () => {
                     Pilih Tanggal Kegiatan <span className="text-sm font-normal text-slate-400 italic">(Opsional)</span>
                   </h2>
                   <p className="text-xs text-slate-500">
-                    Klik tanggal untuk memilih. Klik lagi untuk membatalkan. Jika Oktober sudah penuh, tersedia juga Kalender November.
+                    Klik tanggal untuk memilih. Klik lagi untuk membatalkan. Jika Oktober sudah penuh, tersedia juga Kalender November dan Desember.
                   </p>
                 </div>
               </div>
@@ -1387,6 +1454,38 @@ export const SchoolPortal = () => {
                   adminLockMap={Object.fromEntries((dateLocks || []).filter(l => l.month === 11 && l.year === 2026).map(l => [l.day, l]))}
                 />
               </div>
+
+              {/* Divider */}
+              <div className="flex items-center gap-4">
+                <div className="flex-1 h-px bg-slate-800" />
+                <span className="text-xs text-slate-500 font-semibold px-3 py-1.5 rounded-full bg-slate-900 border border-slate-800">
+                  atau pilih bulan berikutnya
+                </span>
+                <div className="flex-1 h-px bg-slate-800" />
+              </div>
+
+              {/* Kalender Desember */}
+              <div className="space-y-3">
+                <div className="flex items-center space-x-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block" />
+                  <h3 className="text-sm font-bold text-amber-300">Desember 2026</h3>
+                  {selectedDatesDec.length > 0 && (
+                    <span className="ml-auto px-2 py-0.5 rounded-full bg-amber-600/30 border border-amber-500/40 text-amber-300 text-[10px] font-bold">
+                      {selectedDatesDec.length} tgl. dipilih
+                    </span>
+                  )}
+                </div>
+                <MonthCalendar
+                  month="december"
+                  bookedDates={allBookedDatesDec}
+                  myDates={selectedDatesDec}
+                  onSelectDates={setSelectedDatesDec}
+                  disabled={false}
+                  bookedSchoolsMap={bookedSchoolsMapDec}
+                  adminLockedDates={adminLockedDatesDec}
+                  adminLockMap={Object.fromEntries((dateLocks || []).filter(l => l.month === 12 && l.year === 2026).map(l => [l.day, l]))}
+                />
+              </div>
             </div>
           )}
 
@@ -1410,6 +1509,11 @@ export const SchoolPortal = () => {
                   {selectedDatesNov.length > 0 && (
                     <p className="text-[11px] text-teal-300 mt-0.5 font-semibold">
                       📅 November: {selectedDatesNov.map(d => `${d} Nov`).join(' & ')}
+                    </p>
+                  )}
+                  {selectedDatesDec.length > 0 && (
+                    <p className="text-[11px] text-amber-300 mt-0.5 font-semibold">
+                      📅 Desember: {selectedDatesDec.map(d => `${d} Des`).join(' & ')}
                     </p>
                   )}
                 </div>
@@ -1567,7 +1671,13 @@ export const SchoolPortal = () => {
                               <span>{d} Nov 2026</span>
                             </span>
                           ))}
-                          {(!reg.selectedDates || reg.selectedDates.length === 0) && (!reg.selectedDatesNov || reg.selectedDatesNov.length === 0) && (
+                          {reg.selectedDatesDec && reg.selectedDatesDec.length > 0 && [...reg.selectedDatesDec].sort((a, b) => Number(a) - Number(b)).map(d => (
+                            <span key={`dec-${d}`} className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-md bg-amber-900/40 border border-amber-600/30 text-amber-300 text-[10px] font-bold">
+                              <Calendar className="w-2.5 h-2.5" />
+                              <span>{d} Des 2026</span>
+                            </span>
+                          ))}
+                          {(!reg.selectedDates || reg.selectedDates.length === 0) && (!reg.selectedDatesNov || reg.selectedDatesNov.length === 0) && (!reg.selectedDatesDec || reg.selectedDatesDec.length === 0) && (
                             <span className="text-slate-600 italic text-[10px]">Belum dipilih</span>
                           )}
                         </div>
@@ -1763,7 +1873,7 @@ export const SchoolPortal = () => {
               })()}
 
               {/* Tanggal Kegiatan */}
-              {((selectedReg.selectedDates && selectedReg.selectedDates.length > 0) || (selectedReg.selectedDatesNov && selectedReg.selectedDatesNov.length > 0)) && (
+              {((selectedReg.selectedDates && selectedReg.selectedDates.length > 0) || (selectedReg.selectedDatesNov && selectedReg.selectedDatesNov.length > 0) || (selectedReg.selectedDatesDec && selectedReg.selectedDatesDec.length > 0)) && (
                 <div className="p-4 rounded-xl bg-violet-950/30 border border-violet-500/25">
                   <h4 className="text-xs font-bold text-violet-300 uppercase tracking-wider mb-3 flex items-center space-x-2">
                     <Calendar className="w-4 h-4" />
@@ -1778,6 +1888,11 @@ export const SchoolPortal = () => {
                     {selectedReg.selectedDatesNov && selectedReg.selectedDatesNov.map(d => (
                       <span key={`nov-${d}`} className="px-3 py-1.5 rounded-lg bg-teal-900/50 border border-teal-600/40 text-teal-200 text-sm font-bold">
                         {d} November 2026
+                      </span>
+                    ))}
+                    {selectedReg.selectedDatesDec && selectedReg.selectedDatesDec.map(d => (
+                      <span key={`dec-${d}`} className="px-3 py-1.5 rounded-lg bg-amber-900/50 border border-amber-600/40 text-amber-200 text-sm font-bold">
+                        {d} Desember 2026
                       </span>
                     ))}
                   </div>
