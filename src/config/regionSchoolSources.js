@@ -11,15 +11,25 @@ export const REGION_EXCEL_MAP = {
 
 /**
  * Normalisasi nama wilayah agar variasi penulisan seperti
- * "Kota Palu", "Palu", "Kota Bau-Bau", "BauBau", "Kabupaten Sigi", "Sigi" cocok secara presisi.
+ * "Kota Palu", "Palu", "Kota Palu/Kab.Sigi", "Palu/Kab.Sigi", "Kota Bau-Bau", "BauBau", "Kabupaten Sigi", "Sigi" cocok secara presisi.
  */
 export const normalizeRegion = (name = '') => {
-  return String(name || '')
+  const clean = String(name || '')
     .toLowerCase()
     .replace(/^kota\s+/, '')
     .replace(/^kabupaten\s+/, '')
     .replace(/^kab\.?\s*/, '')
     .replace(/[\s\-_.]/g, '');
+
+  if (
+    clean === 'palu' ||
+    clean.startsWith('palu/') ||
+    (clean.includes('palu') && clean.includes('sigi'))
+  ) {
+    return 'palu';
+  }
+
+  return clean;
 };
 
 /**

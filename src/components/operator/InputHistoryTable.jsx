@@ -3,6 +3,7 @@ import { useAuth } from '../../context/useAuth';
 import { History, Search, Edit3, Trash2, Calendar, MapPin, Users, Award, CheckCircle, FileText, School } from 'lucide-react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { isSameRegion } from '../../config/regionSchoolSources';
 
 export const InputHistoryTable = ({ onEditEvent, readOnly = false }) => {
   const { events, schools, handleDeleteEvent, currentUser, showToast, payouts } = useAuth();
@@ -28,7 +29,7 @@ export const InputHistoryTable = ({ onEditEvent, readOnly = false }) => {
   // Untuk operator, batasi agar hanya melihat event dari sekolah yang ditugaskan padanya
   // atau event yang diinputnya sendiri.
   const scopedEvents = events.filter((e) => {
-    const isSameCity = (e.cityName || '').trim().toLowerCase() === (currentUser?.city || '').trim().toLowerCase();
+    const isSameCity = isSameRegion(e.cityName, currentUser?.city);
 
     let isAuthorized = true;
     if (currentUser?.role === 'operator') {

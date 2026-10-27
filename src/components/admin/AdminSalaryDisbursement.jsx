@@ -5,6 +5,7 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { sendFonnteWhatsApp } from '../../services/fonnteService';
 import { getOperatorShare, formatStudents } from '../../utils/operatorShare';
+import { isSameRegion } from '../../config/regionSchoolSources';
 
 export const AdminSalaryDisbursement = () => {
   const { users, events, schools, salarySettings, payouts, handleDisburseFee, showToast } = useAuth();
@@ -40,7 +41,7 @@ export const AdminSalaryDisbursement = () => {
 
     // Event masuk hitungan jika kota event sama dengan kota user
     const unpaidEvents = events.filter((evt) => {
-      const isSameCity = (evt.cityName || '').trim().toLowerCase() === (user.city || '').trim().toLowerCase();
+      const isSameCity = isSameRegion(evt.cityName, user.city);
       if (!isSameCity) return false;
       if (paidEventIds.has(evt.id)) return false;
       return true;

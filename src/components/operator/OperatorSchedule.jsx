@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { useAuth } from '../../context/useAuth';
 import { useSchoolData } from '../../hooks/useSchoolData';
+import { isSameRegion } from '../../config/regionSchoolSources';
 import {
   CalendarDays, MapPin, Users, Clock, CheckCircle2,
   AlertCircle, CalendarClock, Building2, ClipboardList,
@@ -72,7 +73,7 @@ export const OperatorSchedule = () => {
   // Hitung set nama sekolah yang telah selesai diinput kegiatannya di kota ini
   const completedSchoolNames = useMemo(() => {
     const userCity = currentUser?.city;
-    const cityEvents = (events || []).filter(e => e.cityName === userCity);
+    const cityEvents = (events || []).filter(e => isSameRegion(e.cityName, userCity));
 
     const schoolEventMap = {};
     cityEvents.forEach(evt => {
@@ -108,7 +109,7 @@ export const OperatorSchedule = () => {
       .filter((s) => {
         // Tampilkan jika: assignedTo kosong/null (All Team) ATAU mengandung userId (baik event 1 atau event 2)
         const assigned1 = s.assignedTo;
-        const assigned2 = s.assignedTo2;
+        const assigned2 = s.eventDate2 ? s.assignedTo2 : null;
         
         const isAssigned1 = !assigned1 || (Array.isArray(assigned1) && assigned1.length === 0) || (Array.isArray(assigned1) && assigned1.includes(userId)) || assigned1 === userId;
         const isAssigned2 = s.eventDate2 && (!assigned2 || (Array.isArray(assigned2) && assigned2.length === 0) || (Array.isArray(assigned2) && assigned2.includes(userId)) || assigned2 === userId);
@@ -118,7 +119,7 @@ export const OperatorSchedule = () => {
       .filter((s) => {
         // Hanya sekolah di kota operator
         const city = cities.find((c) => c.id === s.cityId);
-        return city?.name === currentUser?.city;
+        return isSameRegion(city?.name, currentUser?.city);
       })
       .filter((s) => {
         // Sembunyikan sekolah jika event yang ditugaskan ke operator ini sudah selesai

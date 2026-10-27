@@ -69,7 +69,19 @@ export const initStorage = () => {
 // Cities API
 export const getCities = () => {
   initStorage();
-  return JSON.parse(localStorage.getItem(KEYS.CITIES) || '[]');
+  const raw = JSON.parse(localStorage.getItem(KEYS.CITIES) || '[]');
+  let hasChanges = false;
+  const migrated = raw.map(c => {
+    if (c.id === 'city-palu' || c.name === 'Kota Palu') {
+      hasChanges = true;
+      return { ...c, name: 'Kota Palu/Kab.Sigi' };
+    }
+    return c;
+  });
+  if (hasChanges) {
+    localStorage.setItem(KEYS.CITIES, JSON.stringify(migrated));
+  }
+  return migrated;
 };
 
 export const saveCity = (city) => {

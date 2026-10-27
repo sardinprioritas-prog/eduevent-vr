@@ -9,6 +9,8 @@
 //     mendapat 100% jumlah siswa (tidak dibagi).
 //   - Pioneer tidak terpengaruh (selalu 100%).
 
+import { isSameRegion } from '../config/regionSchoolSources';
+
 const norm = (v) => (v || '').toString().trim().toLowerCase();
 
 const toIdList = (assigned) => {
@@ -61,7 +63,7 @@ export const getOperatorShare = (evt, user, { schools, users }) => {
 
   // Full Team: bagi rata dengan jumlah operator di kota event
   const cityOperators = (users || []).filter(
-    (u) => u.role === 'operator' && norm(u.city) === norm(evt.cityName)
+    (u) => u.role === 'operator' && isSameRegion(u.city, evt.cityName)
   );
   const divisor = Math.max(cityOperators.length, 1);
 

@@ -21,7 +21,7 @@ import { supabase } from './supabaseClient';
  */
 const toAppCity = (row) => ({
   id: row.id,
-  name: row.name,
+  name: (row.name === 'Kota Palu' || row.id === 'city-palu') ? 'Kota Palu/Kab.Sigi' : row.name,
   province: row.province,
   passcode: row.passcode || '',
   active: row.active,

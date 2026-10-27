@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useAuth } from '../../context/useAuth';
 import { PlusCircle, Pencil, Trash2, Building2, MapPin, Users, Calendar, AlertCircle, Link2, ChevronDown, RefreshCw, AlertTriangle } from 'lucide-react';
 import { OperatorAssignmentForm } from '../school/OperatorAssignmentForm';
+import { isSameRegion, normalizeRegion } from '../../config/regionSchoolSources';
 
 export const SchoolManagement = () => {
   const { schools, cities, events, schoolRegistrations, handleSaveSchool, handleDeleteSchool, currentUser, users, showToast } = useAuth();
@@ -10,8 +11,8 @@ export const SchoolManagement = () => {
   // (sudah tercatat di Riwayat Input Kegiatan VR).
   const hideCompletedSchools = currentUser?.role === 'pioneer';
 
-  // Kunci unik sekolah: "kota|nama sekolah" (lowercase, tanpa awalan 'kota ')
-  const normCity = (name) => (name || '').toLowerCase().replace('kota ', '').trim();
+  // Kunci unik sekolah: "kota|nama sekolah"
+  const normCity = (name) => normalizeRegion(name);
   const schoolKey = (cityName, schoolName) => `${normCity(cityName)}|${(schoolName || '').trim().toLowerCase()}`;
 
   // Sekolah dianggap SELESAI jika (sama seperti logika EventInputForm):
@@ -88,11 +89,7 @@ export const SchoolManagement = () => {
           if (s.cityId && s.cityId === formData.cityId) return true;
           const sCity = cities.find(c => c.id === s.cityId);
           if (sCity && selectedCity) {
-            const scName = (sCity.name || '').toLowerCase().replace('kota ', '').trim();
-            const selName = (selectedCity.name || '').toLowerCase().replace('kota ', '').trim();
-            if (scName === selName || scName.includes(selName) || selName.includes(scName)) {
-              return true;
-            }
+            return isSameRegion(sCity.name, selectedCity.name);
           }
           return false;
         })
@@ -107,10 +104,7 @@ export const SchoolManagement = () => {
       if (reg.cityId && reg.cityId === formData.cityId) {
         cityMatches = true;
       } else {
-        // Fallback pencocokan nama (abaikan awalan 'kota ')
-        const regCity = (reg.cityName || '').toLowerCase().replace('kota ', '').trim();
-        const selCity = (selectedCity.name || '').toLowerCase().replace('kota ', '').trim();
-        cityMatches = regCity === selCity || regCity.includes(selCity) || selCity.includes(regCity);
+        cityMatches = isSameRegion(reg.cityName, selectedCity.name);
       }
 
       if (!cityMatches) return false;
@@ -184,7 +178,7 @@ export const SchoolManagement = () => {
     
     // Filter by city for non-admin/pimpinan
     if (currentUser?.role !== 'admin' && currentUser?.role !== 'pimpinan') {
-      return matchesSearch && (schoolCity?.name || '').trim().toLowerCase() === (currentUser?.city || '').trim().toLowerCase();
+      return matchesSearch && isSameRegion(schoolCity?.name, currentUser?.city);
     }
     
     return matchesSearch;
@@ -348,7 +342,11 @@ export const SchoolManagement = () => {
 
   const getCityName = (cityId) => {
     const city = cities.find(c => c.id === cityId);
-    return city ? city.name : 'Unknown';
+    if (!city) return 'Unknown';
+    if (city.name === 'Kota Palu' || city.id === 'city-palu') {
+      return 'Kota Palu/Kab.Sigi';
+    }
+    return city.name;
   };
 
   const getOperatorLabel = (assignedTo) => {
@@ -430,7 +428,9 @@ export const SchoolManagement = () => {
                 className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-blue-500"
               >
                 {activeCities.map(c => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
+                  <option key={c.id} value={c.id}>
+                    {(c.name === 'Kota Palu' || c.id === 'city-palu') ? 'Kota Palu/Kab.Sigi' : c.name}
+                  </option>
                 ))}
               </select>
             </div>
@@ -579,7 +579,7 @@ export const SchoolManagement = () => {
           {(() => {
             const reg = portalSchoolOptions.find(r => r.schoolName === formData.name);
             const availableOperators = users
-              .filter(u => u.role === 'operator' && u.city === getCityName(formData.cityId))
+              .filter(u => u.role === 'operator' && isSameRegion(u.city, getCityName(formData.cityId)))
               .map(u => ({ id: u.id, name: u.name }));
             
             // Tanggal penugasan mengikuti tanggal event yang ditentukan di form

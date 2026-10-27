@@ -7,7 +7,7 @@ import { normalizeRegion } from '../../config/regionSchoolSources';
 // Fallback lama: dipakai hanya jika kota di Master Data belum punya passcode,
 // atau jika data kota belum termuat sama sekali.
 const LEGACY_REGIONS = [
-  { id: 'palu', name: 'Kota Palu', passcode: 'PLW-01' },
+  { id: 'palu', name: 'Kota Palu/Kab.Sigi', passcode: 'PLW-01' },
   { id: 'samarinda', name: 'Samarinda', passcode: 'SMD-11' },
   { id: 'balikpapan', name: 'Balikpapan', passcode: 'BPN-12' },
   { id: 'tenggarong', name: 'Tenggarong', passcode: 'TGR-13' },

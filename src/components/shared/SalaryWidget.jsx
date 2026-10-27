@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { useAuth } from '../../context/useAuth';
 import { Wallet, TrendingUp, Target, Award, Eye, EyeOff } from 'lucide-react';
 import { getOperatorShare, formatStudents } from '../../utils/operatorShare';
+import { isSameRegion } from '../../config/regionSchoolSources';
 
 export const SalaryWidget = ({ role = 'operator' }) => {
   const { events, schools, users, currentUser, salarySettings, payouts } = useAuth();
@@ -36,7 +37,7 @@ export const SalaryWidget = ({ role = 'operator' }) => {
     const userCity = currentUser?.city;
     
     const cityEventsUnpaid = events.filter((evt) => {
-      const isSameCity = (evt.cityName || '').trim().toLowerCase() === (userCity || '').trim().toLowerCase();
+      const isSameCity = isSameRegion(evt.cityName, userCity);
       if (!isSameCity) return false;
       if (paidEventIds.has(evt.id)) return false;
       if (userHasOldFormatPayout && evt.payoutId) return false;
