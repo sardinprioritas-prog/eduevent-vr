@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { Shield, X, MapPin, Key } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/useAuth';
+import { normalizeRegion } from '../../config/regionSchoolSources';
 
 // Fallback lama: dipakai hanya jika kota di Master Data belum punya passcode,
 // atau jika data kota belum termuat sama sekali.
@@ -10,12 +11,9 @@ const LEGACY_REGIONS = [
   { id: 'samarinda', name: 'Samarinda', passcode: 'SMD-11' },
   { id: 'balikpapan', name: 'Balikpapan', passcode: 'BPN-12' },
   { id: 'tenggarong', name: 'Tenggarong', passcode: 'TGR-13' },
-  { id: 'baubau', name: 'BauBau', passcode: 'BUW-14' }
+  { id: 'baubau', name: 'BauBau', passcode: 'BUW-14' },
+  { id: 'sigi', name: 'Kabupaten Sigi', passcode: 'SIG-15' }
 ];
-
-// "Kota Bau-Bau" -> "baubau"
-const normalizeName = (name = '') =>
-  name.toLowerCase().replace(/^kota\s+/, '').replace(/[\s\-_.]/g, '');
 
 export const PortalSekolahModal = ({ isOpen, onClose }) => {
   const navigate = useNavigate();
@@ -31,7 +29,7 @@ export const PortalSekolahModal = ({ isOpen, onClose }) => {
     return activeCities
       .map((city) => {
         const legacy = LEGACY_REGIONS.find(
-          (r) => normalizeName(r.name) === normalizeName(city.name)
+          (r) => normalizeRegion(r.name) === normalizeRegion(city.name)
         );
         return {
           id: city.id,

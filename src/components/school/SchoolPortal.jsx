@@ -391,7 +391,7 @@ export const SchoolPortal = () => {
   const location = useLocation();
   const regionName = location.state?.regionName;
 
-  // Load data sekolah dari Excel spesifik wilayah (Palu -> Book1.xlsx, BauBau -> Book2.xlsx)
+  // Load data sekolah dari Excel spesifik wilayah (Palu -> Book1.xlsx, BauBau -> Book2.xlsx, Sigi -> Book3.xlsx)
   const { schoolData, kecamatanList, loading: excelLoading, hasSource } = useSchoolData(regionName);
 
   const [formData, setFormData] = useState({

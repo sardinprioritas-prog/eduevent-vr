@@ -5,18 +5,20 @@
 export const REGION_EXCEL_MAP = {
   palu: '/Book1.xlsx',
   baubau: '/Book2.xlsx',
+  sigi: '/Book3.xlsx',
+  kabupatensigi: '/Book3.xlsx',
 };
 
 /**
  * Normalisasi nama wilayah agar variasi penulisan seperti
- * "Kota Palu", "Palu", "Kota Bau-Bau", "BauBau" cocok secara presisi.
+ * "Kota Palu", "Palu", "Kota Bau-Bau", "BauBau", "Kabupaten Sigi", "Sigi" cocok secara presisi.
  */
 export const normalizeRegion = (name = '') => {
   return String(name || '')
     .toLowerCase()
     .replace(/^kota\s+/, '')
     .replace(/^kabupaten\s+/, '')
-    .replace(/^kab\.\s*/, '')
+    .replace(/^kab\.?\s*/, '')
     .replace(/[\s\-_.]/g, '');
 };
 
