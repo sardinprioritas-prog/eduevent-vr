@@ -143,6 +143,22 @@ export const EventInputForm = ({ editingEvent, onCancelEdit }) => {
       return;
     }
 
+    // Cek apakah event untuk sekolah, tanggal, dan sesi ini sudah pernah diinput sebelumnya
+    const isDuplicate = (events || []).find((ev) => {
+      if (editingEvent && ev.id === editingEvent.id) return false;
+      const sameSchool = (ev.schoolName || '').trim().toLowerCase() === formData.schoolName.trim().toLowerCase();
+      const sameDate = ev.date === formData.date;
+      const sameSession = (ev.session || 'Fullday') === (formData.session || 'Fullday');
+      return sameSchool && sameDate && sameSession;
+    });
+
+    if (isDuplicate) {
+      setValidationError(
+        `Event untuk ${formData.schoolName} (${formData.session}) pada tanggal ${formData.date} sudah diinput sebelumnya oleh ${isDuplicate.operatorName || 'operator lain'}. Tidak dapat menginput ganda.`
+      );
+      return;
+    }
+
     const selectedCity = cities.find((c) => c.id === formData.cityId);
 
     const payload = {

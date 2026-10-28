@@ -3,8 +3,9 @@
 // ============================================================
 // Aturan:
 //   - Penugasan "Full Team" (semua operator di kota) pada hari kegiatan →
-//     jumlah siswa hari itu DIBAGI RATA dengan jumlah operator di kota tersebut.
-//     Contoh: 300 siswa, 2 operator → masing-masing 150 siswa.
+//     jumlah siswa hari itu DIBAGI 2 karena terdapat 2 tim operasional di lapangan.
+//     Setiap operator untuk masing-masing tim berhak atas porsi siswa hasil pembagian 2 tersebut.
+//     Contoh: 359 siswa, Full Team (2 tim) → masing-masing 179,5 siswa.
 //   - Penugasan "Partial" (operator spesifik) → operator yang ditugaskan
 //     mendapat 100% jumlah siswa (tidak dibagi).
 //   - Pioneer tidak terpengaruh (selalu 100%).
@@ -28,6 +29,18 @@ export const findSchoolForEvent = (evt, schools) =>
  * sesi Hari-2 / Hari-3 atau tanggalnya sama dengan eventDate2.
  */
 const getAssignmentForEvent = (evt, school) => {
+  const opAssignments = school.operatorAssignments || school.operator_assignments;
+  if (Array.isArray(opAssignments) && opAssignments.length > 0) {
+    const isDay2 = evt.session === 'Hari-2' || (school.eventDate2 && evt.date === school.eventDate2);
+    const isDay3 = evt.session === 'Hari-3';
+    const targetDay = isDay3 ? 3 : (isDay2 ? 2 : 1);
+    const dayAssign = opAssignments.find(a => a.day === targetDay);
+    if (dayAssign) {
+      if (dayAssign.isFullTeam) return [];
+      return dayAssign.operators || [];
+    }
+  }
+
   const hasDay2 = Boolean(school.eventDate2 && String(school.eventDate2).trim() !== '');
   const isDay2 =
     hasDay2 &&
@@ -61,11 +74,12 @@ export const getOperatorShare = (evt, user, { schools, users }) => {
     return assignedIds.includes(user.id) ? full : { ...full, eligible: false, students: 0 };
   }
 
-  // Full Team: bagi rata dengan jumlah operator di kota event
+  // Full Team: dibagi 2 karena terdapat 2 tim operasional di lapangan.
+  // Setiap operator untuk masing-masing tim berhak atas porsi siswa hasil pembagian 2 tersebut.
   const cityOperators = (users || []).filter(
     (u) => u.role === 'operator' && isSameRegion(u.city, evt.cityName)
   );
-  const divisor = Math.max(cityOperators.length, 1);
+  const divisor = cityOperators.length === 1 ? 1 : 2;
 
   return {
     eligible: true,

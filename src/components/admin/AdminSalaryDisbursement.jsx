@@ -47,8 +47,17 @@ export const AdminSalaryDisbursement = () => {
       return true;
     });
 
+    // Deduplikasi event per sekolah, tanggal, dan sesi agar tidak terhitung ganda
+    const seenEventKeys = new Set();
+    const uniqueUnpaidEvents = unpaidEvents.filter(evt => {
+      const key = `${(evt.schoolName || '').trim().toLowerCase()}_${evt.date}_${evt.session || 'Fullday'}`;
+      if (seenEventKeys.has(key)) return false;
+      seenEventKeys.add(key);
+      return true;
+    });
+
     // Porsi siswa per event untuk user ini
-    const eligibleEventShares = unpaidEvents
+    const eligibleEventShares = uniqueUnpaidEvents
       .map(evt => ({ evt, share: getOperatorShare(evt, user, { schools, users }) }))
       .filter(({ share }) => share.eligible);
 
@@ -338,7 +347,7 @@ export const AdminSalaryDisbursement = () => {
                                   </td>
                                   <td className="py-2 px-4 text-center">
                                     {row.isFullTeam ? (
-                                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-sky-500/15 text-sky-400 border border-sky-500/30" title={`Full Team (${row.divisor} operator) — dibagi ${row.divisor}`}>
+                                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-sky-500/15 text-sky-400 border border-sky-500/30" title={`Full Team (${row.divisor} tim) — dibagi ${row.divisor}`}>
                                         <Users2 className="w-3 h-3" />
                                         Full Team (1/{row.divisor})
                                       </span>

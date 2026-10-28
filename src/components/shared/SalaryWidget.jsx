@@ -44,9 +44,18 @@ export const SalaryWidget = ({ role = 'operator' }) => {
       return true;
     });
 
+    // Deduplikasi event per sekolah, tanggal, dan sesi agar tidak terhitung ganda
+    const seenEventKeys = new Set();
+    const uniqueCityEventsUnpaid = cityEventsUnpaid.filter(evt => {
+      const key = `${(evt.schoolName || '').trim().toLowerCase()}_${evt.date}_${evt.session || 'Fullday'}`;
+      if (seenEventKeys.has(key)) return false;
+      seenEventKeys.add(key);
+      return true;
+    });
+
     // Porsi siswa per event untuk user ini.
-    // Operator: hanya event yang ditugaskan; Full Team → dibagi rata jumlah operator kota.
-    const shares = cityEventsUnpaid
+    // Operator: hanya event yang ditugaskan; Full Team → dibagi 2 (karena 2 tim).
+    const shares = uniqueCityEventsUnpaid
       .map(evt => ({ evt, share: getOperatorShare(evt, currentUser, { schools, users }) }))
       .filter(({ share }) => share.eligible);
 
