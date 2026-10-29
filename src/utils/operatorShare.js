@@ -36,8 +36,10 @@ const getAssignmentForEvent = (evt, school) => {
     const targetDay = isDay3 ? 3 : (isDay2 ? 2 : 1);
     const dayAssign = opAssignments.find(a => a.day === targetDay);
     if (dayAssign) {
-      if (dayAssign.isFullTeam) return [];
-      return dayAssign.operators || [];
+      return {
+        isFullTeam: Boolean(dayAssign.isFullTeam),
+        operators: toIdList(dayAssign.operators),
+      };
     }
   }
 
@@ -45,7 +47,12 @@ const getAssignmentForEvent = (evt, school) => {
   const isDay2 =
     hasDay2 &&
     (evt.date === school.eventDate2 || evt.session === 'Hari-2' || evt.session === 'Hari-3');
-  return isDay2 ? school.assignedTo2 : school.assignedTo;
+  const legacyAssigned = isDay2 ? school.assignedTo2 : school.assignedTo;
+  const list = toIdList(legacyAssigned);
+  return {
+    isFullTeam: list.length === 0,
+    operators: list,
+  };
 };
 
 /**
@@ -66,12 +73,24 @@ export const getOperatorShare = (evt, user, { schools, users }) => {
     return isInputter ? full : { ...full, eligible: false, students: 0 };
   }
 
-  const assignedIds = toIdList(getAssignmentForEvent(evt, school));
-  const isFullTeam = assignedIds.length === 0;
+  const assignment = getAssignmentForEvent(evt, school);
+  const assignedIds = assignment.operators;
+  const isFullTeam = assignment.isFullTeam;
+
+  // Jika penugasan memiliki daftar operator dari Pioneer (baik Partial maupun Full Team),
+  // operator harus terdaftar di dalamnya agar berhak mendapatkan fee/siswa kegiatan ini.
+  if (assignedIds.length > 0) {
+    if (!assignedIds.includes(user.id)) {
+      return { ...full, eligible: false, students: 0 };
+    }
+  } else if (!isFullTeam) {
+    // Partial tapi daftar kosong → tidak ada yang berhak
+    return { ...full, eligible: false, students: 0 };
+  }
 
   if (!isFullTeam) {
     // Partial: hanya operator terpilih, masing-masing 100%
-    return assignedIds.includes(user.id) ? full : { ...full, eligible: false, students: 0 };
+    return full;
   }
 
   // Full Team: dibagi 2 karena terdapat 2 tim operasional di lapangan.

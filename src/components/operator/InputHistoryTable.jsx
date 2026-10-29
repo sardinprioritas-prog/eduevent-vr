@@ -37,11 +37,25 @@ export const InputHistoryTable = ({ onEditEvent, readOnly = false }) => {
         s => (s.name || '').trim().toLowerCase() === (e.schoolName || '').trim().toLowerCase()
       );
       if (school) {
-        const assigned1 = school.assignedTo;
-        const assigned2 = school.assignedTo2;
-        const isAssigned1 = !assigned1 || (Array.isArray(assigned1) && assigned1.length === 0) || (Array.isArray(assigned1) && assigned1.includes(currentUser.id)) || assigned1 === currentUser.id;
-        const isAssigned2 = school.eventDate2 && (!assigned2 || (Array.isArray(assigned2) && assigned2.length === 0) || (Array.isArray(assigned2) && assigned2.includes(currentUser.id)) || assigned2 === currentUser.id);
-        isAuthorized = isAssigned1 || isAssigned2;
+        const opAssignments = school.operatorAssignments || school.operator_assignments;
+        if (Array.isArray(opAssignments) && opAssignments.length > 0) {
+          const isDay2 = e.session === 'Hari-2' || (school.eventDate2 && e.date === school.eventDate2);
+          const isDay3 = e.session === 'Hari-3';
+          const targetDay = isDay3 ? 3 : (isDay2 ? 2 : 1);
+          const dayAssign = opAssignments.find(a => a.day === targetDay);
+          if (dayAssign) {
+            const list = dayAssign.operators || [];
+            isAuthorized = list.includes(currentUser.id);
+          } else {
+            isAuthorized = false;
+          }
+        } else {
+          const assigned1 = school.assignedTo;
+          const assigned2 = school.assignedTo2;
+          const isAssigned1 = !assigned1 || (Array.isArray(assigned1) && assigned1.length === 0) || (Array.isArray(assigned1) && assigned1.includes(currentUser.id)) || assigned1 === currentUser.id;
+          const isAssigned2 = school.eventDate2 && (!assigned2 || (Array.isArray(assigned2) && assigned2.length === 0) || (Array.isArray(assigned2) && assigned2.includes(currentUser.id)) || assigned2 === currentUser.id);
+          isAuthorized = isAssigned1 || isAssigned2;
+        }
       } else {
         // Jika sekolah tidak ditemukan, tampilkan jika operator yang menginputnya
         isAuthorized = (e.operatorName || '').trim().toLowerCase() === (currentUser?.name || '').trim().toLowerCase();

@@ -107,12 +107,21 @@ export const OperatorSchedule = () => {
     const userId = currentUser?.id;
     return schools
       .filter((s) => {
-        // Tampilkan jika: assignedTo kosong/null (All Team) ATAU mengandung userId (baik event 1 atau event 2)
-        const assigned1 = s.assignedTo;
-        const assigned2 = s.eventDate2 ? s.assignedTo2 : null;
-        
-        const isAssigned1 = !assigned1 || (Array.isArray(assigned1) && assigned1.length === 0) || (Array.isArray(assigned1) && assigned1.includes(userId)) || assigned1 === userId;
-        const isAssigned2 = s.eventDate2 && (!assigned2 || (Array.isArray(assigned2) && assigned2.length === 0) || (Array.isArray(assigned2) && assigned2.includes(userId)) || assigned2 === userId);
+        const opAssignments = s.operatorAssignments || s.operator_assignments;
+        let isAssigned1 = false;
+        let isAssigned2 = false;
+
+        if (Array.isArray(opAssignments) && opAssignments.length > 0) {
+          const day1 = opAssignments.find(a => a.day === 1);
+          const day2 = opAssignments.find(a => a.day === 2);
+          isAssigned1 = day1 ? (day1.operators || []).includes(userId) : false;
+          isAssigned2 = day2 ? (day2.operators || []).includes(userId) : false;
+        } else {
+          const assigned1 = s.assignedTo;
+          const assigned2 = s.eventDate2 ? s.assignedTo2 : null;
+          isAssigned1 = !assigned1 || (Array.isArray(assigned1) && assigned1.length === 0) || (Array.isArray(assigned1) && assigned1.includes(userId)) || assigned1 === userId;
+          isAssigned2 = s.eventDate2 && (!assigned2 || (Array.isArray(assigned2) && assigned2.length === 0) || (Array.isArray(assigned2) && assigned2.includes(userId)) || assigned2 === userId);
+        }
         
         return isAssigned1 || isAssigned2;
       })
@@ -132,10 +141,21 @@ export const OperatorSchedule = () => {
         
         if (hasFullday) return false;
 
-        const assigned1 = s.assignedTo;
-        const assigned2 = s.assignedTo2;
-        const isAssigned1 = !assigned1 || (Array.isArray(assigned1) && assigned1.length === 0) || (Array.isArray(assigned1) && assigned1.includes(userId)) || assigned1 === userId;
-        const isAssigned2 = s.eventDate2 && (!assigned2 || (Array.isArray(assigned2) && assigned2.length === 0) || (Array.isArray(assigned2) && assigned2.includes(userId)) || assigned2 === userId);
+        const opAssignments = s.operatorAssignments || s.operator_assignments;
+        let isAssigned1 = false;
+        let isAssigned2 = false;
+
+        if (Array.isArray(opAssignments) && opAssignments.length > 0) {
+          const day1 = opAssignments.find(a => a.day === 1);
+          const day2 = opAssignments.find(a => a.day === 2);
+          isAssigned1 = day1 ? (day1.operators || []).includes(userId) : false;
+          isAssigned2 = day2 ? (day2.operators || []).includes(userId) : false;
+        } else {
+          const assigned1 = s.assignedTo;
+          const assigned2 = s.assignedTo2;
+          isAssigned1 = !assigned1 || (Array.isArray(assigned1) && assigned1.length === 0) || (Array.isArray(assigned1) && assigned1.includes(userId)) || assigned1 === userId;
+          isAssigned2 = s.eventDate2 && (!assigned2 || (Array.isArray(assigned2) && assigned2.length === 0) || (Array.isArray(assigned2) && assigned2.includes(userId)) || assigned2 === userId);
+        }
 
         if (isAssigned1 && isAssigned2) {
            return !(hasHari1 && hasHari2);
