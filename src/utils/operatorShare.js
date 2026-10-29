@@ -10,7 +10,7 @@
 //     mendapat 100% jumlah siswa (tidak dibagi).
 //   - Pioneer tidak terpengaruh (selalu 100%).
 
-import { isSameRegion } from '../config/regionSchoolSources';
+import { isSameRegion } from '../config/regionSchoolSources.js';
 
 const norm = (v) => (v || '').toString().trim().toLowerCase();
 
