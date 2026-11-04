@@ -68,7 +68,8 @@ const cardBorderStyles = {
 
 export const OperatorSchedule = () => {
   const { schools, cities, events, currentUser, schoolRegistrations } = useAuth();
-  const { schoolData, loading: excelLoading } = useSchoolData();
+  // Muat data Excel sesuai wilayah operator (mis. Baubau -> Book2.xlsx) agar total siswa sekolah cocok
+  const { schoolData, loading: excelLoading } = useSchoolData(currentUser?.city);
 
   // Hitung set nama sekolah yang telah selesai diinput kegiatannya di kota ini
   const completedSchoolNames = useMemo(() => {
