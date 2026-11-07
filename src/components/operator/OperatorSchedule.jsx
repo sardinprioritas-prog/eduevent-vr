@@ -5,6 +5,7 @@ import { isSameRegion } from '../../config/regionSchoolSources';
 import {
   CalendarDays, MapPin, Users, Clock, CheckCircle2,
   AlertCircle, CalendarClock, Building2, ClipboardList,
+  UserRound, Phone,
 } from 'lucide-react';
 
 const TODAY = new Date();
@@ -287,6 +288,12 @@ const ScheduleCard = ({ school, cities, schoolData = [], schoolRegistrations = [
   );
   const participatingCount = reg?.totalStudents || school.studentCount || 0;
 
+  // Informasi Guru PJ dari pendaftaran portal sekolah
+  const pjName = reg?.pjName && reg.pjName !== '-' ? reg.pjName : '';
+  const pjPhone = (reg?.noHp || '').trim();
+  const waDigits = pjPhone.replace(/[^0-9]/g, '').replace(/^0/, '62');
+  const waLink = waDigits ? `https://wa.me/${waDigits}` : '';
+
   const hasAnyDate = Boolean(school.effectiveDate1 || school.effectiveDate2 || school.rawDate1 || school.rawDate2);
 
   return (
@@ -330,6 +337,33 @@ const ScheduleCard = ({ school, cities, schoolData = [], schoolRegistrations = [
               </span>
             )}
           </span>
+        </div>
+
+        {/* Guru PJ */}
+        <div className="flex items-center gap-2 text-[11px] text-slate-400 min-w-0">
+          <UserRound className="w-3 h-3 flex-shrink-0" />
+          <span className="truncate" title={pjName || ''}>
+            Guru PJ:{' '}
+            <span className={pjName ? 'font-semibold text-slate-200' : 'text-slate-500 italic'}>
+              {pjName || 'Belum diisi'}
+            </span>
+          </span>
+        </div>
+        <div className="flex items-center gap-2 text-[11px] text-slate-400">
+          <Phone className="w-3 h-3 flex-shrink-0" />
+          {pjPhone ? (
+            <a
+              href={waLink || `tel:${pjPhone}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold text-emerald-400 hover:text-emerald-300 hover:underline"
+              title="Hubungi via WhatsApp"
+            >
+              {pjPhone}
+            </a>
+          ) : (
+            <span className="text-slate-500 italic">No. HP belum diisi</span>
+          )}
         </div>
 
         {/* Tanggal Event */}
