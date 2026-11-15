@@ -1,12 +1,17 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { useAuth } from '../../context/useAuth';
 import { useSchoolData } from '../../hooks/useSchoolData';
 import { isSameRegion } from '../../config/regionSchoolSources';
 import {
   CalendarDays, MapPin, Users, Clock, CheckCircle2,
   AlertCircle, CalendarClock, Building2, ClipboardList,
-  UserRound, Phone,
+  UserRound, Phone, X, School,
 } from 'lucide-react';
+
+const findReg = (regs, schoolName) =>
+  (regs || []).find(
+    (r) => r.schoolName?.toLowerCase().trim() === schoolName?.toLowerCase().trim()
+  );
 
 const TODAY = new Date();
 TODAY.setHours(0, 0, 0, 0);
@@ -69,6 +74,7 @@ const cardBorderStyles = {
 
 export const OperatorSchedule = () => {
   const { schools, cities, events, currentUser, schoolRegistrations } = useAuth();
+  const [detailSchool, setDetailSchool] = useState(null);
   // Muat data Excel sesuai wilayah operator (mis. Baubau -> Book2.xlsx) agar total siswa sekolah cocok
   const { schoolData, loading: excelLoading } = useSchoolData(currentUser?.city);
 
@@ -257,16 +263,31 @@ export const OperatorSchedule = () => {
         <div className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
             {mySchedule.map((s) => (
-              <ScheduleCard key={s.id} school={s} cities={cities} schoolData={schoolData} schoolRegistrations={schoolRegistrations} />
+              <ScheduleCard
+                key={s.id}
+                school={s}
+                cities={cities}
+                schoolData={schoolData}
+                schoolRegistrations={schoolRegistrations}
+                onClick={() => setDetailSchool(s)}
+              />
             ))}
           </div>
         </div>
+      )}
+
+      {detailSchool && (
+        <ClassDetailModal
+          school={detailSchool}
+          reg={findReg(schoolRegistrations, detailSchool.name)}
+          onClose={() => setDetailSchool(null)}
+        />
       )}
     </div>
   );
 };
 
-const ScheduleCard = ({ school, cities, schoolData = [], schoolRegistrations = [], dimmed = false }) => {
+const ScheduleCard = ({ school, cities, schoolData = [], schoolRegistrations = [], dimmed = false, onClick }) => {
   const cityName = cities.find((c) => c.id === school.cityId)?.name || '-';
   // Hitung status berdasarkan tanggal tugas operator (effectiveDate1 / effectiveDate2)
   const status = getStatus(
@@ -283,9 +304,7 @@ const ScheduleCard = ({ school, cities, schoolData = [], schoolRegistrations = [
   const dapodikCount = matchedSchool?.jumlahSiswa || 0;
 
   // Ambil total siswa peserta dari pendaftaran portal sekolah
-  const reg = schoolRegistrations.find(
-    (r) => r.schoolName?.toLowerCase().trim() === school.name?.toLowerCase().trim()
-  );
+  const reg = findReg(schoolRegistrations, school.name);
   const participatingCount = reg?.totalStudents || school.studentCount || 0;
 
   // Informasi Guru PJ dari pendaftaran portal sekolah
@@ -298,8 +317,19 @@ const ScheduleCard = ({ school, cities, schoolData = [], schoolRegistrations = [
 
   return (
     <div
-      className={`relative rounded-xl border bg-slate-900/60 p-4 flex flex-col gap-3 transition-all
-        ${borderCls} ${dimmed ? 'opacity-50' : 'hover:bg-slate-800/60'}
+      role="button"
+      tabIndex={0}
+      onClick={onClick}
+      onKeyDown={(e) => {
+        if (onClick && (e.key === 'Enter' || e.key === ' ')) {
+          e.preventDefault();
+          onClick();
+        }
+      }}
+      title="Klik untuk melihat jumlah siswa per kelas"
+      className={`relative rounded-xl border bg-slate-900/60 p-4 flex flex-col gap-3 transition-all cursor-pointer
+        focus:outline-none focus:ring-2 focus:ring-indigo-500/50
+        ${borderCls} ${dimmed ? 'opacity-50' : 'hover:bg-slate-800/60 hover:border-indigo-500/40'}
         ${isToday ? 'shadow-lg shadow-amber-500/10' : ''}`}
     >
       {/* Nama sekolah + status */}
@@ -356,6 +386,7 @@ const ScheduleCard = ({ school, cities, schoolData = [], schoolRegistrations = [
               href={waLink || `tel:${pjPhone}`}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
               className="font-semibold text-emerald-400 hover:text-emerald-300 hover:underline"
               title="Hubungi via WhatsApp"
             >
@@ -435,5 +466,159 @@ const InfoRow = ({ icon, text, muted = false }) => (
   <div className={`flex items-center gap-2 text-[11px] ${muted ? 'text-slate-500' : 'text-slate-400'}`}>
     <span className="flex-shrink-0">{icon}</span>
     <span className="truncate">{text}</span>
+  </div>
+);
+
+
+/**
+ * Popup daftar jumlah siswa per kelas berdasarkan data Portal Sekolah (classDetails)
+ * Format classDetails: { "1A": 25, "1B": 24, "2A": 30, ... }
+ */
+const ClassDetailModal = ({ school, reg, onClose }) => {
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', onKey);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [onClose]);
+
+  // Kelompokkan kelas per tingkat, hanya kelas dengan nilai terisi
+  const grouped = useMemo(() => {
+    const details = reg?.classDetails || {};
+    const groups = {};
+    Object.entries(details).forEach(([className, raw]) => {
+      if (raw === '' || raw === null || raw === undefined) return;
+      const count = parseInt(raw, 10) || 0;
+      const match = String(className).match(/^(\d+)/);
+      const grade = match ? match[1] : 'Lainnya';
+      if (!groups[grade]) groups[grade] = [];
+      groups[grade].push({ className, count });
+    });
+    return Object.entries(groups)
+      .sort(([a], [b]) => (parseInt(a, 10) || 99) - (parseInt(b, 10) || 99))
+      .map(([grade, classes]) => ({
+        grade,
+        classes: classes.sort((x, y) => x.className.localeCompare(y.className, 'id', { numeric: true })),
+        subtotal: classes.reduce((sum, c) => sum + c.count, 0),
+      }));
+  }, [reg]);
+
+  const total = grouped.reduce((sum, g) => sum + g.subtotal, 0);
+  const totalClasses = grouped.reduce((sum, g) => sum + g.classes.length, 0);
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        className="w-full max-w-lg max-h-[85vh] flex flex-col rounded-2xl border border-slate-700 bg-slate-900 shadow-2xl overflow-hidden"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="flex items-start justify-between gap-3 p-4 border-b border-slate-800 bg-slate-950/60">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="p-2 bg-indigo-500/10 text-indigo-400 rounded-xl border border-indigo-500/20 flex-shrink-0">
+              <School className="w-4 h-4" />
+            </div>
+            <div className="min-w-0">
+              <h3 className="text-sm font-bold text-slate-100 truncate" title={school.name}>{school.name}</h3>
+              <p className="text-[11px] text-slate-400">Jumlah siswa per kelas (data Portal Sekolah)</p>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-100 hover:bg-slate-800 transition-colors"
+            aria-label="Tutup"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* Body */}
+        <div className="p-4 overflow-y-auto space-y-4">
+          {!reg ? (
+            <EmptyState text="Sekolah ini belum melakukan pendaftaran melalui Portal Sekolah." />
+          ) : grouped.length === 0 ? (
+            <EmptyState text="Data jumlah siswa per kelas belum diinput oleh sekolah." />
+          ) : (
+            <>
+              {/* Ringkasan */}
+              <div className="grid grid-cols-3 gap-2">
+                <SummaryBox label="Total Siswa" value={total.toLocaleString('id-ID')} highlight />
+                <SummaryBox label="Jumlah Kelas" value={totalClasses} />
+                <SummaryBox label="Rombel / Tingkat" value={reg.rombelCount || '-'} />
+              </div>
+
+              {/* Per tingkat */}
+              <div className="space-y-3">
+                {grouped.map((g) => (
+                  <div key={g.grade} className="rounded-xl border border-slate-800 bg-slate-950/60 p-3">
+                    <div className="flex items-center justify-between pb-2 mb-2 border-b border-slate-800">
+                      <span className="text-xs font-bold text-indigo-400">
+                        {g.grade === 'Lainnya' ? 'Lainnya' : `Kelas ${g.grade}`}
+                      </span>
+                      <span className="text-[11px] text-slate-400">
+                        Subtotal: <span className="font-bold text-slate-200">{g.subtotal}</span> siswa
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                      {g.classes.map((c) => (
+                        <div
+                          key={c.className}
+                          className="rounded-lg border border-slate-800 bg-slate-900 p-2 text-center"
+                        >
+                          <span className="block text-[10px] font-bold text-slate-500">{c.className}</span>
+                          <span className={`text-sm font-bold ${c.count > 0 ? 'text-slate-100' : 'text-slate-600'}`}>
+                            {c.count}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="flex items-center justify-between gap-2 p-3 border-t border-slate-800 bg-slate-950/60">
+          <span className="text-[10px] text-slate-500 truncate">
+            {reg?.pjName && reg.pjName !== '-' ? `Guru PJ: ${reg.pjName}` : ''}
+          </span>
+          <button
+            onClick={onClose}
+            className="px-4 py-1.5 text-xs font-semibold rounded-lg border border-slate-700 text-slate-300 hover:bg-slate-800 transition-colors"
+          >
+            Tutup
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const SummaryBox = ({ label, value, highlight = false }) => (
+  <div
+    className={`rounded-xl border p-2.5 text-center ${
+      highlight ? 'border-indigo-500/30 bg-indigo-500/10' : 'border-slate-800 bg-slate-950/60'
+    }`}
+  >
+    <span className="block text-[10px] text-slate-400">{label}</span>
+    <span className={`text-base font-extrabold ${highlight ? 'text-indigo-300' : 'text-slate-200'}`}>{value}</span>
+  </div>
+);
+
+const EmptyState = ({ text }) => (
+  <div className="flex flex-col items-center justify-center py-10 text-center text-slate-500">
+    <ClipboardList className="w-9 h-9 mb-2 opacity-30" />
+    <p className="text-xs">{text}</p>
   </div>
 );
