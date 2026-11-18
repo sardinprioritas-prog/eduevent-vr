@@ -11,6 +11,7 @@ export const Login = ({ role }) => {
   const navigate = useNavigate();
 
   const needsCitySelection = role === 'operator' || role === 'kadin' || role === 'pioneer';
+  const activeCities = (cities || []).filter(c => c.active !== false);
 
   const roleConfig = {
     operator: { title: 'Login Operator', icon: <Building2 className="w-6 h-6 text-emerald-400" />, color: 'emerald' },
@@ -82,7 +83,7 @@ export const Login = ({ role }) => {
                   className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-4 py-3 text-slate-200 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 appearance-none transition-all"
                 >
                   <option value="">-- Pilih Wilayah --</option>
-                  {cities.map(c => (
+                  {activeCities.map(c => (
                     <option key={c.id} value={c.name}>{c.name}</option>
                   ))}
                 </select>
