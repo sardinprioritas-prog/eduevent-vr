@@ -12,7 +12,8 @@ const LEGACY_REGIONS = [
   { id: 'balikpapan', name: 'Balikpapan', passcode: 'BPN-12' },
   { id: 'tenggarong', name: 'Tenggarong', passcode: 'TGR-13' },
   { id: 'baubau', name: 'BauBau', passcode: 'BUW-14' },
-  { id: 'sigi', name: 'Kabupaten Sigi', passcode: 'SIG-15' }
+  { id: 'sigi', name: 'Kabupaten Sigi', passcode: 'SIG-15' },
+  { id: 'kendari', name: 'Kendari', passcode: 'KDI-16' }
 ];
 
 export const PortalSekolahModal = ({ isOpen, onClose }) => {

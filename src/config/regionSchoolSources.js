@@ -7,6 +7,7 @@ export const REGION_EXCEL_MAP = {
   baubau: '/Book2.xlsx',
   sigi: '/Book3.xlsx',
   kabupatensigi: '/Book3.xlsx',
+  kendari: '/Book4.xlsx',
 };
 
 /**

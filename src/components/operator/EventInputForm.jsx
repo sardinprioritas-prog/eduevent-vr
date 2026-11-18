@@ -5,7 +5,7 @@ import { PlusCircle, Save, X, Calendar, MapPin, School, Clock, Users, CheckCircl
 
 export const EventInputForm = ({ editingEvent, onCancelEdit }) => {
   const { cities, schools, events, currentUser, handleSaveEvent, schoolRegistrations } = useAuth();
-  const { schoolData } = useSchoolData();
+  const { schoolData } = useSchoolData(currentUser?.city);
 
   const activeCities = cities.filter((c) => {
     if (c.active === false) return false;

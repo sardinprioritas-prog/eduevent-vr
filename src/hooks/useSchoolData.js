@@ -1,9 +1,10 @@
 /**
  * useSchoolData.js
  * Hook untuk membaca data sekolah & kecamatan berdasarkan wilayah:
- * - Palu  -> /Book1.xlsx
- * - BauBau -> /Book2.xlsx
- * - Sigi   -> /Book3.xlsx (Kabupaten Sigi)
+ * - Palu    -> /Book1.xlsx
+ * - BauBau  -> /Book2.xlsx
+ * - Sigi    -> /Book3.xlsx (Kabupaten Sigi)
+ * - Kendari -> /Book4.xlsx
  * - Fallback / backward-compat: /schoolData.json (jika regionName tidak diberikan)
  *
  * Return: { schoolData, kecamatanList, loading, error, hasSource }

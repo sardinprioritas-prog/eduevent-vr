@@ -11,6 +11,7 @@ export const INITIAL_CITIES = [
   { id: 'city-tenggarong', name: 'Tenggarong', province: 'Kalimantan Timur', active: true },
   { id: 'city-baubau', name: 'BauBau', province: 'Sulawesi Tenggara', active: true },
   { id: 'city-sigi', name: 'Kabupaten Sigi', province: 'Sulawesi Tengah', active: true, passcode: 'SIG-15' },
+  { id: 'city-kendari', name: 'Kendari', province: 'Sulawesi Tenggara', active: true, passcode: 'KDI-16' },
 ];
 
 export const INITIAL_SCHOOLS = [
